@@ -1,7 +1,10 @@
-import { SourceEvent } from "./source-event";
-import { VersionedAggregateRoot } from "./versioned-aggregate-root";
+import { StoredEvent } from "./stored-event";
+import { StoredAggregateRoot } from "./stored-aggregate-root";
+import { AggregateRoot } from "../domain/aggregate-root";
 
 export interface EventStore {
-    findByAggregateRootId(id: string): Promise<Array<SourceEvent>>;
-    save(events: Array<SourceEvent>, aggregate: VersionedAggregateRoot): Promise<Array<SourceEvent>>;
+    addPublisher<T extends AggregateRoot>(aggregateRoot: T): T;
+    findByAggregateRootId(id: string): Promise<Array<StoredEvent>>;
+    save(events: Array<StoredEvent>, aggregate: StoredAggregateRoot): Promise<Array<StoredEvent>>;
+    generateEntityId(): Promise<string>;
 }

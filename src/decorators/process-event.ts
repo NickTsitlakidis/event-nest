@@ -1,6 +1,6 @@
 import "reflect-metadata";
 
-const METADATA_KEY = "ne-process-event";
+const METADATA_KEY = "process-event-meta";
 
 export function getProcessFunctionKey(entity, eventClass): string | undefined {
     const metadataKeys = Reflect.getMetadataKeys(entity);

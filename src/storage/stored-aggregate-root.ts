@@ -1,4 +1,4 @@
-export class VersionedAggregateRoot {
+export class StoredAggregateRoot {
     id: string;
     version: number;
 }

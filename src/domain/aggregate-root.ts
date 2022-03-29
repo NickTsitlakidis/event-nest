@@ -1,10 +1,9 @@
 import { EventPayload } from "../storage/event-payload";
 import { Logger } from "@nestjs/common";
-import { SourceEvent } from "../storage/source-event";
+import { StoredEvent } from "../storage/stored-event";
 import { getEventClassForName } from "../decorators/serialized-event";
 import { MissingEventHandlerException } from "../exceptions/missing-event-handler-exception";
-import { getProcessFunctionKey, ProcessEvent } from "../decorators/process-event";
-import { EventNameConflictException } from "../exceptions/event-name-conflict-exception";
+import { getProcessFunctionKey } from "../decorators/process-event";
 
 export abstract class AggregateRoot {
     private _appliedEvents: Array<EventPayload>;
@@ -12,14 +11,14 @@ export abstract class AggregateRoot {
 
     protected constructor(
         private readonly _id: string,
-        events: Array<SourceEvent> = [],
+        events: Array<StoredEvent> = [],
         private readonly _logger?: Logger
     ) {
         this._appliedEvents = [];
         this._version = 0;
 
         if (events && events.length > 0) {
-            this.buildFromEvents(events);
+            this.processEvents(events);
         }
 
         if (!this._logger) {
@@ -45,7 +44,7 @@ export abstract class AggregateRoot {
      * If a publisher is not connected, the method will return a rejected promise.
      * @param events The events to be published
      */
-    publish(events: Array<EventPayload>): Promise<Array<SourceEvent>> {
+    publish(events: Array<EventPayload>): Promise<Array<StoredEvent>> {
         this.logger.error("There is no event publisher assigned");
         return Promise.reject("There is no event publisher assigned");
     }
@@ -90,7 +89,7 @@ export abstract class AggregateRoot {
      * application logic.
      * @param events The events that will be sent to EventProcessors
      */
-    buildFromEvents(events: Array<SourceEvent>) {
+    processEvents(events: Array<StoredEvent>) {
         if (events.length > 0) {
             this.sortEvents(events).forEach((ev) => {
                 try {
@@ -116,12 +115,12 @@ export abstract class AggregateRoot {
         }
     }
 
-    protected resolveVersion(events: Array<SourceEvent>) {
-        const sorted: Array<SourceEvent> = events.sort((e1, e2) => e1.aggregateRootVersion - e2.aggregateRootVersion);
+    protected resolveVersion(events: Array<StoredEvent>) {
+        const sorted: Array<StoredEvent> = events.sort((e1, e2) => e1.aggregateRootVersion - e2.aggregateRootVersion);
         this._version = sorted.slice(-1)[0].aggregateRootVersion;
     }
 
-    protected sortEvents(events: Array<SourceEvent>): Array<SourceEvent> {
+    protected sortEvents(events: Array<StoredEvent>): Array<StoredEvent> {
         return events.sort((e1, e2) => e1.aggregateRootVersion - e2.aggregateRootVersion);
     }
 }
