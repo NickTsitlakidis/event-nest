@@ -1,8 +1,7 @@
 import { MongoClient, ObjectId } from "mongodb";
 import { Logger } from "@nestjs/common";
 import { EventConcurrencyException } from "./event-concurrency-exception";
-import { AbstractEventStore, StoredAggregateRoot, StoredEvent } from "@event-nest/core";
-import { isNil } from "@event-nest/utils";
+import { AbstractEventStore, isNil, StoredAggregateRoot, StoredEvent } from "@event-nest/core";
 
 export class MongoEventStore extends AbstractEventStore {
     private _logger: Logger;

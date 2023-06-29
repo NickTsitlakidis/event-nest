@@ -16,8 +16,7 @@
         "baseUrl": ".",
         "paths": {
             "@event-nest/core": ["libs/core/src/index.ts"],
-            "@event-nest/mongodb": ["libs/mongodb/src/index.ts"],
-            "@event-nest/utils": ["libs/utils/src/index.ts"]
+            "@event-nest/mongodb": ["libs/mongodb/src/index.ts"]
         }
     },
     "exclude": ["node_modules", "tmp"]

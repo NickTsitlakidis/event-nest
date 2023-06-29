@@ -4,7 +4,7 @@ import { StoredEvent } from "../storage/stored-event";
 import { getEventClass } from "../decorators/registered-event";
 import { getProcessFunctionKey } from "../decorators/event-processor";
 import { MissingEventProcessor } from "./missing-event-processor-exception";
-import { isNil } from "@event-nest/utils";
+import { isNil } from "../utils/type-utils";
 
 export abstract class AggregateRoot {
     private _appliedEvents: Array<EventPayload>;

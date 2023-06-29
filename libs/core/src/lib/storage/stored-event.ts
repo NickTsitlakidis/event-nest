@@ -1,7 +1,7 @@
 import { ClassConstructor, instanceToPlain, plainToClass } from "class-transformer";
 import { EventPayload } from "./event-payload";
 import { getEventName } from "../decorators/registered-event";
-import { isNil } from "@event-nest/utils";
+import { isNil } from "../utils/type-utils";
 
 export class StoredEvent {
     aggregateRootVersion!: number;

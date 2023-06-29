@@ -1,7 +1,7 @@
 import { ClassConstructor } from "class-transformer";
 import { EventNameConflictException } from "./event-name-conflict-exception";
 import { EventPayload } from "../storage/event-payload";
-import { isNil } from "@event-nest/utils";
+import { isNil } from "../utils/type-utils";
 
 interface EventRegistration {
     eventName: string;

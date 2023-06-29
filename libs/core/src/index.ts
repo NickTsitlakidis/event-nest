@@ -11,3 +11,5 @@ export * from "./lib/storage/event-payload";
 export * from "./lib/storage/id-generation-exception";
 export * from "./lib/storage/stored-event";
 export * from "./lib/storage/stored-aggregate-root";
+
+export * from "./lib/utils/type-utils";
