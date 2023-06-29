@@ -1,13 +1,14 @@
-import { EventPayload } from "../storage/event-payload";
 import { Logger } from "@nestjs/common";
 import { StoredEvent } from "../storage/stored-event";
-import { getEventClass } from "../decorators/registered-event";
+import { getEventClass, isRegistered } from "../decorators/registered-event";
 import { getProcessFunctionKey } from "../decorators/event-processor";
 import { MissingEventProcessor } from "./missing-event-processor-exception";
 import { isNil } from "../utils/type-utils";
+import { NotRegisteredEventException } from "../decorators/not-registered-event-exception";
+import { AggregateRootAware } from "./aggregate-root-aware";
 
 export abstract class AggregateRoot {
-    private _appliedEvents: Array<EventPayload>;
+    private _appliedEvents: Array<AggregateRootAware<object>>;
     private _version: number;
     private readonly _logger: Logger;
 
@@ -40,7 +41,7 @@ export abstract class AggregateRoot {
      * If a publisher is not connected, the method will return a rejected promise.
      * @param events The events to be published
      */
-    publish(events: Array<EventPayload>): Promise<Array<StoredEvent>> {
+    publish(events: Array<AggregateRootAware<object>>): Promise<Array<StoredEvent>> {
         this.logger.error("There is no event publisher assigned");
         return Promise.reject("There is no event publisher assigned");
     }
@@ -67,15 +68,22 @@ export abstract class AggregateRoot {
      * method once all the events you want are appliec.
      * @param event The event to be applied
      */
-    apply(event: EventPayload) {
-        event.aggregateRootId = this.id;
-        this._appliedEvents.push(event);
+    apply(event: object) {
+        if (!isRegistered(event)) {
+            this.logger.error(`Event ${event.constructor.name} is not registered.`);
+            throw new NotRegisteredEventException(event.constructor.name);
+        }
+
+        this._appliedEvents.push({
+            aggregateRootId: this.id,
+            payload: event
+        });
     }
 
     /**
      * Returns a clone array of all the currently applied events of the entity.
      */
-    get appliedEvents(): Array<EventPayload> {
+    get appliedEvents(): Array<AggregateRootAware<object>> {
         return this._appliedEvents.slice(0);
     }
 

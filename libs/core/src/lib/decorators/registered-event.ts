@@ -1,6 +1,5 @@
 import { ClassConstructor } from "class-transformer";
 import { EventNameConflictException } from "./event-name-conflict-exception";
-import { EventPayload } from "../storage/event-payload";
 import { isNil } from "../utils/type-utils";
 
 interface EventRegistration {
@@ -26,7 +25,7 @@ export function RegisteredEvent(eventName: string): ClassDecorator {
  * Returns the event name that matches the class of the provided object.
  * @param target
  */
-export function getEventName(target: EventPayload): string | undefined {
+export function getEventName(target: object): string | undefined {
     const found = REGISTRATIONS.find((registration) => registration.eventClass === target.constructor);
     return found ? found.eventName : undefined;
 }
@@ -38,4 +37,8 @@ export function getEventName(target: EventPayload): string | undefined {
 export function getEventClass<T>(name: string): ClassConstructor<T> | undefined {
     const found = REGISTRATIONS.find((registration) => registration.eventName === name);
     return isNil(found) ? undefined : (found.eventClass as ClassConstructor<T>);
+}
+
+export function isRegistered(event: object): boolean {
+    return !isNil(getEventName(event));
 }

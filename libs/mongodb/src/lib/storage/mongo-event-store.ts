@@ -26,9 +26,9 @@ export class MongoEventStore extends AbstractEventStore {
                 return StoredEvent.fromStorage(
                     doc._id.toHexString(),
                     doc["aggregateRootId"],
-                    doc["aggregateRootVersion"],
-                    doc["createdAt"],
                     doc["eventName"],
+                    doc["createdAt"],
+                    doc["aggregateRootVersion"],
                     doc["payload"]
                 );
             });

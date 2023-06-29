@@ -1,5 +1,4 @@
 import { ClassConstructor, instanceToPlain, plainToClass } from "class-transformer";
-import { EventPayload } from "./event-payload";
 import { getEventName } from "../decorators/registered-event";
 import { isNil } from "../utils/type-utils";
 
@@ -17,7 +16,7 @@ export class StoredEvent {
         this._id = id;
     }
 
-    static fromPublishedEvent(id: string, aggregateRootId: string, publishedEvent: EventPayload): StoredEvent {
+    static fromPublishedEvent(id: string, aggregateRootId: string, publishedEvent: object): StoredEvent {
         const newEvent = new StoredEvent(id, aggregateRootId);
         newEvent._createdAt = new Date(new Date().toUTCString());
 

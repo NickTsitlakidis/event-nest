@@ -1,1 +1,1 @@
-export * from "./lib/mongodb.module";
+export * from "./lib/event-nest-mongodb.module";
