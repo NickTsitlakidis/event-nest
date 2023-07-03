@@ -2,24 +2,24 @@ import { Logger } from "@nestjs/common";
 import { StoredEvent } from "../storage/stored-event";
 import { getEventClass, isRegistered } from "../decorators/registered-event";
 import { getProcessFunctionKey } from "../decorators/event-processor";
-import { MissingEventProcessor } from "./missing-event-processor-exception";
+import { UnknownEventException } from "./unknown-event-exception";
 import { isNil } from "../utils/type-utils";
-import { NotRegisteredEventException } from "../decorators/not-registered-event-exception";
+import { UnregisteredEventException } from "../decorators/unregistered-event-exception";
 import { AggregateRootAware } from "./aggregate-root-aware";
 
+type KnownEvent = {
+    processorKey: string;
+    payload: unknown;
+};
+
 export abstract class AggregateRoot {
-    private _appliedEvents: Array<AggregateRootAware<object>>;
+    private _appendedEvents: Array<AggregateRootAware<object>>;
     private _version: number;
     private readonly _logger: Logger;
 
-    protected constructor(private readonly _id: string, events: Array<StoredEvent> = [], logger?: Logger) {
-        this._appliedEvents = [];
+    protected constructor(private readonly _id: string, logger?: Logger) {
+        this._appendedEvents = [];
         this._version = 0;
-
-        if (events && events.length > 0) {
-            this.processEvents(events);
-        }
-
         this._logger = isNil(logger) ? new Logger(AggregateRoot.name) : logger;
     }
 
@@ -56,8 +56,8 @@ export abstract class AggregateRoot {
      * Call this once all the events you want, have been appended.
      */
     commit(): Promise<AggregateRoot> {
-        const toPublish = this._appliedEvents.slice(0);
-        this._appliedEvents = [];
+        const toPublish = this._appendedEvents.slice(0);
+        this._appendedEvents = [];
         if (toPublish.length > 0) {
             return this.publish(toPublish).then(() => Promise.resolve(this));
         }
@@ -72,10 +72,10 @@ export abstract class AggregateRoot {
     append(event: object) {
         if (!isRegistered(event)) {
             this.logger.error(`Event ${event.constructor.name} is not registered.`);
-            throw new NotRegisteredEventException(event.constructor.name);
+            throw new UnregisteredEventException(event.constructor.name);
         }
 
-        this._appliedEvents.push({
+        this._appendedEvents.push({
             aggregateRootId: this.id,
             payload: event
         });
@@ -85,7 +85,7 @@ export abstract class AggregateRoot {
      * Returns a clone array of all the currently appended events of the entity.
      */
     get appendedEvents(): Array<AggregateRootAware<object>> {
-        return this._appliedEvents.slice(0);
+        return this._appendedEvents.slice(0);
     }
 
     /**
@@ -96,26 +96,22 @@ export abstract class AggregateRoot {
      */
     processEvents(events: Array<StoredEvent>) {
         if (events.length > 0) {
-            this.sortEvents(events).forEach((ev) => {
+            const [unregistered, missingProcessor, known] = this.splitEvents(this.sortEvents(events));
+
+            if (unregistered.length > 0 || missingProcessor.length > 0) {
+                const e = new UnknownEventException(unregistered, missingProcessor, this.id);
+                this.logger.error(e.message);
+                throw e;
+            }
+
+            known.forEach((event) => {
                 try {
-                    const eventClass = getEventClass(ev.eventName);
-                    if (!eventClass) {
-                        this.logger.error(`Found event name with no handler : ${ev.eventName}.`);
-                        throw new MissingEventProcessor(ev.eventName, this._id);
-                    }
-                    const processorKey = getProcessFunctionKey(this, eventClass);
-                    if (!processorKey) {
-                        this.logger.error(`Found event name with no handler : ${ev.eventName}.`);
-                        throw new MissingEventProcessor(ev.eventName, this._id);
-                    }
-                    const mappedEvent = ev.getPayloadAs(eventClass);
-                    (this as any)[processorKey](mappedEvent);
+                    (this as any)[event.processorKey](event.payload);
                 } catch (error) {
-                    this.logger.error(`Unable to process domain event : ${ev.eventName}.`);
+                    this.logger.error(`Unable to process domain event due to error in processor function: ${error}`);
                     throw error;
                 }
             });
-
             this.resolveVersion(events);
         }
     }
@@ -127,5 +123,30 @@ export abstract class AggregateRoot {
 
     protected sortEvents(events: Array<StoredEvent>): Array<StoredEvent> {
         return events.sort((e1, e2) => e1.aggregateRootVersion - e2.aggregateRootVersion);
+    }
+
+    private splitEvents(events: Array<StoredEvent>): [Array<string>, Array<string>, Array<KnownEvent>] {
+        const known: Array<KnownEvent> = [];
+        const unregistered: Array<string> = [];
+        const missingProcessor: Array<string> = [];
+
+        events.forEach((ev) => {
+            const eventClass = getEventClass(ev.eventName);
+            if (isNil(eventClass)) {
+                unregistered.push(ev.eventName);
+            } else {
+                const processorKey = getProcessFunctionKey(this, eventClass);
+                if (isNil(processorKey)) {
+                    missingProcessor.push(ev.eventName);
+                } else {
+                    known.push({
+                        processorKey,
+                        payload: ev.getPayloadAs(eventClass)
+                    });
+                }
+            }
+        });
+
+        return [unregistered, missingProcessor, known];
     }
 }

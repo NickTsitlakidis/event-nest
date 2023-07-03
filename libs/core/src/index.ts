@@ -3,7 +3,7 @@ export * from "./lib/decorators/event-processor";
 export * from "./lib/decorators/registered-event";
 
 export * from "./lib/domain/aggregate-root";
-export * from "./lib/domain/missing-event-processor-exception";
+export * from "./lib/domain/unknown-event-exception";
 
 export * from "./lib/storage/abstract-event-store";
 export * from "./lib/storage/event-store";
