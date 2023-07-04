@@ -4,7 +4,7 @@ import { ClassConstructor } from "class-transformer";
 
 const METADATA_KEY = "process-event-meta";
 
-export function getProcessFunctionKey(
+export function getDecoratedPropertyKey(
     entity: AggregateRoot,
     eventClass: ClassConstructor<unknown>
 ): string | undefined {

@@ -1,7 +1,7 @@
 import { Logger } from "@nestjs/common";
 import { StoredEvent } from "../storage/stored-event";
 import { getEventClass, isRegistered } from "../decorators/registered-event";
-import { getProcessFunctionKey } from "../decorators/event-processor";
+import { getDecoratedPropertyKey } from "../decorators/event-processor";
 import { UnknownEventException } from "./unknown-event-exception";
 import { isNil } from "../utils/type-utils";
 import { UnregisteredEventException } from "../decorators/unregistered-event-exception";
@@ -135,7 +135,7 @@ export abstract class AggregateRoot {
             if (isNil(eventClass)) {
                 unregistered.push(ev.eventName);
             } else {
-                const processorKey = getProcessFunctionKey(this, eventClass);
+                const processorKey = getDecoratedPropertyKey(this, eventClass);
                 if (isNil(processorKey)) {
                     missingProcessor.push(ev.eventName);
                 } else {
