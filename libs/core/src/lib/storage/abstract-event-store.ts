@@ -4,6 +4,7 @@ import { AggregateRoot } from "../domain/aggregate-root";
 import { StoredAggregateRoot } from "./stored-aggregate-root";
 import { IdGenerationException } from "./id-generation-exception";
 import { AggregateRootAware } from "../domain/aggregate-root-aware";
+import { hasAllValues } from "../utils/type-utils";
 
 export abstract class AbstractEventStore implements EventStore {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -22,7 +23,7 @@ export abstract class AbstractEventStore implements EventStore {
             }
 
             const ids = await Promise.all(events.map(() => this.generateEntityId()));
-            if (ids.length !== events.length) {
+            if (ids.length !== events.length || !hasAllValues(ids)) {
                 throw new IdGenerationException(ids.length, events.length);
             }
             const storedEvents = events.map((serializable) => {
