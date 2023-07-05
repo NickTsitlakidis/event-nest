@@ -1,17 +1,18 @@
 import { MongoClient, ObjectId } from "mongodb";
 import { Logger } from "@nestjs/common";
 import { EventConcurrencyException } from "./event-concurrency-exception";
-import { AbstractEventStore, isNil, StoredAggregateRoot, StoredEvent } from "@event-nest/core";
+import { AbstractEventStore, EventBus, isNil, StoredAggregateRoot, StoredEvent } from "@event-nest/core";
 
 export class MongoEventStore extends AbstractEventStore {
     private _logger: Logger;
 
     constructor(
+        eventBus: EventBus,
         private _mongoClient: MongoClient,
         private _aggregatesCollectionName: string,
         private _eventsCollectionName: string
     ) {
-        super();
+        super(eventBus);
         this._logger = new Logger(MongoEventStore.name);
     }
 

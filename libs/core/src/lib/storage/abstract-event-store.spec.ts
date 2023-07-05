@@ -1,12 +1,16 @@
 import { AbstractEventStore } from "./abstract-event-store";
 import { StoredEvent } from "./stored-event";
-import { AggregateRoot } from "../domain/aggregate-root";
+import { AggregateRoot } from "../aggregate-root";
 import { StoredAggregateRoot } from "./stored-aggregate-root";
-import { IdGenerationException } from "@event-nest/core";
+import { IdGenerationException } from "../exceptions/id-generation-exception";
+import { EventBus } from "../event-bus";
+import { createMock } from "@golevelup/ts-jest";
+
+const eventBusMock = createMock<EventBus>();
 
 class TestStore extends AbstractEventStore {
     constructor() {
-        super();
+        super(eventBusMock);
     }
     savedEvents: Array<StoredEvent> = [];
     savedAggregate: StoredAggregateRoot | undefined;
@@ -54,12 +58,16 @@ describe("addPublisher tests", () => {
     test("publisher calls save with events and aggregate", async () => {
         const store = new TestStore();
         const entity = store.addPublisher(new TestEntity());
-        await entity.publish([{ aggregateRootId: "id", payload: new TestEvent("test") }]);
+        const toPublish = [{ aggregateRootId: "id", payload: new TestEvent("test") }];
+        await entity.publish(toPublish);
+        eventBusMock.emitMultiple.mockResolvedValue("whatever");
         expect(store.savedEvents).toEqual([
             StoredEvent.fromPublishedEvent("generated-id", "id", new TestEvent("test"))
         ]);
         expect(store.savedAggregate?.id).toBe("id");
         expect(store.savedAggregate?.version).toBe(entity.version);
+        expect(eventBusMock.emitMultiple).toHaveBeenCalledWith(toPublish);
+        expect(eventBusMock.emitMultiple).toHaveBeenCalledTimes(1);
     });
 
     test("publisher throws when id generation throws", async () => {

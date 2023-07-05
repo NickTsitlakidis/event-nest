@@ -1,5 +1,5 @@
 import { isRegistered, RegisteredEvent } from "./registered-event";
-import { EventNameConflictException } from "./event-name-conflict-exception";
+import { EventNameConflictException } from "./exceptions/event-name-conflict-exception";
 
 class TestClass1 {}
 

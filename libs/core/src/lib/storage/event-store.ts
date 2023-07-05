@@ -1,6 +1,6 @@
 import { StoredEvent } from "./stored-event";
 import { StoredAggregateRoot } from "./stored-aggregate-root";
-import { AggregateRoot } from "../domain/aggregate-root";
+import { AggregateRoot } from "../aggregate-root";
 
 /**
  * A unique symbol that can be used to inject the event store into other classes.

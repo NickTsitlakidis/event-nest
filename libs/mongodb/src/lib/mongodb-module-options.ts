@@ -1,4 +1,6 @@
-export interface MongodbModuleOptions {
+import { CoreModuleOptions } from "@event-nest/core";
+
+export interface MongodbModuleOptions extends CoreModuleOptions {
     /**
      * A valid connection string which will be used to connect to the MongoDB instance.
      */

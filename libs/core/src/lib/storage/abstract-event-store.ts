@@ -1,14 +1,15 @@
 import { EventStore } from "./event-store";
 import { StoredEvent } from "./stored-event";
-import { AggregateRoot } from "../domain/aggregate-root";
+import { AggregateRoot } from "../aggregate-root";
 import { StoredAggregateRoot } from "./stored-aggregate-root";
-import { IdGenerationException } from "./id-generation-exception";
-import { AggregateRootAware } from "../domain/aggregate-root-aware";
+import { IdGenerationException } from "../exceptions/id-generation-exception";
+import { AggregateRootAwareEvent } from "../aggregate-root-aware-event";
 import { hasAllValues } from "../utils/type-utils";
+import { EventBus } from "../event-bus";
 
 export abstract class AbstractEventStore implements EventStore {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    protected constructor() {}
+    protected constructor(private _eventBus: EventBus) {}
 
     abstract findByAggregateRootId(id: string): Promise<Array<StoredEvent>>;
 
@@ -17,7 +18,7 @@ export abstract class AbstractEventStore implements EventStore {
     abstract generateEntityId(): Promise<string>;
 
     addPublisher<T extends AggregateRoot>(aggregateRoot: T): T {
-        aggregateRoot.publish = async (events: Array<AggregateRootAware<object>>) => {
+        aggregateRoot.publish = async (events: Array<AggregateRootAwareEvent<object>>) => {
             if (events.length == 0) {
                 return Promise.resolve([]);
             }
@@ -33,7 +34,7 @@ export abstract class AbstractEventStore implements EventStore {
 
             const toStore = new StoredAggregateRoot(aggregateRoot.id, aggregateRoot.version);
             return this.save(storedEvents, toStore).then((savedEvents) => {
-                //this._eventBus.publishAll(events);
+                this._eventBus.emitMultiple(events);
                 return Promise.resolve(savedEvents);
             });
         };

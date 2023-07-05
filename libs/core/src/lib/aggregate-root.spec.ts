@@ -1,11 +1,11 @@
 import { AggregateRoot } from "./aggregate-root";
-import { EventProcessor } from "../decorators/event-processor";
-import { RegisteredEvent } from "../decorators/registered-event";
+import { EventProcessor } from "./event-processor";
+import { RegisteredEvent } from "./registered-event";
 import { Logger } from "@nestjs/common";
-import { StoredEvent } from "../storage/stored-event";
-import { UnregisteredEventException } from "../decorators/unregistered-event-exception";
-import { UnknownEventException } from "./unknown-event-exception";
-import { AggregateRootAware } from "./aggregate-root-aware";
+import { StoredEvent } from "./storage/stored-event";
+import { UnregisteredEventException } from "./exceptions/unregistered-event-exception";
+import { UnknownEventException } from "./exceptions/unknown-event-exception";
+import { AggregateRootAwareEvent } from "./aggregate-root-aware-event";
 
 @RegisteredEvent("test-event-1")
 class TestEvent1 {}
@@ -22,7 +22,7 @@ class ThrowingEvent {}
 class UnregisteredEvent {}
 
 class SubEntity extends AggregateRoot {
-    public published: Array<AggregateRootAware<object>> = [];
+    public published: Array<AggregateRootAwareEvent<object>> = [];
 
     @EventProcessor(TestEvent1)
     processTestEvent1 = () => {};
@@ -39,7 +39,7 @@ class SubEntity extends AggregateRoot {
         super(id);
     }
 
-    override publish(events: Array<AggregateRootAware<object>>): Promise<Array<StoredEvent>> {
+    override publish(events: Array<AggregateRootAwareEvent<object>>): Promise<Array<StoredEvent>> {
         this.published = events;
         return Promise.resolve([]);
     }

@@ -1,5 +1,5 @@
 import { EventProcessor, getDecoratedPropertyKey } from "./event-processor";
-import { AggregateRoot } from "../domain/aggregate-root";
+import { AggregateRoot } from "./aggregate-root";
 
 class TestEvent {}
 
@@ -23,7 +23,7 @@ class TestEntity extends AggregateRoot {
 }
 
 test("EventProcessor - adds metadata", () => {
-    const metadata = Reflect.getMetadata("process-event-meta-processTestEvent", new TestEntity());
+    const metadata = Reflect.getMetadata("event-nest-process-event-meta-processTestEvent", new TestEntity());
     expect(metadata).toBeDefined();
     expect(metadata.eventClass).toBe(TestEvent);
     expect(metadata.key).toBe("processTestEvent");

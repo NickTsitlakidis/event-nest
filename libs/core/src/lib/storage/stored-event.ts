@@ -1,5 +1,5 @@
 import { ClassConstructor, instanceToPlain, plainToClass } from "class-transformer";
-import { getEventName } from "../decorators/registered-event";
+import { getEventName } from "../registered-event";
 import { isNil } from "../utils/type-utils";
 
 /**

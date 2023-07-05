@@ -1,8 +1,7 @@
 import "reflect-metadata";
-import { AggregateRoot } from "../domain/aggregate-root";
+import { AggregateRoot } from "./aggregate-root";
 import { ClassConstructor } from "class-transformer";
-
-const METADATA_KEY = "process-event-meta";
+import { EVENT_PROCESSOR_KEY } from "./metadata-keys";
 
 export function getDecoratedPropertyKey(
     entity: AggregateRoot,
@@ -28,7 +27,7 @@ export function getDecoratedPropertyKey(
 export function EventProcessor(eventClass: ClassConstructor<unknown>): PropertyDecorator {
     return (propertyParent, propertyKey) => {
         Reflect.defineMetadata(
-            METADATA_KEY + "-" + propertyKey.toString(),
+            EVENT_PROCESSOR_KEY + "-" + propertyKey.toString(),
             { eventClass: eventClass, key: propertyKey },
             propertyParent
         );
