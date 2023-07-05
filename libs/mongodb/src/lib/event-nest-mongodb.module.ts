@@ -20,7 +20,7 @@ export class EventNestMongoDbModule implements OnApplicationBootstrap {
     static registerAsync(options: MongoDbModuleAsyncOptions): DynamicModule {
         return {
             module: EventNestMongoDbModule,
-            providers: [provideEventStoreAsync(options)],
+            providers: provideEventStoreAsync(options),
             exports: [EVENT_STORE]
         };
     }

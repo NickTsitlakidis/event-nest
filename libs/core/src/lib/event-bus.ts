@@ -30,7 +30,7 @@ export class EventBus implements OnModuleDestroy {
                     return;
                 }
 
-                if (isDomainEventSubscription(provider.instance)) {
+                if (isDomainEventSubscription(provider.instance as object)) {
                     const events = getEventsFromDomainEventSubscription(provider.instance as OnDomainEvent<unknown>);
                     events.forEach((event) => {
                         const eventId = getEventId(event) as string;

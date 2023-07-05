@@ -14,6 +14,7 @@ export class MongoEventStore extends AbstractEventStore {
     ) {
         super(eventBus);
         this._logger = new Logger(MongoEventStore.name);
+        console.log(eventBus);
     }
 
     async findByAggregateRootId(id: string): Promise<Array<StoredEvent>> {
