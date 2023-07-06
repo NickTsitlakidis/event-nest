@@ -94,7 +94,7 @@ export abstract class AggregateRoot {
      * application logic.
      * @param events The events that will be sent to EventProcessor functions
      */
-    processEvents(events: Array<StoredEvent>) {
+    reconstitute(events: Array<StoredEvent>) {
         if (events.length > 0) {
             const [unregistered, missingProcessor, known] = this.splitEvents(this.sortEvents(events));
 

@@ -68,7 +68,7 @@ describe("constructor tests", () => {
     });
 });
 
-describe("processEvents tests", () => {
+describe("reconstitute tests", () => {
     test("calls mapped processors after sorting", () => {
         const ev1 = StoredEvent.fromStorage("ev1", "id1", "test-event-2", new Date(), 10, {});
         const ev2 = StoredEvent.fromStorage("ev2", "id1", "test-event-1", new Date(), 2, {});
@@ -83,7 +83,7 @@ describe("processEvents tests", () => {
             last = 2;
         });
 
-        entity.processEvents([ev1, ev2]);
+        entity.reconstitute([ev1, ev2]);
 
         expect(processor1Spy).toHaveBeenCalledTimes(1);
         expect(processor1Spy).toHaveBeenCalledWith(ev1.getPayloadAs(TestEvent2));
@@ -97,7 +97,7 @@ describe("processEvents tests", () => {
     test("throws when an event processor throws", () => {
         const ev1 = StoredEvent.fromStorage("ev1", "id1", "throwing-event", new Date(), 10, {});
         const entity = new SubEntity("id1");
-        expect(() => entity.processEvents([ev1])).toThrow();
+        expect(() => entity.reconstitute([ev1])).toThrow();
     });
 
     test("throws when an event has no matching handler", () => {
@@ -109,7 +109,7 @@ describe("processEvents tests", () => {
         const processor1Spy = jest.spyOn(entity, "processTestEvent1").mockImplementation(() => {});
         const processor2Spy = jest.spyOn(entity, "processTestEvent2").mockImplementation(() => {});
 
-        expect(() => entity.processEvents([ev1, ev3])).toThrow(UnknownEventException);
+        expect(() => entity.reconstitute([ev1, ev3])).toThrow(UnknownEventException);
 
         expect(processor1Spy).not.toHaveBeenCalled();
         expect(processor2Spy).not.toHaveBeenCalled();
@@ -124,7 +124,7 @@ describe("processEvents tests", () => {
         const processor1Spy = jest.spyOn(entity, "processTestEvent1").mockImplementation(() => {});
         const processor2Spy = jest.spyOn(entity, "processTestEvent2").mockImplementation(() => {});
 
-        expect(() => entity.processEvents([ev1, ev3])).toThrow(UnknownEventException);
+        expect(() => entity.reconstitute([ev1, ev3])).toThrow(UnknownEventException);
 
         expect(processor1Spy).not.toHaveBeenCalled();
         expect(processor2Spy).not.toHaveBeenCalled();
