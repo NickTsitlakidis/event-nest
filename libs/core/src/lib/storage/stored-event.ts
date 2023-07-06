@@ -20,6 +20,7 @@ export class StoredEvent {
     private _createdAt!: Date;
     private _payload: unknown;
     private _eventName!: string;
+    private _aggregateRootName!: string;
 
     private constructor(id: string, aggregateRootId: string) {
         this._aggregateRootId = aggregateRootId;
@@ -32,11 +33,18 @@ export class StoredEvent {
      * class-transformer library.
      * @param id The event id
      * @param aggregateRootId The aggregate root id
+     * @param aggregateRootName The name of the aggregate root
      * @param payload The event payload as an object.
      */
-    static fromPublishedEvent(id: string, aggregateRootId: string, payload: object): StoredEvent {
+    static fromPublishedEvent(
+        id: string,
+        aggregateRootId: string,
+        aggregateRootName: string,
+        payload: object
+    ): StoredEvent {
         const newEvent = new StoredEvent(id, aggregateRootId);
         newEvent._createdAt = new Date(new Date().toUTCString());
+        newEvent._aggregateRootName = aggregateRootName;
 
         const eventName = getEventName(payload);
         if (!isNil(eventName)) {
@@ -57,6 +65,7 @@ export class StoredEvent {
      * @param eventName The event name
      * @param createdAt The event creation date
      * @param aggregateRootVersion The aggregate root version
+     * @param aggregateRootName The aggregate root name
      * @param payload The event payload as an object.
      */
     static fromStorage(
@@ -65,12 +74,14 @@ export class StoredEvent {
         eventName: string,
         createdAt: Date,
         aggregateRootVersion: number,
+        aggregateRootName: string,
         payload: unknown
     ): StoredEvent {
         const newEvent = new StoredEvent(id, aggregateRootId);
         newEvent._eventName = eventName;
         newEvent._createdAt = createdAt;
         newEvent.aggregateRootVersion = aggregateRootVersion;
+        newEvent._aggregateRootName = aggregateRootName;
         newEvent._payload = payload;
         return newEvent;
     }
@@ -97,5 +108,9 @@ export class StoredEvent {
 
     get eventName(): string {
         return this._eventName;
+    }
+
+    get aggregateRootName(): string {
+        return this._aggregateRootName;
     }
 }

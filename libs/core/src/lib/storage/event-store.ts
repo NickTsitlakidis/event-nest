@@ -2,10 +2,13 @@ import { StoredEvent } from "./stored-event";
 import { StoredAggregateRoot } from "./stored-aggregate-root";
 import { AggregateRoot } from "../aggregate-root";
 
-/**
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type AggregateRootClass<T> = Function & { prototype: T };
+
+export /**
  * A unique symbol that can be used to inject the event store into other classes.
  */
-export const EVENT_STORE = Symbol("EVENT_NEST_EVENT_STORE");
+const EVENT_STORE = Symbol("EVENT_NEST_EVENT_STORE");
 
 /**
  * Defines the main EventStore interface that can be used to retrieve and save events. Each implementation of this interface
@@ -23,11 +26,15 @@ export interface EventStore {
     addPublisher<T extends AggregateRoot>(aggregateRoot: T): T;
 
     /**
-     * Finds all events that are associated with the provided aggregate root id. These events can later be used to recreate
-     * an aggregate root object.
+     * Finds all events that are associated with the provided aggregate root id and match the aggregate root name which
+     * is resolved from the aggregate root class. These events can later be used to recreate an aggregate root object.
+     * @param aggregateRootClass The class of the aggregate root for which the store will search for events
      * @param id The unique id of the aggregate root object
      */
-    findByAggregateRootId(id: string): Promise<Array<StoredEvent>>;
+    findByAggregateRootId<T extends AggregateRoot>(
+        aggregateRootClass: AggregateRootClass<T>,
+        id: string
+    ): Promise<Array<StoredEvent>>;
 
     /**
      * Saves the provided event and aggregate root object. Before saving the aggregate root object, the method will check

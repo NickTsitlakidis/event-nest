@@ -1,7 +1,17 @@
 import { MongoClient, ObjectId } from "mongodb";
 import { Logger } from "@nestjs/common";
 import { EventConcurrencyException } from "./event-concurrency-exception";
-import { AbstractEventStore, EventBus, isNil, StoredAggregateRoot, StoredEvent } from "@event-nest/core";
+import {
+    AbstractEventStore,
+    AggregateRoot,
+    AggregateRootClass,
+    EventBus,
+    getAggregateRootName,
+    isNil,
+    MissingAggregateRootNameException,
+    StoredAggregateRoot,
+    StoredEvent
+} from "@event-nest/core";
 
 export class MongoEventStore extends AbstractEventStore {
     private _logger: Logger;
@@ -16,11 +26,19 @@ export class MongoEventStore extends AbstractEventStore {
         this._logger = new Logger(MongoEventStore.name);
     }
 
-    async findByAggregateRootId(id: string): Promise<Array<StoredEvent>> {
+    async findByAggregateRootId<T extends AggregateRoot>(
+        aggregateRootClass: AggregateRootClass<T>,
+        id: string
+    ): Promise<Array<StoredEvent>> {
+        const aggregateRootName = getAggregateRootName(aggregateRootClass);
+        if (isNil(aggregateRootName)) {
+            throw new MissingAggregateRootNameException(aggregateRootClass.name);
+        }
+
         const documents = await this._mongoClient
             .db()
             .collection(this._eventsCollectionName)
-            .find({ aggregateRootId: id })
+            .find({ aggregateRootId: id, aggregateRootName: aggregateRootName })
             .toArray();
         if (documents.length > 0) {
             return documents.map((doc) => {
@@ -30,6 +48,7 @@ export class MongoEventStore extends AbstractEventStore {
                     doc["eventName"],
                     doc["createdAt"],
                     doc["aggregateRootVersion"],
+                    doc["aggregateRootName"],
                     doc["payload"]
                 );
             });
@@ -80,7 +99,7 @@ export class MongoEventStore extends AbstractEventStore {
 
             for (let i = 0; i < events.length; i++) {
                 incrementedVersion = aggregate.version + i + 1;
-                events[i].entityVersion = incrementedVersion;
+                events[i].aggregateRootVersion = incrementedVersion;
             }
 
             aggregate.version = incrementedVersion;
@@ -91,8 +110,9 @@ export class MongoEventStore extends AbstractEventStore {
                 return {
                     _id: new ObjectId(ev.id),
                     createdAt: ev.createdAt,
-                    aggregateRootId: ev.entityId,
-                    aggregateRootVersion: ev.entityVersion,
+                    aggregateRootId: ev.aggregateRootId,
+                    aggregateRootVersion: ev.aggregateRootVersion,
+                    aggregateRootName: ev.aggregateRootName,
                     eventName: ev.eventName,
                     payload: ev.payload
                 };
