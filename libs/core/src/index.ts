@@ -7,7 +7,6 @@ export * from "./lib/domain-event-subscription";
 export * from "./lib/aggregate-root";
 export * from "./lib/on-domain-event";
 export * from "./lib/event-bus";
-export * from "./lib/event-bus-provider";
 export * from "./lib/core-module-options";
 
 export * from "./lib/storage/stored-event";

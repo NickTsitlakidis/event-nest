@@ -14,7 +14,6 @@ export class MongoEventStore extends AbstractEventStore {
     ) {
         super(eventBus);
         this._logger = new Logger(MongoEventStore.name);
-        console.log(eventBus);
     }
 
     async findByAggregateRootId(id: string): Promise<Array<StoredEvent>> {
@@ -81,7 +80,7 @@ export class MongoEventStore extends AbstractEventStore {
 
             for (let i = 0; i < events.length; i++) {
                 incrementedVersion = aggregate.version + i + 1;
-                events[i].aggregateRootVersion = incrementedVersion;
+                events[i].entityVersion = incrementedVersion;
             }
 
             aggregate.version = incrementedVersion;
@@ -92,8 +91,8 @@ export class MongoEventStore extends AbstractEventStore {
                 return {
                     _id: new ObjectId(ev.id),
                     createdAt: ev.createdAt,
-                    aggregateRootId: ev.aggregateRootId,
-                    aggregateRootVersion: ev.aggregateRootVersion,
+                    aggregateRootId: ev.entityId,
+                    aggregateRootVersion: ev.entityVersion,
                     eventName: ev.eventName,
                     payload: ev.payload
                 };

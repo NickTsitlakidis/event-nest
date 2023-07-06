@@ -1,21 +1,34 @@
 import { Provider } from "@nestjs/common";
-import { EVENT_STORE, EventBus, isNil } from "@event-nest/core";
-import { MongoDbModuleAsyncOptions, MongodbModuleOptions } from "../mongodb-module-options";
+import { EVENT_STORE, EventBus } from "@event-nest/core";
+import { MongoDbModuleAsyncOptions, MongodbModuleOptions } from "./mongodb-module-options";
 import { MongoClient } from "mongodb";
-import { MongoEventStore } from "./mongo-event-store";
+import { MongoEventStore } from "./storage/mongo-event-store";
 
-export function provideEventStore(options: MongodbModuleOptions): Provider {
-    return {
-        provide: EVENT_STORE,
-        useFactory: (eventBus: EventBus) => {
-            const mongoClient = new MongoClient(options.connectionUri);
-            return new MongoEventStore(eventBus, mongoClient, options.aggregatesCollection, options.eventsCollection);
+export function createProviders(options: MongodbModuleOptions): Provider[] {
+    return [
+        {
+            provide: EventBus,
+            useFactory: () => {
+                return new EventBus(options.runParallelSubscriptions);
+            }
         },
-        inject: [EventBus]
-    };
+        {
+            provide: EVENT_STORE,
+            useFactory: (eventBus: EventBus) => {
+                const mongoClient = new MongoClient(options.connectionUri);
+                return new MongoEventStore(
+                    eventBus,
+                    mongoClient,
+                    options.aggregatesCollection,
+                    options.eventsCollection
+                );
+            },
+            inject: [EventBus]
+        }
+    ];
 }
 
-export function provideEventStoreAsync(options: MongoDbModuleAsyncOptions): Provider[] {
+export function createAsyncProviders(options: MongoDbModuleAsyncOptions): Provider[] {
     const optionsProvider = {
         provide: "EVENT_NEST_OPTIONS",
         useFactory: async (...args: any[]) => {
