@@ -13,9 +13,6 @@ class TestEvent1 {}
 @RegisteredEvent("test-event-2")
 class TestEvent2 {}
 
-@RegisteredEvent("test-event-3")
-class TestEvent3 {}
-
 @RegisteredEvent("throwing-event")
 class ThrowingEvent {}
 

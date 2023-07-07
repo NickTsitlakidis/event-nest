@@ -5,9 +5,8 @@ import { StoredAggregateRoot } from "./stored-aggregate-root";
 import { IdGenerationException } from "../exceptions/id-generation-exception";
 import { DomainEventEmitter } from "../domain-event-emitter";
 import { createMock } from "@golevelup/ts-jest";
-import { AggregateRootClass } from "./event-store";
 import { AggregateRootName } from "../aggregate-root-name";
-import { MissingAggregateRootNameException } from "@event-nest/core";
+import { MissingAggregateRootNameException } from "../exceptions/missing-aggregate-root-name-exception";
 
 const eventBusMock = createMock<DomainEventEmitter>();
 
@@ -18,7 +17,7 @@ class TestStore extends AbstractEventStore {
     savedEvents: Array<StoredEvent> = [];
     savedAggregate: StoredAggregateRoot | undefined;
 
-    findByAggregateRootId<T>(aggregateRootClass: AggregateRootClass<T>, id: string): Promise<Array<StoredEvent>> {
+    findByAggregateRootId<T>(): Promise<Array<StoredEvent>> {
         return Promise.resolve([]);
     }
 

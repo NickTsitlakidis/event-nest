@@ -19,28 +19,28 @@ class TestEvent3 {}
 
 @DomainEventSubscription(TestEvent1)
 class TestSubscription implements OnDomainEvent<TestEvent1> {
-    onDomainEvent(event: AggregateRootAwareEvent<TestEvent1>): Promise<unknown> {
+    onDomainEvent(): Promise<unknown> {
         return Promise.resolve(undefined);
     }
 }
 
 @DomainEventSubscription(TestEvent1)
 class OtherSubscription implements OnDomainEvent<TestEvent1> {
-    onDomainEvent(event: AggregateRootAwareEvent<TestEvent1>): Promise<unknown> {
+    onDomainEvent(): Promise<unknown> {
         return Promise.resolve(undefined);
     }
 }
 
 @DomainEventSubscription(TestEvent2)
 class TestEvent2Subscription implements OnDomainEvent<TestEvent2> {
-    onDomainEvent(event: AggregateRootAwareEvent<TestEvent2>): Promise<unknown> {
+    onDomainEvent(): Promise<unknown> {
         return Promise.resolve(undefined);
     }
 }
 
 @DomainEventSubscription(TestEvent1, TestEvent2)
 class WithMultiple implements OnDomainEvent<TestEvent1 | TestEvent2> {
-    onDomainEvent(event: AggregateRootAwareEvent<TestEvent1 | TestEvent2>): Promise<unknown> {
+    onDomainEvent(): Promise<unknown> {
         return Promise.resolve(undefined);
     }
 }

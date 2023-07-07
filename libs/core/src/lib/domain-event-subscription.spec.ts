@@ -12,7 +12,6 @@ import {
     isDomainEventSubscription
 } from "./domain-event-subscription";
 import { OnDomainEvent } from "./on-domain-event";
-import { AggregateRootAwareEvent } from "./aggregate-root-aware-event";
 import { DOMAIN_EVENT_KEY, DOMAIN_EVENT_SUBSCRIPTION_KEY } from "./metadata-keys";
 
 randomUUID.mockReturnValue("the-id");
@@ -23,13 +22,13 @@ class UnusedEvent {}
 
 @DomainEventSubscription(TheEvent)
 class DecoratedSubscription implements OnDomainEvent<TheEvent> {
-    onDomainEvent(event: AggregateRootAwareEvent<TheEvent>): Promise<unknown> {
+    onDomainEvent(): Promise<unknown> {
         return Promise.resolve(undefined);
     }
 }
 
 class UndecoratedSubscription implements OnDomainEvent<TheEvent> {
-    onDomainEvent(event: AggregateRootAwareEvent<TheEvent>): Promise<unknown> {
+    onDomainEvent(): Promise<unknown> {
         return Promise.resolve(undefined);
     }
 }

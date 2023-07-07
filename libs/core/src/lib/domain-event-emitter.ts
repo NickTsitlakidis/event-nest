@@ -39,7 +39,7 @@ export class DomainEventEmitter implements OnModuleDestroy {
                         }
 
                         this._logger.debug(`Binding ${provider.instance?.constructor.name} to event ${eventId}`);
-                        this._handlers.get(eventId)!.push(provider.instance as OnDomainEvent<any>);
+                        this._handlers.get(eventId)?.push(provider.instance as OnDomainEvent<any>);
                     });
                 }
             });

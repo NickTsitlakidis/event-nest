@@ -43,6 +43,7 @@ export abstract class AggregateRoot {
      * If a publisher is not connected, the method will return a rejected promise.
      * @param events The events to be published
      */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     publish(events: Array<AggregateRootAwareEvent<object>>): Promise<Array<StoredEvent>> {
         this.logger.error("There is no event publisher assigned");
         return Promise.reject("There is no event publisher assigned");

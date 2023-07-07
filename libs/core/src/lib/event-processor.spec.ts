@@ -17,7 +17,7 @@ class TestEntity extends AggregateRoot {
     }
 
     @EventProcessor(TestEvent)
-    processTestEvent(event: TestEvent) {
+    processTestEvent() {
         // do something
     }
 }
