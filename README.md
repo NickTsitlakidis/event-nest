@@ -97,8 +97,8 @@ import { AggregateRoot, AggregateRootName, EventProcessor, StoredEvent } from "@
 
 @AggregateRootName("User")
 export class User extends AggregateRoot {
-    private _name: string;
-    private _email: string;
+    private name: string;
+    private email: string;
 
     private constructor(id: string) {
         super(id);
@@ -126,13 +126,13 @@ export class User extends AggregateRoot {
 
     @EventProcessor(UserCreatedEvent)
     private processUserCreatedEvent = (event: UserCreatedEvent) => {
-        this._name = event.name;
-        this._email = event.email;
+        this.name = event.name;
+        this.email = event.email;
     };
 
     @EventProcessor(UserUpdatedEvent)
     private processUserUpdatedEvent = (event: UserUpdatedEvent) => {
-        this._name = event.newName;
+        this.name = event.newName;
     };
     
 }

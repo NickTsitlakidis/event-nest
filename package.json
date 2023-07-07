@@ -1,12 +1,19 @@
 {
     "name": "@event-nest/source",
-    "version": "0.0.3",
+    "version": "1.0.0",
     "license": "MIT",
     "author": "Nick Tsitlakidis",
     "private": true,
     "scripts": {
         "test": "nx run-many -t test --projects=tag:publishable",
         "lint": "nx run-many -t lint --projects=tag:publishable"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/NickTsitlakidis/event-nest.git"
+    },
+    "engines": {
+        "node": ">= 16"
     },
     "devDependencies": {
         "@golevelup/ts-jest": "0.3.7",
