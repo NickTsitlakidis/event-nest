@@ -5,7 +5,7 @@ import {
     AbstractEventStore,
     AggregateRoot,
     AggregateRootClass,
-    EventBus,
+    DomainEventEmitter,
     getAggregateRootName,
     isNil,
     MissingAggregateRootNameException,
@@ -17,7 +17,7 @@ export class MongoEventStore extends AbstractEventStore {
     private _logger: Logger;
 
     constructor(
-        eventBus: EventBus,
+        eventBus: DomainEventEmitter,
         private _mongoClient: MongoClient,
         private _aggregatesCollectionName: string,
         private _eventsCollectionName: string

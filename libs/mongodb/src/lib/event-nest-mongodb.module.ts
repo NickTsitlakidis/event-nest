@@ -1,13 +1,13 @@
 import { DynamicModule, Global, Module, OnApplicationBootstrap } from "@nestjs/common";
 import { MongoDbModuleAsyncOptions, MongodbModuleOptions } from "./mongodb-module-options";
-import { EVENT_STORE, EventBus } from "@event-nest/core";
+import { EVENT_STORE, DomainEventEmitter } from "@event-nest/core";
 import { ModulesContainer } from "@nestjs/core";
 import { createAsyncProviders, createProviders } from "./module-providers";
 
 @Global()
 @Module({})
 export class EventNestMongoDbModule implements OnApplicationBootstrap {
-    constructor(private readonly _eventBus: EventBus, private readonly _modulesContainer: ModulesContainer) {}
+    constructor(private readonly _eventBus: DomainEventEmitter, private readonly _modulesContainer: ModulesContainer) {}
 
     static register(options: MongodbModuleOptions): DynamicModule {
         return {

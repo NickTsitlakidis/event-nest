@@ -1,4 +1,4 @@
-import { EventBus } from "./event-bus";
+import { DomainEventEmitter } from "./domain-event-emitter";
 import { OnDomainEvent } from "./on-domain-event";
 import { createMock } from "@golevelup/ts-jest";
 import { Module } from "@nestjs/core/injector/module";
@@ -39,7 +39,7 @@ class TestEvent2Subscription implements OnDomainEvent<TestEvent2> {
 }
 
 test("onModuleDestroy - stops calling subscriptions", () => {
-    const bus = new EventBus();
+    const bus = new DomainEventEmitter();
 
     const subscription = new TestSubscription();
     const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>();
@@ -69,7 +69,7 @@ describe("emit tests", () => {
 
         const handleSpy = jest.spyOn(subscription, "onDomainEvent").mockResolvedValue("anything");
 
-        const bus = new EventBus();
+        const bus = new DomainEventEmitter();
         bus.bindSubscriptions(injectorModules);
 
         await bus.emit({ payload: new TestEvent1("apollo"), aggregateRootId: "test" });
@@ -90,7 +90,7 @@ describe("emit tests", () => {
         const handleSpy = jest.spyOn(subscription1, "onDomainEvent").mockResolvedValue("anything");
         const handleSpy2 = jest.spyOn(subscription2, "onDomainEvent").mockResolvedValue("anything");
 
-        const bus = new EventBus();
+        const bus = new DomainEventEmitter();
         bus.bindSubscriptions(injectorModules);
 
         await bus.emit({ payload: new TestEvent1("apollo"), aggregateRootId: "test" });
@@ -113,7 +113,7 @@ describe("emit tests", () => {
         const handleSpy = jest.spyOn(subscription1, "onDomainEvent").mockResolvedValue("anything");
         const handleSpy2 = jest.spyOn(subscription2, "onDomainEvent").mockResolvedValue("anything");
 
-        const bus = new EventBus();
+        const bus = new DomainEventEmitter();
         bus.bindSubscriptions(injectorModules);
 
         await bus.emit({ payload: new TestEvent2(), aggregateRootId: "test" });
@@ -133,7 +133,7 @@ describe("emitMultiple tests", () => {
 
         const handleSpy = jest.spyOn(subscription1, "onDomainEvent").mockResolvedValue("anything");
 
-        const bus = new EventBus();
+        const bus = new DomainEventEmitter();
         bus.bindSubscriptions(injectorModules);
 
         await bus.emitMultiple([
@@ -153,7 +153,7 @@ describe("emitMultiple tests", () => {
 
         const handleSpy = jest.spyOn(subscription1, "onDomainEvent").mockResolvedValue("anything");
 
-        const bus = new EventBus();
+        const bus = new DomainEventEmitter();
         bus.bindSubscriptions(injectorModules);
 
         await bus.emitMultiple([
@@ -196,7 +196,7 @@ describe("emitMultiple tests", () => {
             );
         });
 
-        const bus = new EventBus(true);
+        const bus = new DomainEventEmitter(true);
         bus.bindSubscriptions(injectorModules);
 
         await bus.emitMultiple([
@@ -241,7 +241,7 @@ describe("emitMultiple tests", () => {
             );
         });
 
-        const bus = new EventBus(true);
+        const bus = new DomainEventEmitter(true);
         bus.bindSubscriptions(injectorModules);
 
         await expect(

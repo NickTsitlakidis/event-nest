@@ -1,5 +1,5 @@
 import { Provider } from "@nestjs/common";
-import { EVENT_STORE, EventBus } from "@event-nest/core";
+import { EVENT_STORE, DomainEventEmitter } from "@event-nest/core";
 import { MongoDbModuleAsyncOptions, MongodbModuleOptions } from "./mongodb-module-options";
 import { MongoClient } from "mongodb";
 import { MongoEventStore } from "./storage/mongo-event-store";
@@ -7,14 +7,14 @@ import { MongoEventStore } from "./storage/mongo-event-store";
 export function createProviders(options: MongodbModuleOptions): Provider[] {
     return [
         {
-            provide: EventBus,
+            provide: DomainEventEmitter,
             useFactory: () => {
-                return new EventBus(options.runParallelSubscriptions);
+                return new DomainEventEmitter(options.runParallelSubscriptions);
             }
         },
         {
             provide: EVENT_STORE,
-            useFactory: (eventBus: EventBus) => {
+            useFactory: (eventBus: DomainEventEmitter) => {
                 const mongoClient = new MongoClient(options.connectionUri);
                 return new MongoEventStore(
                     eventBus,
@@ -23,7 +23,7 @@ export function createProviders(options: MongodbModuleOptions): Provider[] {
                     options.eventsCollection
                 );
             },
-            inject: [EventBus]
+            inject: [DomainEventEmitter]
         }
     ];
 }
@@ -39,20 +39,20 @@ export function createAsyncProviders(options: MongoDbModuleAsyncOptions): Provid
     };
 
     const eventBusProvider = {
-        provide: EventBus,
+        provide: DomainEventEmitter,
         useFactory: (options: MongodbModuleOptions) => {
-            return new EventBus(options.runParallelSubscriptions);
+            return new DomainEventEmitter(options.runParallelSubscriptions);
         },
         inject: ["EVENT_NEST_OPTIONS"]
     };
 
     const eventStoreProvider = {
         provide: EVENT_STORE,
-        useFactory: (options: MongodbModuleOptions, eventBus: EventBus) => {
+        useFactory: (options: MongodbModuleOptions, eventBus: DomainEventEmitter) => {
             const mongoClient = new MongoClient(options.connectionUri);
             return new MongoEventStore(eventBus, mongoClient, options.aggregatesCollection, options.eventsCollection);
         },
-        inject: ["EVENT_NEST_OPTIONS", EventBus]
+        inject: ["EVENT_NEST_OPTIONS", DomainEventEmitter]
     };
 
     return [optionsProvider, eventBusProvider, eventStoreProvider];

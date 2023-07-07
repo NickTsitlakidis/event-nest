@@ -5,13 +5,13 @@ import { StoredAggregateRoot } from "./stored-aggregate-root";
 import { IdGenerationException } from "../exceptions/id-generation-exception";
 import { AggregateRootAwareEvent } from "../aggregate-root-aware-event";
 import { hasAllValues, isNil } from "../utils/type-utils";
-import { EventBus } from "../event-bus";
+import { DomainEventEmitter } from "../domain-event-emitter";
 import { getAggregateRootName } from "../aggregate-root-name";
 import { MissingAggregateRootNameException } from "../exceptions/missing-aggregate-root-name-exception";
 
 export abstract class AbstractEventStore implements EventStore {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    protected constructor(private _eventBus: EventBus) {}
+    protected constructor(private _eventBus: DomainEventEmitter) {}
 
     abstract findByAggregateRootId<T extends AggregateRoot>(
         aggregateRootClass: AggregateRootClass<T>,

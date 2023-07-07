@@ -3,10 +3,12 @@ import { StoredEvent } from "./stored-event";
 import { AggregateRoot } from "../aggregate-root";
 import { StoredAggregateRoot } from "./stored-aggregate-root";
 import { IdGenerationException } from "../exceptions/id-generation-exception";
-import { EventBus } from "../event-bus";
+import { DomainEventEmitter } from "../domain-event-emitter";
 import { createMock } from "@golevelup/ts-jest";
+import { AggregateRootClass } from "./event-store";
+import { AggregateRootName } from "@event-nest/core";
 
-const eventBusMock = createMock<EventBus>();
+const eventBusMock = createMock<DomainEventEmitter>();
 
 class TestStore extends AbstractEventStore {
     constructor() {
@@ -15,7 +17,7 @@ class TestStore extends AbstractEventStore {
     savedEvents: Array<StoredEvent> = [];
     savedAggregate: StoredAggregateRoot | undefined;
 
-    findByAggregateRootId(id: string): Promise<Array<StoredEvent>> {
+    findByAggregateRootId<T>(aggregateRootClass: AggregateRootClass<T>, id: string): Promise<Array<StoredEvent>> {
         return Promise.resolve([]);
     }
 
@@ -30,6 +32,7 @@ class TestStore extends AbstractEventStore {
     }
 }
 
+@AggregateRootName("test-entity")
 class TestEntity extends AggregateRoot {
     constructor() {
         super("id");
@@ -62,7 +65,7 @@ describe("addPublisher tests", () => {
         await entity.publish(toPublish);
         eventBusMock.emitMultiple.mockResolvedValue("whatever");
         expect(store.savedEvents).toEqual([
-            StoredEvent.fromPublishedEvent("generated-id", "id", new TestEvent("test"))
+            StoredEvent.fromPublishedEvent("generated-id", "id", "test-entity", new TestEvent("test"))
         ]);
         expect(store.savedAggregate?.id).toBe("id");
         expect(store.savedAggregate?.version).toBe(entity.version);

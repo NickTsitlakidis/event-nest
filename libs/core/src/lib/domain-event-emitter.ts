@@ -10,13 +10,13 @@ import { Logger, OnModuleDestroy } from "@nestjs/common";
 import { OnDomainEvent } from "./on-domain-event";
 import { concat, defer, firstValueFrom, from, last } from "rxjs";
 
-export class EventBus implements OnModuleDestroy {
+export class DomainEventEmitter implements OnModuleDestroy {
     private _handlers: Map<string, Array<OnDomainEvent<object>>>;
     private _logger: Logger;
 
     constructor(private _runParallelSubscriptions: boolean = false) {
         this._handlers = new Map<string, Array<OnDomainEvent<object>>>();
-        this._logger = new Logger(EventBus.name);
+        this._logger = new Logger(DomainEventEmitter.name);
     }
 
     onModuleDestroy() {

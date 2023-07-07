@@ -70,8 +70,8 @@ describe("constructor tests", () => {
 
 describe("reconstitute tests", () => {
     test("calls mapped processors after sorting", () => {
-        const ev1 = StoredEvent.fromStorage("ev1", "id1", "test-event-2", new Date(), 10, {});
-        const ev2 = StoredEvent.fromStorage("ev2", "id1", "test-event-1", new Date(), 2, {});
+        const ev1 = StoredEvent.fromStorage("ev1", "id1", "test-event-2", new Date(), 10, "ag-name", {});
+        const ev2 = StoredEvent.fromStorage("ev2", "id1", "test-event-1", new Date(), 2, "ag-name", {});
 
         const entity = new SubEntity("id1");
 
@@ -95,14 +95,14 @@ describe("reconstitute tests", () => {
     });
 
     test("throws when an event processor throws", () => {
-        const ev1 = StoredEvent.fromStorage("ev1", "id1", "throwing-event", new Date(), 10, {});
+        const ev1 = StoredEvent.fromStorage("ev1", "id1", "throwing-event", new Date(), 10, "ag-name", {});
         const entity = new SubEntity("id1");
         expect(() => entity.reconstitute([ev1])).toThrow();
     });
 
     test("throws when an event has no matching handler", () => {
-        const ev1 = StoredEvent.fromStorage("ev1", "id1", "test-event-1", new Date(), 10, {});
-        const ev3 = StoredEvent.fromStorage("ev3", "id1", "test-event-3", new Date(), 10, {});
+        const ev1 = StoredEvent.fromStorage("ev1", "id1", "test-event-1", new Date(), 10, "ag-name", {});
+        const ev3 = StoredEvent.fromStorage("ev3", "id1", "test-event-3", new Date(), 10, "ag-name", {});
 
         const entity = new SubEntity("id1");
 
@@ -116,8 +116,8 @@ describe("reconstitute tests", () => {
     });
 
     test("throws when an event is not registered", () => {
-        const ev1 = StoredEvent.fromStorage("ev1", "id1", "test-event-1", new Date(), 10, {});
-        const ev3 = StoredEvent.fromStorage("ev3", "id1", "other", new Date(), 12, {});
+        const ev1 = StoredEvent.fromStorage("ev1", "id1", "test-event-1", new Date(), 10, "ag-name", {});
+        const ev3 = StoredEvent.fromStorage("ev3", "id1", "other", new Date(), 12, "ag-name", {});
 
         const entity = new SubEntity("id1");
 
@@ -213,11 +213,11 @@ test("publish - throws when publisher is missing", (endTest) => {
 });
 
 test("sortEvents - sorts multiple events by version", () => {
-    const ev1 = StoredEvent.fromPublishedEvent("ev1", "id1", new TestEvent1());
+    const ev1 = StoredEvent.fromPublishedEvent("ev1", "id1", "ag-name", new TestEvent1());
     ev1.aggregateRootVersion = 5;
-    const ev2 = StoredEvent.fromPublishedEvent("ev2", "id1", new TestEvent1());
+    const ev2 = StoredEvent.fromPublishedEvent("ev2", "id1", "ag-name", new TestEvent1());
     ev2.aggregateRootVersion = 1;
-    const ev3 = StoredEvent.fromPublishedEvent("ev3", "id1", new TestEvent1());
+    const ev3 = StoredEvent.fromPublishedEvent("ev3", "id1", "ag-name", new TestEvent1());
     ev3.aggregateRootVersion = 41;
 
     const sorted = new SubEntity("id").sortEvents([ev1, ev2, ev3]);
@@ -225,11 +225,11 @@ test("sortEvents - sorts multiple events by version", () => {
 });
 
 test("resolveVersion - finds greatest version for multiple events", () => {
-    const ev1 = StoredEvent.fromPublishedEvent("ev1", "id1", new TestEvent1());
+    const ev1 = StoredEvent.fromPublishedEvent("ev1", "id1", "ag-name", new TestEvent1());
     ev1.aggregateRootVersion = 10;
-    const ev2 = StoredEvent.fromPublishedEvent("ev2", "id1", new TestEvent1());
+    const ev2 = StoredEvent.fromPublishedEvent("ev2", "id1", "ag-name", new TestEvent1());
     ev2.aggregateRootVersion = 5;
-    const ev3 = StoredEvent.fromPublishedEvent("ev3", "id1", new TestEvent1());
+    const ev3 = StoredEvent.fromPublishedEvent("ev3", "id1", "ag-name", new TestEvent1());
     ev3.aggregateRootVersion = 30;
 
     const entity = new SubEntity("id");
