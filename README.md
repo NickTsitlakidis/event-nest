@@ -2,7 +2,7 @@
 A collection of [nest.js](https://nestjs.com/) libraries to help you build applications based on event sourcing architecture.
 
 ## Description
-Event Nest is a collection of libraries based on nest.js that assists in implementing the core concepts of event sourcing: : 
+Event Nest is a collection of libraries based on nest.js that assists in implementing the core concepts of event sourcing:
 * Saving events in a persistent storage
 * Utilizing the saved events to trigger side effects, such as updating your read model
 * Replaying events to reconstruct the state of your application
@@ -19,8 +19,8 @@ It would also probably help to make some distinctions about what Event Nest is n
 Implementing event sourcing in an application can be challenging, particularly when combined with CQRS and DDD.
 
 Nest.js provides a [fantastic module](https://github.com/nestjs/cqrs) for CQRS but after using it for a while I thought that maybe some things could be improved.
-Furthermore, these improvements can't be added to the official module due to its lightweight and abstract nature. For instance, the official module lacks a way
-of persisting events using storage technology. 
+Furthermore, these improvements can't be added to the official module due to its lightweight and abstract nature. 
+For instance, the official module lacks a specific way of persisting the events to a storage.
 
 This is where Event Nest comes into play. In fact, a significant portion of the code in Event Nest is influenced by how things are implemented in the official module.
 
@@ -29,7 +29,7 @@ simpler, the library is not depending on the official module, so you can use it 
 
 ## Getting Started
 Depending on the storage solution you intend to use, you will need to install the corresponding packages.
-At the moment, only MongoDB is implemented, hopefully soon there will be more.
+At the moment, only MongoDB is supported, hopefully soon there will be more.
 
 ```bash
 npm install --save @event-nest/core @event-nest/mongodb
@@ -50,17 +50,19 @@ import { EventNestMongoDbModule } from "@event-nest/mongodb";
 })
 export class AppModule {}
 ```
-The collection settings define which MongoDB collections will be used to store the aggregates and the events, and they are **not** automatically created.
+The collection settings define which MongoDB collections will be used to store the aggregates and the events. 
+Use any collection you want but be sure to create it before running the application.
 
 
 
 ## Concepts
 ### Aggregate Root
-An aggregate root is a concept from Domain Driven Design. It is a domain object that is responsible for maintaining the consistency of the aggregate.
-To achieve this, the aggregate root contains the required methods, which include the related business logic. Any method that needs to update the state, should also append an event to the aggregate root's event stream.
+An [aggregate root](https://stackoverflow.com/questions/1958621/whats-an-aggregate-root) is a concept from Domain Driven Design. It is a domain object that is responsible for maintaining the consistency of the aggregate.
+To achieve this, the aggregate root should expose methods which encapsulate its behaviour. Any method that needs to update the state, should also append an event to the aggregate root's event stream.
 
 ### Event
-An event is a representation of something that has happened in the past. It is identified by a unique type, and it may contain additional data that will be persisted with the event. 
+An event is a representation of something that has happened in the past. It is identified by a unique name, and it may contain additional data that will be persisted with the event. 
+
 Each event can be used for three purposes : 
 * It will be persisted so that it can be used to reconstruct the state of an aggregate root
 * It will be passed to any internal subscribers that need to react to this event (e.g. updating the read model)
@@ -84,11 +86,11 @@ import { RegisteredEvent } from "@event-nest/core";
 
 @RegisteredEvent("user-updated-event")
 export class UserUpdatedEvent {
-constructor(public newName: string) {}
+    constructor(public newName: string) {}
 }
 ```
 
-We start this example by defining two simple events for a user: a creation event and an update event. Each one has its own data, and they are identified by a unique type which is set with the `@RegisteredEvent` decorator.
+We start this example by defining two simple events for a user: a creation event and an update event. Each one has its own data, and they are identified by a unique name which is set with the `@RegisteredEvent` decorator.
 
 ```typescript
 import { AggregateRoot, AggregateRootName, EventProcessor, StoredEvent } from "@event-nest/core";
@@ -101,18 +103,7 @@ export class User extends AggregateRoot {
     private constructor(id: string) {
         super(id);
     }
-
-    @EventProcessor(UserCreatedEvent)
-    private processUserCreatedEvent = (event: UserCreatedEvent) => {
-        this._name = event.name;
-        this._email = event.email;
-    };
-
-    @EventProcessor(UserUpdatedEvent)
-    private processUserUpdatedEvent = (event: UserUpdatedEvent) => {
-        this._name = event.newName;
-    };
-
+    
     public static createNew(id: string, name: string, email: string): User {
         const user = new User(id);
         const event = new UserCreatedEvent(name, email);
@@ -132,6 +123,17 @@ export class User extends AggregateRoot {
         this.processUserUpdatedEvent(event);
         this.append(event);
     }
+
+    @EventProcessor(UserCreatedEvent)
+    private processUserCreatedEvent = (event: UserCreatedEvent) => {
+        this._name = event.name;
+        this._email = event.email;
+    };
+
+    @EventProcessor(UserUpdatedEvent)
+    private processUserUpdatedEvent = (event: UserUpdatedEvent) => {
+        this._name = event.newName;
+    };
     
 }
 ```
@@ -141,17 +143,20 @@ Next, we define the aggregate root for the user. There's a lot going on here so 
 First of all, the class has to extend the `AggregateRoot` class, and it has to be decorated with the `@AggregateRootName` decorator.
 The name is required to associate persisted events with the correct aggregate root when retrieving them from storage.
 
-We have also defined two private methods which are decorated with the `@EventProcessor` decorator. Each method will be called when the corresponding event is retrieved, and it's ready to be processed.
-This is the place to update the object's internal state based on the event's data. **Make sure that these methods are defined as arrow functions, otherwise they won't be called.**
-
 Now let's talk about the constructor. TypeScript doesn't allow us to define multiple constructors. So if we have two ways of creating an object, we could use static methods as factories.
 In our case, we have the following creation cases :
 * The user is new, and we need to create it from scratch. In that case, we create a new `UserCreatedEvent` event, and we `append` it to the aggregate root's event stream.
 * The user already exists. In that case we need to recreate the aggregate root from the events that have been persisted. We do that by calling the `reconstitute` method.
 
+The `reconstitute` method will initiate the event processing based on the events order.
+
+To process each event, we have defined two private methods which are decorated with the `@EventProcessor` decorator. Each method will be called when the corresponding event is retrieved, and it's ready to be processed.
+This is the place to update the object's internal state based on the event's data. **Make sure that these methods are defined as arrow functions, otherwise they won't be called.**
+
+
 Finally, we define an `update` method which is the place to run any business logic we need and append the corresponding event (`UserUpdatedEvent`) to the event stream.
 
-It's important to note that the append method is not persisting the event. All the appended events can be persisted by calling the `commit` method on the aggregate root.
+It's important to note that the append method is not saving the event. All the appended events can be saved by calling the `commit` method on the aggregate root.
 
 ```typescript
 import { EVENT_STORE, EventStore } from "@event-nest/core";
@@ -179,7 +184,7 @@ export class UserService {
 
 The final piece of the puzzle is a nest.js service that will manage the process. 
 
-We start by injecting the `EventStore` service. This is the service that will be used to retrieve persisted events. 
+We start by injecting the `EventStore`, which will be used to retrieve persisted events. 
 
 Additionally, since the aggregate root classes are not managed by the nest.js dependency injection system, we need to connect them to the event store by calling the `addPublisher` method. This will allow the
 `commit` method to work as expected.
@@ -187,7 +192,7 @@ Additionally, since the aggregate root classes are not managed by the nest.js de
 ### Domain Event Subscription
 When working with event sourcing, you will likely need a way of updating other parts of your system when an event is persisted. For example, you may have a read model for users that needs to be updated when a user is created or updated.
 
-To achieve this, you can implement a service decorated with the `@DomainEventSubscriber` decorator. This decorator takes a list of events that the service is interested in, and it automatically subscribes to them when the service is initialized.
+To achieve this, you can implement a service decorated with the `@DomainEventSubscription` decorator. This decorator takes a list of events that the service is interested in, and it automatically subscribes to them when the service is initialized.
 
 To ensure that the method is implemented correctly, you can use the `OnDomainEvent` interface.
 

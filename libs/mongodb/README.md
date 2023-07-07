@@ -1,11 +1,4 @@
-# mongodb
+# Event Nest | MongoDB
+The MongoDB module for [Event Nest](https://www.npmjs.com/package/@event-nest/core)
 
-This library was generated with [Nx](https://nx.dev).
-
-## Building
-
-Run `nx build mongodb` to build the library.
-
-## Running unit tests
-
-Run `nx test mongodb` to execute the unit tests via [Jest](https://jestjs.io).
+For a full documentation, please visit the [Event Nest](https://www.npmjs.com/package/@event-nest/core) package.
