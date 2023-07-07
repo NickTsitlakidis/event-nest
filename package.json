@@ -1,8 +1,8 @@
 {
     "name": "@event-nest/source",
-    "version": "1.0.0",
+    "version": "0.0.2",
     "license": "MIT",
-    "author": "Nick Tsitlakidis <nicktsitlakidis@gmail.com>",
+    "author": "Nick Tsitlakidis",
     "private": true,
     "devDependencies": {
         "@golevelup/ts-jest": "0.3.7",

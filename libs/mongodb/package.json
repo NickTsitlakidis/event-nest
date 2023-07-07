@@ -1,8 +1,8 @@
 {
     "name": "@event-nest/mongodb",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "license": "MIT",
-    "description": "A MongoDB based implementation for the event-nest library. It uses MongoDB collections and transaction to store events and entity information",
+    "description": "A MongoDB based implementation for the event-nest library. It uses MongoDB collections and transactions to store events and entity information",
     "author": "Nick Tsitlakidis",
     "type": "commonjs",
     "keywords": [
