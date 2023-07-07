@@ -1,12 +1,9 @@
-# Contributing
+# How to contribute
 
-1. [Fork it](https://help.github.com/articles/fork-a-repo/)
-2. Install dependencies (`npm install`)
-3. Create your feature branch (`git checkout -b my-new-feature`)
-4. Commit your changes (`git commit -am 'Added some feature'`)
-5. Test your changes (`npm test`)
-6. Push to the branch (`git push origin my-new-feature`)
-7. [Create new Pull Request](https://help.github.com/articles/creating-a-pull-request/)
+Open source projects always depend on the community to help improve them. Event Nest is no exception. 
+All contributions are welcomed, whether it's a bug report, a feature request, or a pull request (for the ones who are feeling adventurous).
+
+The project is new so the rules will start taking shape as the project grows. For now, please follow the simple guidelines below.
 
 ## Testing
 
@@ -16,16 +13,19 @@ We use [Jest](https://github.com/facebook/jest) to write tests. Run our test sui
 npm test
 ```
 
+The test script is configured to produce coverage reports. If you submit a pull request, make sure that your changes don't decrease the overall coverage.
+
 ## Code Style
 
-We use [Prettier](https://prettier.io/) and tslint to maintain code style and best practices.
+We use [Prettier](https://prettier.io/) and eslint to maintain code style and best practices.
 Please make sure your PR adheres to the guides by running:
 
 ```
-npm run format
-```
-
-and
-```
 npm run lint
 ```
+
+and fixing any issues that may arise.
+
+
+## Consistency
+Please try to follow the existing code conventions and architecture. If you have a suggestion for a change, please open an issue first to discuss it.
