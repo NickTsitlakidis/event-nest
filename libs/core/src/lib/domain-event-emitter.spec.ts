@@ -38,6 +38,13 @@ class TestEvent2Subscription implements OnDomainEvent<TestEvent2> {
     }
 }
 
+@DomainEventSubscription(TestEvent1, TestEvent2)
+class WithMultiple implements OnDomainEvent<TestEvent1 | TestEvent2> {
+    onDomainEvent(event: AggregateRootAwareEvent<TestEvent1 | TestEvent2>): Promise<unknown> {
+        return Promise.resolve(undefined);
+    }
+}
+
 test("onModuleDestroy - stops calling subscriptions", () => {
     const bus = new DomainEventEmitter();
 
@@ -124,6 +131,33 @@ describe("emit tests", () => {
 });
 
 describe("emitMultiple tests", () => {
+    test("emits to subscriptions with multiple events", async () => {
+        const subscription1 = new TestSubscription();
+        const subscription2 = new WithMultiple();
+
+        const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>();
+        providersMap.set(TestSubscription, createMock<InstanceWrapper<Injectable>>({ instance: subscription1 }));
+        providersMap.set(WithMultiple, createMock<InstanceWrapper<Injectable>>({ instance: subscription2 }));
+        const injectorModules = new Map<string, Module>();
+        injectorModules.set("test", createMock<Module>({ providers: providersMap }));
+
+        const handleSpy = jest.spyOn(subscription1, "onDomainEvent").mockResolvedValue("anything");
+        const handleSpy2 = jest.spyOn(subscription2, "onDomainEvent").mockResolvedValue("anything");
+
+        const bus = new DomainEventEmitter();
+        bus.bindSubscriptions(injectorModules);
+
+        await bus.emitMultiple([
+            { payload: new TestEvent1("apollo"), aggregateRootId: "test" },
+            { payload: new TestEvent2(), aggregateRootId: "cc" }
+        ]);
+
+        expect(handleSpy).toHaveBeenCalledTimes(1);
+        expect(handleSpy).toHaveBeenCalledWith({ payload: new TestEvent1("apollo"), aggregateRootId: "test" });
+        expect(handleSpy2).toHaveBeenCalledTimes(2);
+        expect(handleSpy2).toHaveBeenNthCalledWith(1, { payload: new TestEvent1("apollo"), aggregateRootId: "test" });
+        expect(handleSpy2).toHaveBeenNthCalledWith(2, { payload: new TestEvent2(), aggregateRootId: "cc" });
+    });
     test("returns when events have no bound subscriptions", async () => {
         const subscription1 = new TestSubscription();
         const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>();

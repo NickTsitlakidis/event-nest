@@ -6,7 +6,8 @@ import { IdGenerationException } from "../exceptions/id-generation-exception";
 import { DomainEventEmitter } from "../domain-event-emitter";
 import { createMock } from "@golevelup/ts-jest";
 import { AggregateRootClass } from "./event-store";
-import { AggregateRootName } from "@event-nest/core";
+import { AggregateRootName } from "../aggregate-root-name";
+import { MissingAggregateRootNameException } from "@event-nest/core";
 
 const eventBusMock = createMock<DomainEventEmitter>();
 
@@ -34,6 +35,12 @@ class TestStore extends AbstractEventStore {
 
 @AggregateRootName("test-entity")
 class TestEntity extends AggregateRoot {
+    constructor() {
+        super("id");
+    }
+}
+
+class NoNameEntity extends AggregateRoot {
     constructor() {
         super("id");
     }
@@ -105,5 +112,16 @@ describe("addPublisher tests", () => {
         ).rejects.toThrow(IdGenerationException);
 
         expect(idSpy).toHaveBeenCalledTimes(2);
+    });
+
+    test("publisher throws when aggregate root name is missing", async () => {
+        const store = new TestStore();
+        const entity = store.addPublisher(new NoNameEntity());
+        await expect(
+            entity.publish([
+                { aggregateRootId: "id", payload: new TestEvent("test") },
+                { aggregateRootId: "id", payload: new TestEvent("test") }
+            ])
+        ).rejects.toThrow(MissingAggregateRootNameException);
     });
 });
