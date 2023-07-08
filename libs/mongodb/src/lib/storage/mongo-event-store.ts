@@ -32,6 +32,9 @@ export class MongoEventStore extends AbstractEventStore {
     ): Promise<Array<StoredEvent>> {
         const aggregateRootName = getAggregateRootName(aggregateRootClass);
         if (isNil(aggregateRootName)) {
+            this._logger.error(
+                `Missing aggregate root name for class: ${aggregateRootClass.name}. Use the @AggregateRootName decorator.`
+            );
             throw new MissingAggregateRootNameException(aggregateRootClass.name);
         }
 
