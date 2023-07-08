@@ -31,6 +31,9 @@
             "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
             "options": {
                 "jestConfig": "libs/mongodb/jest.config.ts",
+                "coverageReporters": ["lcov", "html"],
+                "collectCoverageFrom": ["src/**/*.ts", "!src/**/index.ts"],
+                "codeCoverage": true,
                 "passWithNoTests": true
             },
             "configurations": {
