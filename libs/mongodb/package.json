@@ -2,7 +2,7 @@
     "name": "@event-nest/mongodb",
     "version": "1.0.1",
     "license": "MIT",
-    "description": "A MongoDB based implementation for the event-nest library. It uses MongoDB collections and transactions to store events and entity information",
+    "description": "Event sourcing module for NestJS using MongoDB. It uses MongoDB collections and transactions to store events and object information",
     "author": "Nick Tsitlakidis",
     "repository": {
         "type": "git",
