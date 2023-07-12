@@ -31,3 +31,5 @@ jobs:
         with:
           targets: lint,test
           projects: core,mongodb
+      - name: Upload test coverage
+        uses: coverallsapp/github-action@v2
