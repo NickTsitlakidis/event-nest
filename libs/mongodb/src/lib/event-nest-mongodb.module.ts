@@ -2,17 +2,20 @@ import { DynamicModule, Global, Module, OnApplicationBootstrap } from "@nestjs/c
 import { MongoDbModuleAsyncOptions, MongodbModuleOptions } from "./mongodb-module-options";
 import { EVENT_STORE, DomainEventEmitter } from "@event-nest/core";
 import { ModulesContainer } from "@nestjs/core";
-import { createAsyncProviders, createProviders } from "./module-providers";
+import { ModuleProviders } from "./module-providers";
 
 @Global()
 @Module({})
 export class EventNestMongoDbModule implements OnApplicationBootstrap {
-    constructor(private readonly _eventBus: DomainEventEmitter, private readonly _modulesContainer: ModulesContainer) {}
+    constructor(
+        private readonly _eventEmitter: DomainEventEmitter,
+        private readonly _modulesContainer: ModulesContainer
+    ) {}
 
     static register(options: MongodbModuleOptions): DynamicModule {
         return {
             module: EventNestMongoDbModule,
-            providers: createProviders(options),
+            providers: ModuleProviders.create(options),
             exports: [EVENT_STORE]
         };
     }
@@ -20,12 +23,12 @@ export class EventNestMongoDbModule implements OnApplicationBootstrap {
     static registerAsync(options: MongoDbModuleAsyncOptions): DynamicModule {
         return {
             module: EventNestMongoDbModule,
-            providers: createAsyncProviders(options),
+            providers: ModuleProviders.createAsync(options),
             exports: [EVENT_STORE]
         };
     }
 
     onApplicationBootstrap(): any {
-        this._eventBus.bindSubscriptions(this._modulesContainer);
+        this._eventEmitter.bindSubscriptions(this._modulesContainer);
     }
 }

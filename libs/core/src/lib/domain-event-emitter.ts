@@ -11,12 +11,16 @@ import { OnDomainEvent } from "./on-domain-event";
 import { concat, defer, firstValueFrom, from, last } from "rxjs";
 
 export class DomainEventEmitter implements OnModuleDestroy {
-    private _handlers: Map<string, Array<OnDomainEvent<object>>>;
-    private _logger: Logger;
+    private readonly _handlers: Map<string, Array<OnDomainEvent<object>>>;
+    private readonly _logger: Logger;
 
-    constructor(private _runParallelSubscriptions: boolean = false) {
+    constructor(private readonly _runParallelSubscriptions: boolean = false) {
         this._handlers = new Map<string, Array<OnDomainEvent<object>>>();
         this._logger = new Logger(DomainEventEmitter.name);
+    }
+
+    get runsParallelSubscriptions(): boolean {
+        return this._runParallelSubscriptions;
     }
 
     onModuleDestroy() {
