@@ -60,17 +60,38 @@ Use any collection you want but be sure to create it before running the applicat
 
 
 ## Concepts
-### Aggregate Root
-An [aggregate root](https://stackoverflow.com/questions/1958621/whats-an-aggregate-root) is a concept from Domain Driven Design. It is a domain object that is responsible for maintaining the consistency of the aggregate.
-To achieve this, the aggregate root should expose methods which encapsulate its behaviour. Any method that needs to update the state, should also append an event to the aggregate root's event stream.
-
 ### Event
-An event is a representation of something that has happened in the past. It is identified by a unique name, and it may contain additional data that will be persisted with the event. 
+An event is a representation of something that has happened in the past. It is identified by a unique name, and it may contain additional data that will be persisted with the event.
 
-Each event can be used for three purposes : 
+Each event serves three purposes :
 * It will be persisted so that it can be used to reconstruct the state of an aggregate root
 * It will be passed to any internal subscribers that need to react to this event (e.g. updating the read model)
 * When it's time to recreate the aggregate root, the event will be processed by the correct method in the aggregate root
+
+There is no specific requirement for the structure of an event, but it is recommended to keep it simple and immutable. The [class-transformer](https://github.com/typestack/class-transformer) library is utilized under the hood to save and read the events from the database. Therefore, your event classes should adhere to the rules of class-transformer to be properly serialized and deserialized.
+
+To register a class as an event, use the `@RegisteredEvent` decorator. The decorator accepts a string parameter which is the unique name of the event.
+
+
+### Aggregate Root
+An [aggregate root](https://stackoverflow.com/questions/1958621/whats-an-aggregate-root) is a fundamental concept in Domain-Driven Design (DDD). 
+It represents a cluster of domain objects that are treated as a single unit. The aggregate root is responsible for maintaining the consistency and enforcing business rules within the aggregate.
+While explaining the concept of an aggregate root in depth is beyond the scope of this documentation, it's important to understand how such an object interacts with the event sourcing system.
+
+In the context of event sourcing, the aggregate root plays a crucial role. Each aggregate root maintains its own set of events, forming an event stream. 
+These events capture the changes or actions that have occurred within the aggregate. The event stream serves as the historical record of what has happened to the aggregate over time.
+
+Let's consider an example to illustrate the concept of an aggregate root. Suppose we have a user management system where we need to create new users and update existing users. In this case, the `User` entity serves as the aggregate root.
+
+The `User` class encapsulates the user-specific behavior and maintains the internal state of a user. It provides methods for creating a new user, updating user details, and performing any other operations relevant to the user domain. These methods are called from Nest.js services or other parts of the application responsible for user-related operations.
+
+Each instance of the `User` class has its own event stream, which records the events specific to that user. For example, when a new user is created, an event called `UserCreatedEvent` is appended to the event stream. Similarly, when a user's details are updated, an event called `UserUpdatedEvent` is appended.
+
+When loading a user from the event store, the event stream is replayed, and each event is processed by the corresponding method in the `User` class. This allows the user object to be reconstructed and updated to its most recent state based on the events.
+
+To ensure that all modifications to the user's state are properly recorded, any method that changes the state should also append the corresponding event to the event stream. By doing so, the event is persisted and can be used for reconstructing the state in the future. 
+If an event is not appended, the changes will not be saved in the database, and the consistency of the user object will be compromised.
+
 
 Enough with the theory, let's see an example that includes all of the above.
 
