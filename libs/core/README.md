@@ -1,6 +1,10 @@
 # Event Nest
 A collection of [nest.js](https://nestjs.com/) libraries to help you build applications based on event sourcing architecture.
 
+![build status](https://github.com/NickTsitlakidis/event-nest/actions/workflows/checks.yml/badge.svg)
+[![npm version](https://badge.fury.io/js/@event-nest%2Fcore.svg)](https://badge.fury.io/js/@event-nest%2Fcore)
+[![Coverage Status](https://coveralls.io/repos/github/NickTsitlakidis/event-nest/badge.svg?branch=master)](https://coveralls.io/github/NickTsitlakidis/event-nest?branch=master)
+
 ## Description
 Event Nest is a collection of libraries based on nest.js that assists in implementing the core concepts of event sourcing:
 * Saving events in a persistent storage

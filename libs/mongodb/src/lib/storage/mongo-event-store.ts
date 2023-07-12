@@ -14,16 +14,24 @@ import {
 } from "@event-nest/core";
 
 export class MongoEventStore extends AbstractEventStore {
-    private _logger: Logger;
+    private readonly _logger: Logger;
 
     constructor(
         eventBus: DomainEventEmitter,
-        private _mongoClient: MongoClient,
-        private _aggregatesCollectionName: string,
-        private _eventsCollectionName: string
+        private readonly _mongoClient: MongoClient,
+        private readonly _aggregatesCollectionName: string,
+        private readonly _eventsCollectionName: string
     ) {
         super(eventBus);
         this._logger = new Logger(MongoEventStore.name);
+    }
+
+    get aggregatesCollectionName(): string {
+        return this._aggregatesCollectionName;
+    }
+
+    get eventsCollectionName(): string {
+        return this._eventsCollectionName;
     }
 
     async findByAggregateRootId<T extends AggregateRoot>(
