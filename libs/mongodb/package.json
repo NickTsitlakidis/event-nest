@@ -20,9 +20,10 @@
         "mongodb"
     ],
     "peerDependencies": {
-        "@nestjs/common": "^9.0.0",
-        "@nestjs/core": "^9.0.0",
+        "@nestjs/common": "^9.0.0 || ^10.0.0",
+        "@nestjs/core": "^9.0.0 || ^10.0.0",
         "reflect-metadata": "0.1.13",
-        "rxjs": "^7.2.0"
+        "rxjs": "^7.2.0",
+        "mongodb": "^5.0.0"
     }
 }
