@@ -68,6 +68,19 @@ export class MongoEventStore extends AbstractEventStore {
         return [];
     }
 
+    async findAggregateRootVersion(id: string): Promise<number> {
+        const found = await this._mongoClient
+            .db()
+            .collection(this._aggregatesCollectionName)
+            .findOne({ _id: new ObjectId(id) });
+
+        if (isNil(found) || isNil(found["version"])) {
+            return -1;
+        }
+
+        return found["version"];
+    }
+
     generateEntityId(): Promise<string> {
         return Promise.resolve(new ObjectId().toHexString());
     }

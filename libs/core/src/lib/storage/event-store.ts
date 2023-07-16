@@ -37,6 +37,13 @@ export interface EventStore {
     ): Promise<Array<StoredEvent>>;
 
     /**
+     * Finds the version of the aggregate root object that is associated with the provided id. If the aggregate root is not found
+     * or there's no version information, the method will return -1
+     * @param id The id of the aggregate root object
+     */
+    findAggregateRootVersion(id: string): Promise<number>;
+
+    /**
      * Saves the provided event and aggregate root object. Before saving the aggregate root object, the method will check
      * if the version of the aggregate root object is the same as the version of the aggregate root object in the database.
      * If there's a version mismatch, the method will throw an exception. Otherwise, the method will increase the version

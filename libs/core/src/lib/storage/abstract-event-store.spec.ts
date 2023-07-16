@@ -21,6 +21,10 @@ class TestStore extends AbstractEventStore {
         return Promise.resolve([]);
     }
 
+    findAggregateRootVersion(id: string): Promise<number> {
+        return Promise.resolve(0);
+    }
+
     generateEntityId(): Promise<string> {
         return Promise.resolve("generated-id");
     }
