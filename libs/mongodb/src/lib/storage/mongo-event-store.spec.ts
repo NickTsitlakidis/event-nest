@@ -241,6 +241,37 @@ describe("findByAggregateRootId tests", () => {
     });
 });
 
+describe("findAggregateRootVersion tests", () => {
+    test("return -1 when the document is not found", async () => {
+        await aggregatesCollection.insertOne({
+            _id: new ObjectId(),
+            version: 5
+        });
+        const version = await eventStore.findAggregateRootVersion(new ObjectId().toHexString());
+        expect(version).toBe(-1);
+    });
+
+    test("return -1 when the version is missing", async () => {
+        const id = new ObjectId();
+        await aggregatesCollection.insertOne({
+            _id: id,
+            other: 5
+        });
+        const version = await eventStore.findAggregateRootVersion(id.toHexString());
+        expect(version).toBe(-1);
+    });
+
+    test("return version when document is found", async () => {
+        const id = new ObjectId();
+        await aggregatesCollection.insertOne({
+            _id: id,
+            version: 5
+        });
+        const version = await eventStore.findAggregateRootVersion(id.toHexString());
+        expect(version).toBe(5);
+    });
+});
+
 test("generateEntityId - returns string with ObjectId format", async () => {
     const id = await eventStore.generateEntityId();
     expect(ObjectId.isValid(id)).toBe(true);
