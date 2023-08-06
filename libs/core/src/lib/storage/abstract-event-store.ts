@@ -9,6 +9,11 @@ import { DomainEventEmitter } from "../domain-event-emitter";
 import { getAggregateRootName } from "../aggregate-root-name";
 import { MissingAggregateRootNameException } from "../exceptions/missing-aggregate-root-name-exception";
 
+/**
+ * An abstract implementation of the {@link EventStore} interface.
+ * Regardless of the database technology, all subclasses should have a common implementation
+ * of the {@link EventStore:addPublisher} method and this is why this class exists.
+ */
 export abstract class AbstractEventStore implements EventStore {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     protected constructor(private _eventBus: DomainEventEmitter) {}
