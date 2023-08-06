@@ -19,6 +19,15 @@ It would also probably help to make some distinctions about what Event Nest is n
 * It is not a library for establishing event-based communication between services.
 * **Although the code is covered by tests, the library is not widely tested in production. Use it at your own risk.**
 
+## Table of contents
+- [Why?](#why)
+- [Getting Started](#getting-started)
+- [Concepts](#concepts)
+    - [Event](#event)
+    - [Aggregate Root](#aggregate-root)
+    - [Domain Event Subscription](#domain-event-subscription)
+
+
 ## Why?
 Implementing event sourcing in an application can be challenging, particularly when combined with CQRS and DDD.
 
