@@ -35,15 +35,17 @@ export class StoredEvent {
      * @param aggregateRootId The aggregate root id
      * @param aggregateRootName The name of the aggregate root
      * @param payload The event payload as an object.
+     * @param occurredAt The event creation date
      */
     static fromPublishedEvent(
         id: string,
         aggregateRootId: string,
         aggregateRootName: string,
-        payload: object
+        payload: object,
+        occurredAt: Date
     ): StoredEvent {
         const newEvent = new StoredEvent(id, aggregateRootId);
-        newEvent._createdAt = new Date(new Date().toUTCString());
+        newEvent._createdAt = occurredAt;
         newEvent._aggregateRootName = aggregateRootName;
 
         const eventName = getEventName(payload);

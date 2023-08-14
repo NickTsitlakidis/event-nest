@@ -69,13 +69,14 @@ describe("addPublisher tests", () => {
     });
 
     test("publisher calls save with events and aggregate", async () => {
+        const creationDate = new Date();
         const store = new TestStore();
         const entity = store.addPublisher(new TestEntity());
-        const toPublish = [{ aggregateRootId: "id", payload: new TestEvent("test") }];
+        const toPublish = [{ aggregateRootId: "id", payload: new TestEvent("test"), occurredAt: creationDate }];
         await entity.publish(toPublish);
         eventBusMock.emitMultiple.mockResolvedValue("whatever");
         expect(store.savedEvents).toEqual([
-            StoredEvent.fromPublishedEvent("generated-id", "id", "test-entity", new TestEvent("test"))
+            StoredEvent.fromPublishedEvent("generated-id", "id", "test-entity", new TestEvent("test"), creationDate)
         ]);
         expect(store.savedAggregate?.id).toBe("id");
         expect(store.savedAggregate?.version).toBe(entity.version);
@@ -92,8 +93,8 @@ describe("addPublisher tests", () => {
         const entity = store.addPublisher(new TestEntity());
         await expect(
             entity.publish([
-                { aggregateRootId: "id", payload: new TestEvent("test") },
-                { aggregateRootId: "id", payload: new TestEvent("test") }
+                { aggregateRootId: "id", payload: new TestEvent("test"), occurredAt: new Date() },
+                { aggregateRootId: "id", payload: new TestEvent("test"), occurredAt: new Date() }
             ])
         ).rejects.toThrow(Error);
 
@@ -109,8 +110,8 @@ describe("addPublisher tests", () => {
         const entity = store.addPublisher(new TestEntity());
         await expect(
             entity.publish([
-                { aggregateRootId: "id", payload: new TestEvent("test") },
-                { aggregateRootId: "id", payload: new TestEvent("test") }
+                { aggregateRootId: "id", payload: new TestEvent("test"), occurredAt: new Date() },
+                { aggregateRootId: "id", payload: new TestEvent("test"), occurredAt: new Date() }
             ])
         ).rejects.toThrow(IdGenerationException);
 
@@ -122,8 +123,8 @@ describe("addPublisher tests", () => {
         const entity = store.addPublisher(new NoNameEntity());
         await expect(
             entity.publish([
-                { aggregateRootId: "id", payload: new TestEvent("test") },
-                { aggregateRootId: "id", payload: new TestEvent("test") }
+                { aggregateRootId: "id", payload: new TestEvent("test"), occurredAt: new Date() },
+                { aggregateRootId: "id", payload: new TestEvent("test"), occurredAt: new Date() }
             ])
         ).rejects.toThrow(MissingAggregateRootNameException);
     });

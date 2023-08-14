@@ -60,7 +60,15 @@ describe("save tests", () => {
 
         await expect(
             eventStore.save(
-                [StoredEvent.fromPublishedEvent(ag.id, new ObjectId().toHexString(), "Test", new TestEvent1())],
+                [
+                    StoredEvent.fromPublishedEvent(
+                        ag.id,
+                        new ObjectId().toHexString(),
+                        "Test",
+                        new TestEvent1(),
+                        new Date()
+                    )
+                ],
                 ag
             )
         ).rejects.toThrow(EventConcurrencyException);
@@ -93,8 +101,8 @@ describe("save tests", () => {
         });
 
         const events = [
-            StoredEvent.fromPublishedEvent(new ObjectId().toHexString(), ag.id, "Test", new TestEvent2()),
-            StoredEvent.fromPublishedEvent(new ObjectId().toHexString(), ag.id, "Test", new TestEvent1())
+            StoredEvent.fromPublishedEvent(new ObjectId().toHexString(), ag.id, "Test", new TestEvent2(), new Date()),
+            StoredEvent.fromPublishedEvent(new ObjectId().toHexString(), ag.id, "Test", new TestEvent1(), new Date())
         ];
 
         const saved = await eventStore.save(events, ag);
@@ -129,7 +137,9 @@ describe("save tests", () => {
     test("saves new aggregate with its event", async () => {
         const ag = new StoredAggregateRoot(new ObjectId().toHexString(), 1);
 
-        const events = [StoredEvent.fromPublishedEvent(new ObjectId().toHexString(), ag.id, "Test", new TestEvent2())];
+        const events = [
+            StoredEvent.fromPublishedEvent(new ObjectId().toHexString(), ag.id, "Test", new TestEvent2(), new Date())
+        ];
 
         const saved = await eventStore.save(events, ag);
 

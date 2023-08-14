@@ -82,7 +82,8 @@ export abstract class AggregateRoot {
 
         this._appendedEvents.push({
             aggregateRootId: this.id,
-            payload: event
+            payload: event,
+            occurredAt: new Date(Date.now())
         });
     }
 

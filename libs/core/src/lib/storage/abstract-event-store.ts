@@ -44,9 +44,15 @@ export abstract class AbstractEventStore implements EventStore {
             if (ids.length !== events.length || !hasAllValues(ids)) {
                 throw new IdGenerationException(ids.length, events.length);
             }
-            const storedEvents = events.map((serializable) => {
+            const storedEvents = events.map((arAwareEvent) => {
                 const id = ids.pop()!;
-                return StoredEvent.fromPublishedEvent(id, aggregateRoot.id, aggregateRootName, serializable.payload);
+                return StoredEvent.fromPublishedEvent(
+                    id,
+                    aggregateRoot.id,
+                    aggregateRootName,
+                    arAwareEvent.payload,
+                    arAwareEvent.occurredAt
+                );
             });
 
             const toStore = new StoredAggregateRoot(aggregateRoot.id, aggregateRoot.version);
