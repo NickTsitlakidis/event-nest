@@ -50,6 +50,14 @@ class SubEntity extends AggregateRoot {
     }
 }
 
+beforeAll(() => {
+    jest.useFakeTimers().setSystemTime(new Date("2020-01-01"));
+});
+
+afterAll(() => {
+    jest.useRealTimers();
+});
+
 class SubEntity2 extends AggregateRoot {
     constructor(id: string) {
         super(id, new Logger(SubEntity2.name));
@@ -192,11 +200,13 @@ describe("commit tests", () => {
         expect((result as SubEntity).published).toEqual([
             {
                 aggregateRootId: "entity-id",
-                payload: event1
+                payload: event1,
+                occurredAt: new Date("2020-01-01")
             },
             {
                 aggregateRootId: "entity-id",
-                payload: event2
+                payload: event2,
+                occurredAt: new Date("2020-01-01")
             }
         ]);
     });
@@ -210,11 +220,11 @@ test("publish - throws when publisher is missing", (endTest) => {
 });
 
 test("sortEvents - sorts multiple events by version", () => {
-    const ev1 = StoredEvent.fromPublishedEvent("ev1", "id1", "ag-name", new TestEvent1());
+    const ev1 = StoredEvent.fromPublishedEvent("ev1", "id1", "ag-name", new TestEvent1(), new Date());
     ev1.aggregateRootVersion = 5;
-    const ev2 = StoredEvent.fromPublishedEvent("ev2", "id1", "ag-name", new TestEvent1());
+    const ev2 = StoredEvent.fromPublishedEvent("ev2", "id1", "ag-name", new TestEvent1(), new Date());
     ev2.aggregateRootVersion = 1;
-    const ev3 = StoredEvent.fromPublishedEvent("ev3", "id1", "ag-name", new TestEvent1());
+    const ev3 = StoredEvent.fromPublishedEvent("ev3", "id1", "ag-name", new TestEvent1(), new Date());
     ev3.aggregateRootVersion = 41;
 
     const sorted = new SubEntity("id").sortEvents([ev1, ev2, ev3]);
@@ -222,11 +232,11 @@ test("sortEvents - sorts multiple events by version", () => {
 });
 
 test("resolveVersion - finds greatest version for multiple events", () => {
-    const ev1 = StoredEvent.fromPublishedEvent("ev1", "id1", "ag-name", new TestEvent1());
+    const ev1 = StoredEvent.fromPublishedEvent("ev1", "id1", "ag-name", new TestEvent1(), new Date());
     ev1.aggregateRootVersion = 10;
-    const ev2 = StoredEvent.fromPublishedEvent("ev2", "id1", "ag-name", new TestEvent1());
+    const ev2 = StoredEvent.fromPublishedEvent("ev2", "id1", "ag-name", new TestEvent1(), new Date());
     ev2.aggregateRootVersion = 5;
-    const ev3 = StoredEvent.fromPublishedEvent("ev3", "id1", "ag-name", new TestEvent1());
+    const ev3 = StoredEvent.fromPublishedEvent("ev3", "id1", "ag-name", new TestEvent1(), new Date());
     ev3.aggregateRootVersion = 30;
 
     const entity = new SubEntity("id");

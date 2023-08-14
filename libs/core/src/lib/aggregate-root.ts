@@ -27,6 +27,10 @@ export abstract class AggregateRoot {
         return this._id;
     }
 
+    /**
+     * Defines the current version of the aggregate root. The version is increased
+     * each time an event is persisted.
+     */
     get version(): number {
         return this._version;
     }
@@ -78,7 +82,8 @@ export abstract class AggregateRoot {
 
         this._appendedEvents.push({
             aggregateRootId: this.id,
-            payload: event
+            payload: event,
+            occurredAt: new Date(Date.now())
         });
     }
 
