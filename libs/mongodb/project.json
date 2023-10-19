@@ -12,7 +12,8 @@
                 "tsConfig": "libs/mongodb/tsconfig.lib.json",
                 "packageJson": "libs/mongodb/package.json",
                 "main": "libs/mongodb/src/index.ts",
-                "assets": ["libs/mongodb/*.md"]
+                "assets": ["libs/mongodb/*.md"],
+                "updateBuildableProjectDepsInPackageJson": true
             }
         },
         "publish": {
