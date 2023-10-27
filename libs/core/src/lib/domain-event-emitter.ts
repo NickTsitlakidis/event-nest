@@ -43,7 +43,7 @@ export class DomainEventEmitter implements OnModuleDestroy {
                         }
 
                         this._logger.debug(`Binding ${provider.instance?.constructor.name} to event ${eventId}`);
-                        this._handlers.get(eventId)?.push(provider.instance as OnDomainEvent<any>);
+                        this._handlers.get(eventId)?.push(provider.instance as OnDomainEvent<object>);
                     });
                 }
             });
@@ -65,7 +65,8 @@ export class DomainEventEmitter implements OnModuleDestroy {
             return Promise.resolve();
         }
 
-        const promises = this._handlers.get(eventId)!.map((handler) => handler.onDomainEvent(withAggregate));
+        const handlers = this._handlers.get(eventId) as Array<OnDomainEvent<object>>;
+        const promises = handlers.map((handler) => handler.onDomainEvent(withAggregate));
         return Promise.all(promises);
     }
 

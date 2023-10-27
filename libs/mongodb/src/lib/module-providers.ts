@@ -31,7 +31,7 @@ export class ModuleProviders {
     static createAsync(options: MongoDbModuleAsyncOptions): Provider[] {
         const optionsProvider = {
             provide: "EVENT_NEST_OPTIONS",
-            useFactory: async (...args: any[]) => {
+            useFactory: async (...args: unknown[]) => {
                 const mongoDbModuleOptions = await options.useFactory(...args);
                 return mongoDbModuleOptions;
             },

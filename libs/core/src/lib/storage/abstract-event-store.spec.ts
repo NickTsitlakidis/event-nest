@@ -17,11 +17,11 @@ class TestStore extends AbstractEventStore {
     savedEvents: Array<StoredEvent> = [];
     savedAggregate: StoredAggregateRoot | undefined;
 
-    findByAggregateRootId<T>(): Promise<Array<StoredEvent>> {
+    findByAggregateRootId(): Promise<Array<StoredEvent>> {
         return Promise.resolve([]);
     }
 
-    findAggregateRootVersion(id: string): Promise<number> {
+    findAggregateRootVersion(): Promise<number> {
         return Promise.resolve(0);
     }
 
