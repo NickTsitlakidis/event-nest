@@ -1,6 +1,6 @@
 import { ClassConstructor, instanceToPlain, plainToClass } from "class-transformer";
-import { getEventName } from "../registered-event";
 import { isNil } from "../utils/type-utils";
+import { getEventName } from "../domain-event-registrations";
 
 /**
  * Represents an event that will be persisted according to the storage solution that is used.

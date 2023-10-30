@@ -23,9 +23,9 @@ It would also probably help to make some distinctions about what Event Nest is n
 - [Why?](#why)
 - [Getting Started](#getting-started)
 - [Concepts](#concepts)
-    - [Event](#event)
-    - [Aggregate Root](#aggregate-root)
-    - [Domain Event Subscription](#domain-event-subscription)
+  - [Event](#event)
+  - [Aggregate Root](#aggregate-root)
+  - [Domain Event Subscription](#domain-event-subscription)
 
 
 ## Why?
@@ -79,7 +79,7 @@ Each event serves three purposes :
 
 There is no specific requirement for the structure of an event, but it is recommended to keep it simple and immutable. The [class-transformer](https://github.com/typestack/class-transformer) library is utilized under the hood to save and read the events from the database. Therefore, your event classes should adhere to the rules of class-transformer to be properly serialized and deserialized.
 
-To register a class as an event, use the `@RegisteredEvent` decorator. The decorator accepts a string parameter which is the unique name of the event.
+To register a class as an event, use the `@DomainEvent` decorator. The decorator accepts a string parameter which is the unique name of the event.
 
 
 ### Aggregate Root
@@ -107,24 +107,24 @@ Enough with the theory, let's see an example that includes all of the above.
 #### Example
 
 ```typescript
-import { RegisteredEvent } from "@event-nest/core";
+import { DomainEvent } from "@event-nest/core";
 
-@RegisteredEvent("user-created-event")
+@DomainEvent("user-created-event")
 export class UserCreatedEvent {
     constructor(public name: string, public email: string) {}
 }
 ```
 
 ```typescript
-import { RegisteredEvent } from "@event-nest/core";
+import { DomainEvent } from "@event-nest/core";
 
-@RegisteredEvent("user-updated-event")
+@DomainEvent("user-updated-event")
 export class UserUpdatedEvent {
     constructor(public newName: string) {}
 }
 ```
 
-We start this example by defining two simple events for a user: a creation event and an update event. Each one has its own data, and they are identified by a unique name which is set with the `@RegisteredEvent` decorator.
+We start this example by defining two simple events for a user: a creation event and an update event. Each one has its own data, and they are identified by a unique name which is set with the `@DomainEvent` decorator.
 
 ```typescript
 import { AggregateRoot, AggregateRootName, EventProcessor, StoredEvent } from "@event-nest/core";
@@ -238,10 +238,10 @@ import { AggregateRootAwareEvent, DomainEventSubscription, OnDomainEvent } from 
 @DomainEventSubscription(UserCreatedEvent, UserUpdatedEvent)
 export class UserEventSubscription implements OnDomainEvent<UserCreatedEvent | UserUpdatedEvent> {
 
-    onDomainEvent(event: AggregateRootAwareEvent<UserCreatedEvent | UserUpdatedEvent>): Promise<unknown> {
-        //Here you can create/update your read model based on the event and your custom logic.
-        return Promise.resolve(undefined);
-    }
+  onDomainEvent(event: AggregateRootAwareEvent<UserCreatedEvent | UserUpdatedEvent>): Promise<unknown> {
+    //Here you can create/update your read model based on the event and your custom logic.
+    return Promise.resolve(undefined);
+  }
 
 }
 ```
@@ -254,14 +254,14 @@ and your logic doesn't depend on the order of the events, you can change this se
 
 ```typescript
 @Module({
-    imports: [
-        EventNestMongoDbModule.register({
-            connectionUri: "mongodb://localhost:27017/example",
-            aggregatesCollection: "aggregates-collection",
-            eventsCollection: "events-collection",
-            runParallelSubscriptions:true
-        })
-    ]
+  imports: [
+    EventNestMongoDbModule.register({
+      connectionUri: "mongodb://localhost:27017/example",
+      aggregatesCollection: "aggregates-collection",
+      eventsCollection: "events-collection",
+      runParallelSubscriptions:true
+    })
+  ]
 })
 export class AppModule {}
 ```

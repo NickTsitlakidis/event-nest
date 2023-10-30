@@ -17,12 +17,12 @@ export class MongoEventStore extends AbstractEventStore {
     private readonly _logger: Logger;
 
     constructor(
-        eventBus: DomainEventEmitter,
+        eventEmitter: DomainEventEmitter,
         private readonly _mongoClient: MongoClient,
         private readonly _aggregatesCollectionName: string,
         private readonly _eventsCollectionName: string
     ) {
-        super(eventBus);
+        super(eventEmitter);
         this._logger = new Logger(MongoEventStore.name);
     }
 

@@ -8,11 +8,11 @@ import { createMock } from "@golevelup/ts-jest";
 import { AggregateRootName } from "../aggregate-root-name";
 import { MissingAggregateRootNameException } from "../exceptions/missing-aggregate-root-name-exception";
 
-const eventBusMock = createMock<DomainEventEmitter>();
+const eventEmitter = createMock<DomainEventEmitter>();
 
 class TestStore extends AbstractEventStore {
     constructor() {
-        super(eventBusMock);
+        super(eventEmitter);
     }
     savedEvents: Array<StoredEvent> = [];
     savedAggregate: StoredAggregateRoot | undefined;
@@ -74,14 +74,14 @@ describe("addPublisher tests", () => {
         const entity = store.addPublisher(new TestEntity());
         const toPublish = [{ aggregateRootId: "id", payload: new TestEvent("test"), occurredAt: creationDate }];
         await entity.publish(toPublish);
-        eventBusMock.emitMultiple.mockResolvedValue("whatever");
+        eventEmitter.emitMultiple.mockResolvedValue("whatever");
         expect(store.savedEvents).toEqual([
             StoredEvent.fromPublishedEvent("generated-id", "id", "test-entity", new TestEvent("test"), creationDate)
         ]);
         expect(store.savedAggregate?.id).toBe("id");
         expect(store.savedAggregate?.version).toBe(entity.version);
-        expect(eventBusMock.emitMultiple).toHaveBeenCalledWith(toPublish);
-        expect(eventBusMock.emitMultiple).toHaveBeenCalledTimes(1);
+        expect(eventEmitter.emitMultiple).toHaveBeenCalledWith(toPublish);
+        expect(eventEmitter.emitMultiple).toHaveBeenCalledTimes(1);
     });
 
     test("publisher throws when id generation throws", async () => {

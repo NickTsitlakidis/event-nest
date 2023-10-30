@@ -1,19 +1,19 @@
 import { AggregateRoot } from "./aggregate-root";
 import { EventProcessor } from "./event-processor";
-import { RegisteredEvent } from "./registered-event";
+import { DomainEvent } from "./domain-event";
 import { Logger } from "@nestjs/common";
 import { StoredEvent } from "./storage/stored-event";
 import { UnregisteredEventException } from "./exceptions/unregistered-event-exception";
 import { UnknownEventException } from "./exceptions/unknown-event-exception";
 import { AggregateRootAwareEvent } from "./aggregate-root-aware-event";
 
-@RegisteredEvent("test-event-1")
+@DomainEvent("test-event-1")
 class TestEvent1 {}
 
-@RegisteredEvent("test-event-2")
+@DomainEvent("test-event-2")
 class TestEvent2 {}
 
-@RegisteredEvent("throwing-event")
+@DomainEvent("throwing-event")
 class ThrowingEvent {}
 
 class UnregisteredEvent {}
