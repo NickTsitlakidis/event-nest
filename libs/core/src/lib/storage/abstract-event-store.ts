@@ -16,7 +16,7 @@ import { MissingAggregateRootNameException } from "../exceptions/missing-aggrega
  */
 export abstract class AbstractEventStore implements EventStore {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    protected constructor(private _eventBus: DomainEventEmitter) {}
+    protected constructor(private _eventEmitter: DomainEventEmitter) {}
 
     abstract findByAggregateRootId<T extends AggregateRoot>(
         aggregateRootClass: AggregateRootClass<T>,
@@ -57,7 +57,7 @@ export abstract class AbstractEventStore implements EventStore {
 
             const toStore = new StoredAggregateRoot(aggregateRoot.id, aggregateRoot.version);
             return this.save(storedEvents, toStore).then((savedEvents) => {
-                this._eventBus.emitMultiple(events);
+                this._eventEmitter.emitMultiple(events);
                 return Promise.resolve(savedEvents);
             });
         };

@@ -1,11 +1,11 @@
-import { RegisteredEvent } from "@event-nest/core";
+import { DomainEvent } from "@event-nest/core";
 
-@RegisteredEvent("user-created-event")
+@DomainEvent("user-created-event")
 export class UserCreatedEvent {
     constructor(public name: string, public email: string) {}
 }
 
-@RegisteredEvent("user-updated-event")
+@DomainEvent("user-updated-event")
 export class UserUpdatedEvent {
     constructor(public newName: string) {}
 }

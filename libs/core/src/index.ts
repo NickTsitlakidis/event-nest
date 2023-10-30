@@ -3,7 +3,7 @@ export * from "./lib/exceptions/unknown-event-exception";
 export * from "./lib/exceptions/missing-aggregate-root-name-exception";
 
 export * from "./lib/event-processor";
-export * from "./lib/registered-event";
+export * from "./lib/domain-event";
 export * from "./lib/domain-event-subscription";
 export * from "./lib/aggregate-root";
 export * from "./lib/aggregate-root-name";

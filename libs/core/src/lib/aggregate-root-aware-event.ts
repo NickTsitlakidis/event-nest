@@ -6,7 +6,7 @@ export interface AggregateRootAwareEvent<T> {
 
     /**
      * The payload of the event. The type of this object depends on the events
-     * you register using the {@link RegisteredEvent} decorator.
+     * you register using the {@link DomainEvent} decorator.
      */
     payload: T;
 

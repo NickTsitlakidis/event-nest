@@ -28,7 +28,7 @@ export class EventNestMongoDbModule implements OnApplicationBootstrap {
         };
     }
 
-    onApplicationBootstrap(): any {
+    onApplicationBootstrap() {
         this._eventEmitter.bindSubscriptions(this._modulesContainer);
     }
 }

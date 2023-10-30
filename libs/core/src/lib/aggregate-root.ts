@@ -1,11 +1,11 @@
 import { Logger } from "@nestjs/common";
 import { StoredEvent } from "./storage/stored-event";
-import { getEventClass, isRegistered } from "./registered-event";
 import { getDecoratedPropertyKey } from "./event-processor";
 import { UnknownEventException } from "./exceptions/unknown-event-exception";
 import { isNil } from "./utils/type-utils";
 import { UnregisteredEventException } from "./exceptions/unregistered-event-exception";
 import { AggregateRootAwareEvent } from "./aggregate-root-aware-event";
+import { getEventClass, isRegistered } from "./domain-event-registrations";
 
 type KnownEvent = {
     processorKey: string;

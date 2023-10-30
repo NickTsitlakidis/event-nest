@@ -6,7 +6,7 @@ import {
     AggregateRootName,
     DomainEventEmitter,
     MissingAggregateRootNameException,
-    RegisteredEvent,
+    DomainEvent,
     StoredAggregateRoot,
     StoredEvent
 } from "@event-nest/core";
@@ -30,10 +30,10 @@ afterEach(async () => {
     mongoClient.close(true);
 });
 
-@RegisteredEvent("test-event-1")
+@DomainEvent("test-event-1")
 class TestEvent1 {}
 
-@RegisteredEvent("test-event-2")
+@DomainEvent("test-event-2")
 class TestEvent2 {}
 
 @AggregateRootName("test-aggregate")
