@@ -1,6 +1,6 @@
 {
     "name": "@event-nest/mongodb",
-    "version": "1.0.6",
+    "version": "1.1.0",
     "license": "MIT",
     "description": "Event sourcing module for NestJS using MongoDB. It uses MongoDB collections and transactions to store events and object information",
     "author": "Nick Tsitlakidis",
