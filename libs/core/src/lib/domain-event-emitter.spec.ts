@@ -267,7 +267,7 @@ describe("emitMultiple tests", () => {
             );
         });
 
-        const bus = new DomainEventEmitter(true);
+        const bus = new DomainEventEmitter(false);
         bus.bindSubscriptions(injectorModules);
 
         const creationDate1 = new Date();
@@ -322,7 +322,7 @@ describe("emitMultiple tests", () => {
             );
         });
 
-        const bus = new DomainEventEmitter(true);
+        const bus = new DomainEventEmitter(false);
         bus.bindSubscriptions(injectorModules);
 
         const creationDate1 = new Date();

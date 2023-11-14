@@ -71,7 +71,7 @@ export class DomainEventEmitter implements OnModuleDestroy {
     }
 
     emitMultiple(withAggregate: AggregateRootAwareEvent<object>[]): Promise<unknown> {
-        if (!this._runParallelSubscriptions) {
+        if (this._runParallelSubscriptions) {
             return Promise.all(withAggregate.map((aggregate) => this.emit(aggregate)));
         }
 
