@@ -19,21 +19,21 @@ describe("create - tests", () => {
         expect(eventStore.aggregatesCollectionName).toBe(options.aggregatesCollection);
     });
 
-    test("creates DomainEventEmitter provider with parallel option", async () => {
+    test("creates DomainEventEmitter provider with concurrent option", async () => {
         const options: MongodbModuleOptions = {
             connectionUri: "mongodb://localhost:27017",
             aggregatesCollection: "aggregates",
             eventsCollection: "events",
-            runParallelSubscriptions: true
+            concurrentSubscriptions: true
         };
         const module = await Test.createTestingModule({ providers: ModuleProviders.create(options) }).compile();
         const emitter: DomainEventEmitter = module.get(DomainEventEmitter);
         expect(emitter).toBeDefined();
         expect(emitter).toBeInstanceOf(DomainEventEmitter);
-        expect(emitter.runsParallelSubscriptions).toBe(options.runParallelSubscriptions);
+        expect(emitter.executesConcurrentSubscriptions).toBe(options.concurrentSubscriptions);
     });
 
-    test("creates DomainEventEmitter provider without parallel option", async () => {
+    test("creates DomainEventEmitter provider without concurrent option", async () => {
         const options: MongodbModuleOptions = {
             connectionUri: "mongodb://localhost:27017",
             aggregatesCollection: "aggregates",
@@ -43,7 +43,7 @@ describe("create - tests", () => {
         const emitter: DomainEventEmitter = module.get(DomainEventEmitter);
         expect(emitter).toBeDefined();
         expect(emitter).toBeInstanceOf(DomainEventEmitter);
-        expect(emitter.runsParallelSubscriptions).toBe(false);
+        expect(emitter.executesConcurrentSubscriptions).toBe(false);
     });
 });
 
@@ -84,14 +84,14 @@ describe("createAsync - tests", () => {
         expect(eventStore.aggregatesCollectionName).toBe("async-aggregates");
     });
 
-    test("creates DomainEventEmitter provider with parallel option when options is Promise", async () => {
+    test("creates DomainEventEmitter provider with concurrent option when options is Promise", async () => {
         const options: MongoDbModuleAsyncOptions = {
             useFactory: () => {
                 return Promise.resolve({
                     connectionUri: "mongodb://localhost:27017",
                     aggregatesCollection: "async-aggregates",
                     eventsCollection: "async-events",
-                    runParallelSubscriptions: true
+                    concurrentSubscriptions: true
                 });
             }
         };
@@ -99,17 +99,17 @@ describe("createAsync - tests", () => {
         const emitter: DomainEventEmitter = module.get(DomainEventEmitter);
         expect(emitter).toBeDefined();
         expect(emitter).toBeInstanceOf(DomainEventEmitter);
-        expect(emitter.runsParallelSubscriptions).toBe(true);
+        expect(emitter.executesConcurrentSubscriptions).toBe(true);
     });
 
-    test("creates DomainEventEmitter provider with parallel option when options is object", async () => {
+    test("creates DomainEventEmitter provider with concurrent option when options is object", async () => {
         const options: MongoDbModuleAsyncOptions = {
             useFactory: () => {
                 return {
                     connectionUri: "mongodb://localhost:27017",
                     aggregatesCollection: "async-aggregates",
                     eventsCollection: "async-events",
-                    runParallelSubscriptions: true
+                    concurrentSubscriptions: true
                 };
             }
         };
@@ -117,10 +117,10 @@ describe("createAsync - tests", () => {
         const emitter: DomainEventEmitter = module.get(DomainEventEmitter);
         expect(emitter).toBeDefined();
         expect(emitter).toBeInstanceOf(DomainEventEmitter);
-        expect(emitter.runsParallelSubscriptions).toBe(true);
+        expect(emitter.executesConcurrentSubscriptions).toBe(true);
     });
 
-    test("creates DomainEventEmitter provider without parallel option when options is Promise", async () => {
+    test("creates DomainEventEmitter provider without concurrent option when options is Promise", async () => {
         const options: MongoDbModuleAsyncOptions = {
             useFactory: () => {
                 return Promise.resolve({
@@ -134,10 +134,10 @@ describe("createAsync - tests", () => {
         const emitter: DomainEventEmitter = module.get(DomainEventEmitter);
         expect(emitter).toBeDefined();
         expect(emitter).toBeInstanceOf(DomainEventEmitter);
-        expect(emitter.runsParallelSubscriptions).toBe(false);
+        expect(emitter.executesConcurrentSubscriptions).toBe(false);
     });
 
-    test("creates DomainEventEmitter provider without parallel option when options is object", async () => {
+    test("creates DomainEventEmitter provider without concurrent option when options is object", async () => {
         const options: MongoDbModuleAsyncOptions = {
             useFactory: () => {
                 return {
@@ -151,6 +151,6 @@ describe("createAsync - tests", () => {
         const emitter: DomainEventEmitter = module.get(DomainEventEmitter);
         expect(emitter).toBeDefined();
         expect(emitter).toBeInstanceOf(DomainEventEmitter);
-        expect(emitter.runsParallelSubscriptions).toBe(false);
+        expect(emitter.executesConcurrentSubscriptions).toBe(false);
     });
 });

@@ -10,7 +10,7 @@ export class ModuleProviders {
             {
                 provide: DomainEventEmitter,
                 useFactory: () => {
-                    return new DomainEventEmitter(options.runParallelSubscriptions);
+                    return new DomainEventEmitter(options.concurrentSubscriptions);
                 }
             },
             {
@@ -41,7 +41,7 @@ export class ModuleProviders {
         const eventBusProvider = {
             provide: DomainEventEmitter,
             useFactory: (options: MongodbModuleOptions) => {
-                return new DomainEventEmitter(options.runParallelSubscriptions);
+                return new DomainEventEmitter(options.concurrentSubscriptions);
             },
             inject: ["EVENT_NEST_OPTIONS"]
         };
