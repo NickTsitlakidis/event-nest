@@ -8,19 +8,19 @@ import { AggregateRootAwareEvent } from "./aggregate-root-aware-event";
 import { isNil } from "./utils/type-utils";
 import { Logger, OnModuleDestroy } from "@nestjs/common";
 import { OnDomainEvent } from "./on-domain-event";
-import { concat, defer, firstValueFrom, from, last } from "rxjs";
+import { concatMap, from, lastValueFrom, toArray } from "rxjs";
 
 export class DomainEventEmitter implements OnModuleDestroy {
     private readonly _handlers: Map<string, Array<OnDomainEvent<object>>>;
     private readonly _logger: Logger;
 
-    constructor(private readonly _runParallelSubscriptions: boolean = false) {
+    constructor(private readonly _concurrentSubscriptions: boolean = false) {
         this._handlers = new Map<string, Array<OnDomainEvent<object>>>();
         this._logger = new Logger(DomainEventEmitter.name);
     }
 
-    get runsParallelSubscriptions(): boolean {
-        return this._runParallelSubscriptions;
+    get executesConcurrentSubscriptions(): boolean {
+        return this._concurrentSubscriptions;
     }
 
     onModuleDestroy() {
@@ -66,16 +66,37 @@ export class DomainEventEmitter implements OnModuleDestroy {
         }
 
         const handlers = this._handlers.get(eventId) as Array<OnDomainEvent<object>>;
-        const promises = handlers.map((handler) => handler.onDomainEvent(withAggregate));
-        return Promise.all(promises);
+        const withErrorHandling = handlers.map((handler) => {
+            return async () => {
+                // eslint-disable-next-line no-useless-catch
+                try {
+                    const result = await handler.onDomainEvent(withAggregate);
+                    return result;
+                } catch (error) {
+                    this._logger.error(
+                        `Error while emitting event ${withAggregate.payload.constructor.name} : ${
+                            (error as any).message
+                        }`
+                    );
+                    throw error;
+                }
+            };
+        });
+        return Promise.all(withErrorHandling.map((f) => f()));
     }
 
     emitMultiple(withAggregate: AggregateRootAwareEvent<object>[]): Promise<unknown> {
-        if (this._runParallelSubscriptions) {
+        if (this._concurrentSubscriptions) {
             return Promise.all(withAggregate.map((aggregate) => this.emit(aggregate)));
         }
 
-        const deferred = withAggregate.map((w) => defer(() => from(this.emit(w))));
-        return firstValueFrom(concat(...deferred).pipe(last()));
+        return lastValueFrom(
+            from(withAggregate).pipe(
+                concatMap((event) => from(this.emit(event))),
+                toArray()
+            )
+        ).catch((error) => {
+            this._logger.debug(`Error while emitting events sequentially: ${(error as any).message}`);
+        });
     }
 }

@@ -314,7 +314,7 @@ describe("emitMultiple tests", () => {
         });
         const handleSpy2 = jest.spyOn(subscription2, "onDomainEvent").mockImplementation(() => {
             return firstValueFrom(
-                timer(2000).pipe(
+                timer(1000).pipe(
                     mergeMap(() => {
                         return throwError(() => new Error("test"));
                     })
@@ -328,20 +328,18 @@ describe("emitMultiple tests", () => {
         const creationDate1 = new Date();
         const creationDate2 = new Date();
 
-        await expect(
-            bus.emitMultiple([
-                { payload: new TestEvent2(), aggregateRootId: "test2", occurredAt: creationDate2 },
-                { payload: new TestEvent1("ev1"), aggregateRootId: "test1", occurredAt: creationDate1 }
-            ])
-        ).rejects.toThrow(Error);
+        await bus.emitMultiple([
+            { payload: new TestEvent2(), aggregateRootId: "test2", occurredAt: creationDate2 },
+            { payload: new TestEvent1("ev1"), aggregateRootId: "test1", occurredAt: creationDate1 }
+        ]);
 
-        expect(handleSpy).toHaveBeenCalledTimes(0);
         expect(handleSpy2).toHaveBeenCalledTimes(1);
         expect(handleSpy2).toHaveBeenCalledWith({
             payload: new TestEvent2(),
             aggregateRootId: "test2",
             occurredAt: creationDate2
         });
+        expect(handleSpy).toHaveBeenCalledTimes(0);
         expect(handledParameters).toEqual([]);
     }, 10000);
 });

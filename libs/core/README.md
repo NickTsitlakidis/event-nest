@@ -246,7 +246,7 @@ export class UserEventSubscription implements OnDomainEvent<UserCreatedEvent | U
 }
 ```
 
-If there are multiple subscription services for the same event, they will be executed in parallel.
+If there are multiple subscription services for the same event, they will be executed concurrently.
 However, if there are multiple events that the service is subscribed to, they will be executed sequentially based on the order they were emitted.
 
 This is the default behaviour because there are cases where the logic may depend on the completion of the previous event. If you want better performance
@@ -259,7 +259,7 @@ and your logic doesn't depend on the order of the events, you can change this se
       connectionUri: "mongodb://localhost:27017/example",
       aggregatesCollection: "aggregates-collection",
       eventsCollection: "events-collection",
-      runParallelSubscriptions:true
+      concurrentSubscriptions:true
     })
   ]
 })

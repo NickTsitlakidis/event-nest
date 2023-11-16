@@ -7,5 +7,5 @@ export interface CoreModuleOptions {
      * you can set this to true.
      *
      */
-    runParallelSubscriptions?: boolean;
+    concurrentSubscriptions?: boolean;
 }
