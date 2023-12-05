@@ -1,4 +1,4 @@
-export interface AggregateRootAwareEvent<T> {
+export interface AggregateRootEvent<T> {
     /**
      * The unique id of the aggregate root that published the event
      */

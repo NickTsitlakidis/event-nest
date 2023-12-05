@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import { AggregateRoot } from "./aggregate-root";
 import { ClassConstructor } from "class-transformer";
-import { EVENT_PROCESSOR_KEY } from "./metadata-keys";
+import { EVENT_PROCESSOR_KEY } from "../metadata-keys";
 
 export function getDecoratedPropertyKey(
     entity: AggregateRoot,

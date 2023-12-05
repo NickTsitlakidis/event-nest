@@ -1,4 +1,4 @@
-import { AGGREGATE_ROOT_NAME_KEY } from "./metadata-keys";
+import { AGGREGATE_ROOT_NAME_KEY } from "../metadata-keys";
 
 /**
  * A decorator to mark an aggregate root class with a unique name. The name will

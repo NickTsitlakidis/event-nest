@@ -1,6 +1,6 @@
 import { StoredEvent } from "./stored-event";
 import { StoredAggregateRoot } from "./stored-aggregate-root";
-import { AggregateRoot } from "../aggregate-root";
+import { AggregateRoot } from "../aggregate-root/aggregate-root";
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 export type AggregateRootClass<T> = Function & { prototype: T };
