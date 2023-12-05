@@ -4,11 +4,11 @@ import {
     getEventsFromDomainEventSubscription,
     isDomainEventSubscription
 } from "./domain-event-subscription";
-import { AggregateRootAwareEvent } from "./aggregate-root-aware-event";
 import { isNil } from "./utils/type-utils";
 import { Logger, OnModuleDestroy } from "@nestjs/common";
 import { OnDomainEvent } from "./on-domain-event";
 import { concatMap, from, lastValueFrom, toArray } from "rxjs";
+import { PublishedDomainEvent } from "./published-domain-event";
 
 export class DomainEventEmitter implements OnModuleDestroy {
     private readonly _handlers: Map<string, Array<OnDomainEvent<object>>>;
@@ -50,7 +50,7 @@ export class DomainEventEmitter implements OnModuleDestroy {
         });
     }
 
-    emit(withAggregate: AggregateRootAwareEvent<object>): Promise<unknown> {
+    emit(withAggregate: PublishedDomainEvent<object>): Promise<unknown> {
         if (this._handlers.size === 0) {
             this._logger.warn(
                 `Event ${withAggregate.payload.constructor.name} can't be passed to subscriptions. Make sure you use the @DomainEventSubscription decorator`
@@ -85,7 +85,7 @@ export class DomainEventEmitter implements OnModuleDestroy {
         return Promise.all(withErrorHandling.map((f) => f()));
     }
 
-    emitMultiple(withAggregate: AggregateRootAwareEvent<object>[]): Promise<unknown> {
+    emitMultiple(withAggregate: PublishedDomainEvent<object>[]): Promise<unknown> {
         if (this._concurrentSubscriptions) {
             return Promise.all(withAggregate.map((aggregate) => this.emit(aggregate)));
         }

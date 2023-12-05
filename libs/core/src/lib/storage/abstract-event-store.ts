@@ -1,13 +1,15 @@
 import { AggregateRootClass, EventStore } from "./event-store";
 import { StoredEvent } from "./stored-event";
-import { AggregateRoot } from "../aggregate-root";
+import { AggregateRoot } from "../aggregate-root/aggregate-root";
 import { StoredAggregateRoot } from "./stored-aggregate-root";
 import { IdGenerationException } from "../exceptions/id-generation-exception";
-import { AggregateRootAwareEvent } from "../aggregate-root-aware-event";
+import { AggregateRootEvent } from "../aggregate-root/aggregate-root-event";
 import { hasAllValues, isNil } from "../utils/type-utils";
 import { DomainEventEmitter } from "../domain-event-emitter";
-import { getAggregateRootName } from "../aggregate-root-name";
+import { getAggregateRootName } from "../aggregate-root/aggregate-root-name";
 import { MissingAggregateRootNameException } from "../exceptions/missing-aggregate-root-name-exception";
+import { PublishedDomainEvent } from "../published-domain-event";
+import { UnknownEventVersionException } from "../exceptions/unknown-event-version-exception";
 
 /**
  * An abstract implementation of the {@link EventStore} interface.
@@ -30,7 +32,7 @@ export abstract class AbstractEventStore implements EventStore {
     abstract generateEntityId(): Promise<string>;
 
     addPublisher<T extends AggregateRoot>(aggregateRoot: T): T {
-        aggregateRoot.publish = async (events: Array<AggregateRootAwareEvent<object>>) => {
+        aggregateRoot.publish = async (events: Array<AggregateRootEvent<object>>) => {
             const aggregateRootName = getAggregateRootName(aggregateRoot.constructor);
             if (isNil(aggregateRootName)) {
                 throw new MissingAggregateRootNameException(aggregateRoot.constructor.name);
@@ -44,22 +46,40 @@ export abstract class AbstractEventStore implements EventStore {
             if (ids.length !== events.length || !hasAllValues(ids)) {
                 throw new IdGenerationException(ids.length, events.length);
             }
-            const storedEvents = events.map((arAwareEvent) => {
-                const id = ids.pop()!;
-                return StoredEvent.fromPublishedEvent(
-                    id,
-                    aggregateRoot.id,
-                    aggregateRootName,
-                    arAwareEvent.payload,
-                    arAwareEvent.occurredAt
+            const published: Array<PublishedDomainEvent<object>> = [];
+            const storedEvents: Array<StoredEvent> = [];
+
+            events.forEach((event) => {
+                const id = ids.pop() as string;
+                storedEvents.push(
+                    StoredEvent.fromPublishedEvent(
+                        id,
+                        aggregateRoot.id,
+                        aggregateRootName,
+                        event.payload,
+                        event.occurredAt
+                    )
                 );
+                published.push({
+                    ...event,
+                    eventId: id,
+                    version: aggregateRoot.version
+                });
             });
 
             const toStore = new StoredAggregateRoot(aggregateRoot.id, aggregateRoot.version);
-            return this.save(storedEvents, toStore).then((savedEvents) => {
-                this._eventEmitter.emitMultiple(events);
-                return Promise.resolve(savedEvents);
+            const saved = await this.save(storedEvents, toStore);
+            published.forEach((event) => {
+                const found = saved.find((s) => s.id === event.eventId);
+                if (isNil(found)) {
+                    throw new UnknownEventVersionException(event.eventId, event.aggregateRootId);
+                }
+
+                event.version = found.aggregateRootVersion;
             });
+
+            this._eventEmitter.emitMultiple(published);
+            return saved;
         };
         return aggregateRoot;
     }

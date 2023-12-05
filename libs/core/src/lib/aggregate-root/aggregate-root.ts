@@ -1,11 +1,11 @@
 import { Logger } from "@nestjs/common";
-import { StoredEvent } from "./storage/stored-event";
+import { StoredEvent } from "../storage/stored-event";
 import { getDecoratedPropertyKey } from "./event-processor";
-import { UnknownEventException } from "./exceptions/unknown-event-exception";
-import { isNil } from "./utils/type-utils";
-import { UnregisteredEventException } from "./exceptions/unregistered-event-exception";
-import { AggregateRootAwareEvent } from "./aggregate-root-aware-event";
-import { getEventClass, isRegistered } from "./domain-event-registrations";
+import { UnknownEventException } from "../exceptions/unknown-event-exception";
+import { isNil } from "../utils/type-utils";
+import { UnregisteredEventException } from "../exceptions/unregistered-event-exception";
+import { AggregateRootEvent } from "./aggregate-root-event";
+import { getEventClass, isRegistered } from "../domain-event-registrations";
 
 type KnownEvent = {
     processorKey: string;
@@ -13,7 +13,7 @@ type KnownEvent = {
 };
 
 export abstract class AggregateRoot {
-    private _appendedEvents: Array<AggregateRootAwareEvent<object>>;
+    private _appendedEvents: Array<AggregateRootEvent<object>>;
     private _version: number;
     private readonly _logger: Logger;
 
@@ -48,7 +48,7 @@ export abstract class AggregateRoot {
      * @param events The events to be published
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    publish(events: Array<AggregateRootAwareEvent<object>>): Promise<Array<StoredEvent>> {
+    publish(events: Array<AggregateRootEvent<object>>): Promise<Array<StoredEvent>> {
         this.logger.error("There is no event publisher assigned");
         return Promise.reject("There is no event publisher assigned");
     }
@@ -90,7 +90,7 @@ export abstract class AggregateRoot {
     /**
      * Returns a clone array of all the currently appended events of the entity.
      */
-    get appendedEvents(): Array<AggregateRootAwareEvent<object>> {
+    get appendedEvents(): Array<AggregateRootEvent<object>> {
         return this._appendedEvents.slice(0);
     }
 

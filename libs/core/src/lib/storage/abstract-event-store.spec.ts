@@ -1,12 +1,14 @@
 import { AbstractEventStore } from "./abstract-event-store";
 import { StoredEvent } from "./stored-event";
-import { AggregateRoot } from "../aggregate-root";
+import { AggregateRoot } from "../aggregate-root/aggregate-root";
 import { StoredAggregateRoot } from "./stored-aggregate-root";
 import { IdGenerationException } from "../exceptions/id-generation-exception";
 import { DomainEventEmitter } from "../domain-event-emitter";
 import { createMock } from "@golevelup/ts-jest";
-import { AggregateRootName } from "../aggregate-root-name";
+import { AggregateRootName } from "../aggregate-root/aggregate-root-name";
 import { MissingAggregateRootNameException } from "../exceptions/missing-aggregate-root-name-exception";
+import { PublishedDomainEvent } from "../published-domain-event";
+import { UnknownEventVersionException } from "../exceptions/unknown-event-version-exception";
 
 const eventEmitter = createMock<DomainEventEmitter>();
 
@@ -32,7 +34,14 @@ class TestStore extends AbstractEventStore {
     save(events: Array<StoredEvent>, aggregate: StoredAggregateRoot): Promise<Array<StoredEvent>> {
         this.savedEvents = events;
         this.savedAggregate = aggregate;
-        return Promise.resolve([]);
+        return Promise.resolve(
+            events.map((event) => {
+                return createMock<StoredEvent>({
+                    id: event.id,
+                    aggregateRootVersion: aggregate.version + 100
+                });
+            })
+        );
     }
 }
 
@@ -73,14 +82,23 @@ describe("addPublisher tests", () => {
         const store = new TestStore();
         const entity = store.addPublisher(new TestEntity());
         const toPublish = [{ aggregateRootId: "id", payload: new TestEvent("test"), occurredAt: creationDate }];
-        await entity.publish(toPublish);
+        const expectedEmissions: Array<PublishedDomainEvent<object>> = [
+            {
+                aggregateRootId: "id",
+                eventId: "generated-id",
+                occurredAt: creationDate,
+                payload: new TestEvent("test"),
+                version: 100
+            }
+        ];
         eventEmitter.emitMultiple.mockResolvedValue("whatever");
+        await entity.publish(toPublish);
         expect(store.savedEvents).toEqual([
             StoredEvent.fromPublishedEvent("generated-id", "id", "test-entity", new TestEvent("test"), creationDate)
         ]);
         expect(store.savedAggregate?.id).toBe("id");
         expect(store.savedAggregate?.version).toBe(entity.version);
-        expect(eventEmitter.emitMultiple).toHaveBeenCalledWith(toPublish);
+        expect(eventEmitter.emitMultiple).toHaveBeenCalledWith(expectedEmissions);
         expect(eventEmitter.emitMultiple).toHaveBeenCalledTimes(1);
     });
 
@@ -127,5 +145,17 @@ describe("addPublisher tests", () => {
                 { aggregateRootId: "id", payload: new TestEvent("test"), occurredAt: new Date() }
             ])
         ).rejects.toThrow(MissingAggregateRootNameException);
+    });
+
+    test("publisher throws when event version is not found", async () => {
+        const store = new TestStore();
+        jest.spyOn(store, "save").mockResolvedValueOnce([]);
+        const entity = store.addPublisher(new TestEntity());
+        await expect(
+            entity.publish([
+                { aggregateRootId: "id", payload: new TestEvent("test"), occurredAt: new Date() },
+                { aggregateRootId: "id", payload: new TestEvent("test"), occurredAt: new Date() }
+            ])
+        ).rejects.toThrow(UnknownEventVersionException);
     });
 });
