@@ -231,18 +231,19 @@ To achieve this, you can implement a service decorated with the `@DomainEventSub
 To ensure that the method is implemented correctly, you can use the `OnDomainEvent` interface.
 
 #### Example
+
 ```typescript
-import { AggregateRootAwareEvent, DomainEventSubscription, OnDomainEvent } from "@event-nest/core";
+import { PublishedDomainEvent, DomainEventSubscription, OnDomainEvent } from "@event-nest/core";
 
 @Injectable()
 @DomainEventSubscription(UserCreatedEvent, UserUpdatedEvent)
 export class UserEventSubscription implements OnDomainEvent<UserCreatedEvent | UserUpdatedEvent> {
-    
-    onDomainEvent(event: AggregateRootAwareEvent<UserCreatedEvent | UserUpdatedEvent>): Promise<unknown> {
-        //Here you can create/update your read model based on the event and your custom logic.
-        return Promise.resolve(undefined);
-    }
-    
+
+  onDomainEvent(event: PublishedDomainEvent<UserCreatedEvent | UserUpdatedEvent>): Promise<unknown> {
+    //Here you can create/update your read model based on the event and your custom logic.
+    return Promise.resolve(undefined);
+  }
+
 }
 ```
 

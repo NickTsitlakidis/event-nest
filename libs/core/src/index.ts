@@ -1,6 +1,5 @@
 export * from "./lib/aggregate-root/aggregate-root";
 export * from "./lib/aggregate-root/aggregate-root-name";
-export * from "./lib/aggregate-root/aggregate-root-event";
 export * from "./lib/aggregate-root/event-processor";
 
 export * from "./lib/exceptions/event-name-conflict-exception";
@@ -8,6 +7,7 @@ export * from "./lib/exceptions/unknown-event-exception";
 export * from "./lib/exceptions/missing-aggregate-root-name-exception";
 
 export * from "./lib/domain-event";
+export * from "./lib/published-domain-event";
 export * from "./lib/domain-event-subscription";
 
 export * from "./lib/on-domain-event";
