@@ -36,10 +36,15 @@ class TestStore extends AbstractEventStore {
         this.savedAggregate = aggregate;
         return Promise.resolve(
             events.map((event) => {
-                return createMock<StoredEvent>({
-                    id: event.id,
-                    aggregateRootVersion: aggregate.version + 100
-                });
+                return StoredEvent.fromStorage(
+                    event.id,
+                    event.aggregateRootId,
+                    event.aggregateRootName,
+                    event.createdAt,
+                    aggregate.version + 100,
+                    "name",
+                    event.payload
+                );
             })
         );
     }
@@ -93,11 +98,12 @@ describe("addPublisher tests", () => {
         ];
         eventEmitter.emitMultiple.mockResolvedValue("whatever");
         await entity.publish(toPublish);
+        expect(entity.version).toBe(100);
         expect(store.savedEvents).toEqual([
             StoredEvent.fromPublishedEvent("generated-id", "id", "test-entity", new TestEvent("test"), creationDate)
         ]);
         expect(store.savedAggregate?.id).toBe("id");
-        expect(store.savedAggregate?.version).toBe(entity.version);
+        expect(entity.version).toEqual(100);
         expect(eventEmitter.emitMultiple).toHaveBeenCalledWith(expectedEmissions);
         expect(eventEmitter.emitMultiple).toHaveBeenCalledTimes(1);
     });

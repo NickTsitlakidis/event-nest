@@ -122,7 +122,7 @@ export abstract class AggregateRoot {
         }
     }
 
-    protected resolveVersion(events: Array<StoredEvent>) {
+    resolveVersion(events: Array<StoredEvent>) {
         const sorted: Array<StoredEvent> = events.sort((e1, e2) => e1.aggregateRootVersion - e2.aggregateRootVersion);
         this._version = sorted.slice(-1)[0].aggregateRootVersion;
     }
