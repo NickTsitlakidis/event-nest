@@ -79,6 +79,7 @@ export abstract class AbstractEventStore implements EventStore {
             });
 
             this._eventEmitter.emitMultiple(published);
+            aggregateRoot.resolveVersion(saved);
             return saved;
         };
         return aggregateRoot;
