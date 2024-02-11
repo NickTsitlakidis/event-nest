@@ -14,12 +14,12 @@ export class DomainEventEmitter implements OnModuleDestroy {
     private readonly _handlers: Map<string, Array<OnDomainEvent<object>>>;
     private readonly _logger: Logger;
 
-    constructor(private readonly _concurrentSubscriptions: boolean = false) {
+    constructor(private readonly _concurrentSubscriptions = false) {
         this._handlers = new Map<string, Array<OnDomainEvent<object>>>();
         this._logger = new Logger(DomainEventEmitter.name);
     }
 
-    get executesConcurrentSubscriptions(): boolean {
+    get concurrentSubscriptions(): boolean {
         return this._concurrentSubscriptions;
     }
 

@@ -22,10 +22,7 @@
         },
         "lint": {
             "executor": "@nx/eslint:lint",
-            "outputs": ["{options.outputFile}"],
-            "options": {
-                "lintFilePatterns": ["libs/mongodb/**/*.ts"]
-            }
+            "outputs": ["{options.outputFile}"]
         },
         "test": {
             "executor": "@nx/jest:jest",
@@ -34,14 +31,7 @@
                 "jestConfig": "libs/mongodb/jest.config.ts",
                 "coverageReporters": ["lcov", "html"],
                 "collectCoverageFrom": ["src/**/*.ts", "!src/**/index.ts"],
-                "codeCoverage": true,
-                "passWithNoTests": true
-            },
-            "configurations": {
-                "ci": {
-                    "ci": true,
-                    "codeCoverage": true
-                }
+                "codeCoverage": true
             }
         }
     },

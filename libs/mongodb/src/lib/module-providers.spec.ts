@@ -30,7 +30,7 @@ describe("create - tests", () => {
         const emitter: DomainEventEmitter = module.get(DomainEventEmitter);
         expect(emitter).toBeDefined();
         expect(emitter).toBeInstanceOf(DomainEventEmitter);
-        expect(emitter.executesConcurrentSubscriptions).toBe(options.concurrentSubscriptions);
+        expect(emitter.concurrentSubscriptions).toBe(options.concurrentSubscriptions);
     });
 
     test("creates DomainEventEmitter provider without concurrent option", async () => {
@@ -43,7 +43,7 @@ describe("create - tests", () => {
         const emitter: DomainEventEmitter = module.get(DomainEventEmitter);
         expect(emitter).toBeDefined();
         expect(emitter).toBeInstanceOf(DomainEventEmitter);
-        expect(emitter.executesConcurrentSubscriptions).toBe(false);
+        expect(emitter.concurrentSubscriptions).toBe(false);
     });
 });
 
@@ -99,7 +99,7 @@ describe("createAsync - tests", () => {
         const emitter: DomainEventEmitter = module.get(DomainEventEmitter);
         expect(emitter).toBeDefined();
         expect(emitter).toBeInstanceOf(DomainEventEmitter);
-        expect(emitter.executesConcurrentSubscriptions).toBe(true);
+        expect(emitter.concurrentSubscriptions).toBe(true);
     });
 
     test("creates DomainEventEmitter provider with concurrent option when options is object", async () => {
@@ -117,7 +117,7 @@ describe("createAsync - tests", () => {
         const emitter: DomainEventEmitter = module.get(DomainEventEmitter);
         expect(emitter).toBeDefined();
         expect(emitter).toBeInstanceOf(DomainEventEmitter);
-        expect(emitter.executesConcurrentSubscriptions).toBe(true);
+        expect(emitter.concurrentSubscriptions).toBe(true);
     });
 
     test("creates DomainEventEmitter provider without concurrent option when options is Promise", async () => {
@@ -134,7 +134,7 @@ describe("createAsync - tests", () => {
         const emitter: DomainEventEmitter = module.get(DomainEventEmitter);
         expect(emitter).toBeDefined();
         expect(emitter).toBeInstanceOf(DomainEventEmitter);
-        expect(emitter.executesConcurrentSubscriptions).toBe(false);
+        expect(emitter.concurrentSubscriptions).toBe(false);
     });
 
     test("creates DomainEventEmitter provider without concurrent option when options is object", async () => {
@@ -151,6 +151,6 @@ describe("createAsync - tests", () => {
         const emitter: DomainEventEmitter = module.get(DomainEventEmitter);
         expect(emitter).toBeDefined();
         expect(emitter).toBeInstanceOf(DomainEventEmitter);
-        expect(emitter.executesConcurrentSubscriptions).toBe(false);
+        expect(emitter.concurrentSubscriptions).toBe(false);
     });
 });
