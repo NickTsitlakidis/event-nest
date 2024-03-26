@@ -70,8 +70,7 @@ export class DomainEventEmitter implements OnModuleDestroy {
             return async () => {
                 // eslint-disable-next-line no-useless-catch
                 try {
-                    const result = await handler.onDomainEvent(withAggregate);
-                    return result;
+                    return await handler.onDomainEvent(withAggregate);
                 } catch (error) {
                     this._logger.error(
                         `Error while emitting event ${withAggregate.payload.constructor.name} : ${

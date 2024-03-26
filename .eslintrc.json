@@ -23,7 +23,7 @@
         },
         {
             "files": ["*.ts", "*.tsx"],
-            "extends": ["plugin:@nx/typescript"],
+            "extends": ["plugin:@nx/typescript", "plugin:sonarjs/recommended"],
             "rules": {}
         },
         {
@@ -37,6 +37,7 @@
                 "jest": true
             },
             "rules": {
+                "sonarjs/no-duplicate-string": "off",
                 "@typescript-eslint/no-empty-function": "off",
                 "@typescript-eslint/no-explicit-any": "off"
             }

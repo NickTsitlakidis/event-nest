@@ -32,8 +32,7 @@ export class ModuleProviders {
         const optionsProvider = {
             provide: "EVENT_NEST_OPTIONS",
             useFactory: async (...args: unknown[]) => {
-                const mongoDbModuleOptions = await options.useFactory(...args);
-                return mongoDbModuleOptions;
+                return await options.useFactory(...args);
             },
             inject: options.inject
         };

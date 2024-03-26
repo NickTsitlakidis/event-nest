@@ -85,6 +85,9 @@ devDependencies:
   eslint-config-prettier:
     specifier: 9.1.0
     version: 9.1.0(eslint@8.48.0)
+  eslint-plugin-sonarjs:
+    specifier: ^0.24.0
+    version: 0.24.0(eslint@8.48.0)
   husky:
     specifier: ^8.0.3
     version: 8.0.3
@@ -4798,6 +4801,15 @@ packages:
     hasBin: true
     peerDependencies:
       eslint: '>=7.0.0'
+    dependencies:
+      eslint: 8.48.0
+    dev: true
+
+  /eslint-plugin-sonarjs@0.24.0(eslint@8.48.0):
+    resolution: {integrity: sha512-87zp50mbbNrSTuoEOebdRQBPa0mdejA5UEjyuScyIw8hEpEjfWP89Qhkq5xVZfVyVSRQKZc9alVm7yRKQvvUmg==}
+    engines: {node: '>=16'}
+    peerDependencies:
+      eslint: ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0
     dependencies:
       eslint: 8.48.0
     dev: true
