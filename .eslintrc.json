@@ -1,9 +1,12 @@
 {
+    "root": true,
     "ignorePatterns": ["**/*"],
+    "plugins": ["@nx", "sonarjs", "prettier"],
     "overrides": [
         {
             "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
             "rules": {
+                "prettier/prettier": "error",
                 "@nx/enforce-module-boundaries": [
                     "error",
                     {
@@ -21,11 +24,12 @@
         },
         {
             "files": ["*.ts", "*.tsx"],
-            "extends": ["plugin:sonarjs/recommended"],
+            "extends": ["plugin:@nx/typescript", "plugin:sonarjs/recommended"],
             "rules": {}
         },
         {
             "files": ["*.js", "*.jsx"],
+            "extends": ["plugin:@nx/javascript"],
             "rules": {}
         },
         {
@@ -39,6 +43,5 @@
                 "@typescript-eslint/no-explicit-any": "off"
             }
         }
-    ],
-    "extends": ["./.eslintrc.base.json"]
+    ]
 }
