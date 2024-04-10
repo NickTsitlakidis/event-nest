@@ -1,5 +1,7 @@
 {
+    "root": true,
     "ignorePatterns": ["**/*"],
+    "plugins": ["@nx"],
     "overrides": [
         {
             "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
@@ -21,11 +23,12 @@
         },
         {
             "files": ["*.ts", "*.tsx"],
-            "extends": ["plugin:sonarjs/recommended"],
+            "extends": ["plugin:@nx/typescript"],
             "rules": {}
         },
         {
             "files": ["*.js", "*.jsx"],
+            "extends": ["plugin:@nx/javascript"],
             "rules": {}
         },
         {
@@ -33,12 +36,7 @@
             "env": {
                 "jest": true
             },
-            "rules": {
-                "sonarjs/no-duplicate-string": "off",
-                "@typescript-eslint/no-empty-function": "off",
-                "@typescript-eslint/no-explicit-any": "off"
-            }
+            "rules": {}
         }
-    ],
-    "extends": ["./.eslintrc.base.json"]
+    ]
 }

@@ -1,5 +1,5 @@
 {
-    "extends": ["../../.eslintrc.json"],
+    "extends": ["../../.eslintrc.json", "../../.eslintrc.base.json"],
     "ignorePatterns": ["!**/*"],
     "overrides": [
         {
@@ -13,6 +13,17 @@
         {
             "files": ["*.js", "*.jsx"],
             "rules": {}
+        },
+        {
+            "files": ["*.spec.ts", "*.spec.tsx", "*.spec.js", "*.spec.jsx"],
+            "env": {
+                "jest": true
+            },
+            "rules": {
+                "sonarjs/no-duplicate-string": "off",
+                "@typescript-eslint/no-empty-function": "off",
+                "@typescript-eslint/no-explicit-any": "off"
+            }
         }
     ]
 }

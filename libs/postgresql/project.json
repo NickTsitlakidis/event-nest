@@ -1,0 +1,31 @@
+{
+    "name": "postgresql",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "libs/postgresql/src",
+    "projectType": "library",
+    "targets": {
+        "build": {
+            "executor": "@nx/js:tsc",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "outputPath": "dist/libs/postgresql",
+                "tsConfig": "libs/postgresql/tsconfig.lib.json",
+                "packageJson": "libs/postgresql/package.json",
+                "main": "libs/postgresql/src/index.ts",
+                "assets": ["libs/postgresql/*.md"]
+            }
+        },
+        "publish": {
+            "command": "node tools/scripts/publish.mjs postgresql {args.ver} {args.tag}",
+            "dependsOn": ["build"]
+        },
+        "test": {
+            "executor": "@nx/jest:jest",
+            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+            "options": {
+                "jestConfig": "libs/postgresql/jest.config.ts"
+            }
+        }
+    },
+    "tags": ["publishable"]
+}

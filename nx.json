@@ -30,6 +30,11 @@
                     "codeCoverage": true
                 }
             }
+        },
+        "@nx/js:tsc": {
+            "cache": true,
+            "dependsOn": ["^build"],
+            "inputs": ["production", "^production"]
         }
     },
     "namedInputs": {
@@ -43,5 +48,13 @@
             "!{projectRoot}/src/test-setup.[jt]s"
         ],
         "sharedGlobals": []
-    }
+    },
+    "plugins": [
+        {
+            "plugin": "@nx/eslint/plugin",
+            "options": {
+                "targetName": "lint"
+            }
+        }
+    ]
 }
