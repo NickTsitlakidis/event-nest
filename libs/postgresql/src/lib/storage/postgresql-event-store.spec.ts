@@ -4,14 +4,17 @@ import {
     AggregateRootName,
     DomainEvent,
     DomainEventEmitter,
-    MissingAggregateRootNameException
+    EventConcurrencyException,
+    MissingAggregateRootNameException,
+    StoredAggregateRoot,
+    StoredEvent
 } from "@event-nest/core";
 import { v4 as uuidv4, validate } from "uuid";
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from "@testcontainers/postgresql";
 import { knex } from "knex";
 import { createMock } from "@golevelup/ts-jest";
 import { EventRow } from "./event-row";
-import { ObjectId } from "mongodb";
+import { AggregateRootRow } from "./aggregate-root-row";
 
 let eventStore: PostgreSQLEventStore;
 let container: StartedPostgreSqlContainer;
@@ -67,10 +70,10 @@ beforeAll(async () => {
 beforeEach(async () => {
     eventStore = new PostgreSQLEventStore(
         createMock<DomainEventEmitter>(),
-        knexConnection,
         schema,
         "es-aggregates",
-        "es-events"
+        "es-events",
+        knexConnection
     );
 });
 
@@ -214,6 +217,115 @@ describe("findByAggregateRootId tests", () => {
         await expect(eventStore.findByAggregateRootId(UndecoratedAggregateRoot, aggregateRootId)).rejects.toThrow(
             MissingAggregateRootNameException
         );
+    });
+});
+
+describe("save tests", () => {
+    test("does nothing for empty events array", async () => {
+        const ag = new StoredAggregateRoot(uuidv4(), 5);
+
+        await eventStore.save([], ag);
+
+        const events = await knexConnection(schema + ".es-events").select("*");
+        expect(events.length).toBe(0);
+
+        const aggregates = await knexConnection(schema + ".es-aggregates").select("*");
+        expect(aggregates.length).toBe(0);
+    });
+
+    test("throws when there's a concurrency issue", async () => {
+        const id = uuidv4();
+        const root = new StoredAggregateRoot(id, 5);
+
+        await knexConnection<AggregateRootRow>(schema + ".es-aggregates").insert({ id: id, version: 6 });
+
+        await expect(
+            eventStore.save(
+                [StoredEvent.fromPublishedEvent(uuidv4(), root.id, "Test", new SqlEvent1(), new Date())],
+                root
+            )
+        ).rejects.toThrow(EventConcurrencyException);
+
+        const events = await knexConnection(schema + ".es-events").select("*");
+        expect(events.length).toBe(0);
+
+        const aggregate = await knexConnection<AggregateRootRow>(schema + ".es-aggregates")
+            .select("*")
+            .where("id", id)
+            .first();
+        expect(aggregate!.version).toBe(6);
+    });
+
+    test("saves new aggregate with its event", async () => {
+        const rootId = uuidv4();
+        const root = new StoredAggregateRoot(rootId, 1);
+
+        const events = [StoredEvent.fromPublishedEvent(uuidv4(), rootId, "Test", new SqlEvent2(), new Date())];
+
+        const saved = await eventStore.save(events, root);
+
+        const aggregate = await knexConnection<AggregateRootRow>(schema + ".es-aggregates")
+            .select("*")
+            .where("id", rootId)
+            .first();
+        expect(aggregate!.version).toBe(1);
+
+        const storedEvents = await knexConnection<EventRow>(schema + ".es-events").select("*");
+        expect(storedEvents.length).toBe(1);
+
+        expect(storedEvents[0].event_name).toBe("sql-event-2");
+        expect(storedEvents[0].aggregate_root_id).toBe(rootId);
+        expect(storedEvents[0].aggregate_root_version).toBe(1);
+        expect(storedEvents[0].aggregate_root_name).toBe("Test");
+        expect(storedEvents[0].payload).toEqual(events[0].payload);
+        expect(storedEvents[0].created_at).toEqual(events[0].createdAt);
+        expect(storedEvents[0].id).toBe(events[0].id);
+
+        expect(saved).toEqual(events);
+        expect(saved[0].aggregateRootVersion).toBe(1);
+    });
+
+    test("increases version and stores events and aggregate", async () => {
+        const rootId = uuidv4();
+        const root = new StoredAggregateRoot(rootId, 38);
+
+        await knexConnection<AggregateRootRow>(schema + ".es-aggregates").insert({
+            id: rootId,
+            version: 38
+        });
+
+        const events = [
+            StoredEvent.fromPublishedEvent(uuidv4(), rootId, "Test", new SqlEvent2(), new Date()),
+            StoredEvent.fromPublishedEvent(uuidv4(), rootId, "Test", new SqlEvent1(), new Date())
+        ];
+
+        const saved = await eventStore.save(events, root);
+
+        const storedAggregates = await knexConnection<AggregateRootRow>(schema + ".es-aggregates").select("*");
+        expect(storedAggregates[0].version).toBe(40);
+
+        const storedEvents = await knexConnection<EventRow>(schema + ".es-events").select("*");
+        expect(storedEvents.length).toBe(2);
+
+        expect(storedEvents[0].event_name).toBe("sql-event-2");
+        expect(storedEvents[0].aggregate_root_id).toBe(rootId);
+        expect(storedEvents[0].aggregate_root_version).toBe(39);
+        expect(storedEvents[0].aggregate_root_name).toBe("Test");
+        expect(storedEvents[0].payload).toEqual(events[0].payload);
+        expect(storedEvents[0].created_at).toEqual(events[0].createdAt);
+        expect(storedEvents[0].id).toBe(events[0].id);
+
+        expect(storedEvents[1].event_name).toBe("sql-event-1");
+        expect(storedEvents[1].aggregate_root_id).toBe(rootId);
+        expect(storedEvents[1].aggregate_root_version).toBe(40);
+        expect(storedEvents[1].aggregate_root_name).toBe("Test");
+        expect(storedEvents[1].payload).toEqual(events[1].payload);
+        expect(storedEvents[1].created_at).toEqual(events[1].createdAt);
+        expect(storedEvents[1].id).toBe(events[1].id);
+
+        expect(saved).toEqual(events);
+        expect(saved[0].aggregateRootVersion).toBe(39);
+        expect(saved[1].aggregateRootVersion).toBe(40);
     });
 });
 
