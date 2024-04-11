@@ -23,15 +23,27 @@ export class PostgreSQLEventStore extends AbstractEventStore {
 
     constructor(
         eventEmitter: DomainEventEmitter,
-        schemaName: string,
-        aggregatesTableName: string,
-        eventsTableName: string,
+        private _schemaName: string,
+        private _aggregatesTableName: string,
+        private _eventsTableName: string,
         private readonly _knexConnection: knex.Knex
     ) {
         super(eventEmitter);
         this._logger = new Logger(PostgreSQLEventStore.name);
-        this._fullAggregatesTableName = schemaName + "." + aggregatesTableName;
-        this._fullEventsTableName = schemaName + "." + eventsTableName;
+        this._fullAggregatesTableName = this._schemaName + "." + this._aggregatesTableName;
+        this._fullEventsTableName = this._schemaName + "." + this._eventsTableName;
+    }
+
+    get schemaName(): string {
+        return this._schemaName;
+    }
+
+    get aggregatesTableName(): string {
+        return this._aggregatesTableName;
+    }
+
+    get eventsTableName(): string {
+        return this._eventsTableName;
     }
 
     generateEntityId(): Promise<string> {
