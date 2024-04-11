@@ -3,5 +3,8 @@
  * that we can always have a way of knowing what is the current version of the aggregate root object.
  */
 export class StoredAggregateRoot {
-    constructor(public id: string, public version: number) {}
+    constructor(
+        public id: string,
+        public version: number
+    ) {}
 }

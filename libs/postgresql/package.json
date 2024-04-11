@@ -3,7 +3,10 @@
     "version": "0.0.1",
     "dependencies": {
         "tslib": "^2.3.0",
-        "@nestjs/common": "^10.3.2"
+        "@nestjs/common": "^10.3.2",
+        "@event-nest/core": "1.3.1",
+        "knex": "^3.1.0",
+        "uuid": "^9.0.1"
     },
     "type": "commonjs",
     "main": "./src/index.js",
