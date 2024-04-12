@@ -1,11 +1,33 @@
 import { Provider } from "@nestjs/common";
-import { EVENT_STORE, DomainEventEmitter } from "@event-nest/core";
+import { EVENT_STORE, DomainEventEmitter, isNil } from "@event-nest/core";
 import { PostgreSQLModuleAsyncOptions, PostgreSQLModuleOptions } from "./postgresql-module-options";
 import { PostgreSQLEventStore } from "./storage/postgresql-event-store";
 import { knex } from "knex";
 
 const KNEX_CONNECTION = Symbol("EVENT_NEST_KNEX_CONNECTION");
 
+function buildKnexConnection(options: PostgreSQLModuleOptions): knex.Knex {
+    if (isNil(options.ssl)) {
+        return knex({
+            client: "pg",
+            connection: {
+                connectionString: options.connectionUri,
+                ssl: { rejectUnauthorized: false }
+            }
+        });
+    }
+
+    return knex({
+        client: "pg",
+        connection: {
+            connectionString: options.connectionUri,
+            ssl: {
+                ca: options.ssl.certificate,
+                rejectUnauthorized: options.ssl.rejectUnauthorized
+            }
+        }
+    });
+}
 export class ModuleProviders {
     static create(options: PostgreSQLModuleOptions): Provider[] {
         return [
@@ -17,7 +39,7 @@ export class ModuleProviders {
             },
             {
                 provide: KNEX_CONNECTION,
-                useValue: knex({ client: "pg", connection: options.connectionUri })
+                useValue: buildKnexConnection(options)
             },
             {
                 provide: EVENT_STORE,
@@ -54,8 +76,8 @@ export class ModuleProviders {
 
         const knexProvider = {
             provide: KNEX_CONNECTION,
-            useFactory: (options: PostgreSQLModuleOptions) => {
-                return knex({ client: "pg", connection: options.connectionUri });
+            useFactory: (options: PostgreSQLModuleOptions): knex.Knex => {
+                return buildKnexConnection(options);
             },
             inject: ["EVENT_NEST_PG_OPTIONS"]
         };

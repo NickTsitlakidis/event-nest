@@ -1,4 +1,14 @@
 import { Test } from "@nestjs/testing";
+import * as knex from "knex";
+const mockedKnex = jest.fn().mockImplementation((options) => {
+    return {};
+});
+jest.mock("knex", () => {
+    return {
+        knex: mockedKnex
+    };
+});
+
 import { DomainEventEmitter, EVENT_STORE } from "@event-nest/core";
 import { ModuleProviders } from "./module-providers";
 import { PostgreSQLModuleAsyncOptions, PostgreSQLModuleOptions } from "./postgresql-module-options";
@@ -48,6 +58,47 @@ describe("create - tests", () => {
         expect(emitter).toBeDefined();
         expect(emitter).toBeInstanceOf(DomainEventEmitter);
         expect(emitter.concurrentSubscriptions).toBe(false);
+    });
+
+    test("disables ssl when ssl option is not provided", async () => {
+        const options: PostgreSQLModuleOptions = {
+            connectionUri: "postgres://test:test@docker:32770/db",
+            aggregatesTableName: "aggregates",
+            eventsTableName: "events",
+            schemaName: "the-schema"
+        };
+        const module = await Test.createTestingModule({ providers: ModuleProviders.create(options) }).compile();
+        expect(mockedKnex).toHaveBeenCalledWith({
+            client: "pg",
+            connection: {
+                connectionString: options.connectionUri,
+                ssl: { rejectUnauthorized: false }
+            }
+        });
+    });
+
+    test("enables ssl when ssl options are provided", async () => {
+        const options: PostgreSQLModuleOptions = {
+            connectionUri: "postgres://test:test@docker:32770/db",
+            aggregatesTableName: "aggregates",
+            eventsTableName: "events",
+            schemaName: "the-schema",
+            ssl: {
+                certificate: "ca-cert",
+                rejectUnauthorized: true
+            }
+        };
+        const module = await Test.createTestingModule({ providers: ModuleProviders.create(options) }).compile();
+        expect(mockedKnex).toHaveBeenCalledWith({
+            client: "pg",
+            connection: {
+                connectionString: options.connectionUri,
+                ssl: {
+                    ca: "ca-cert",
+                    rejectUnauthorized: true
+                }
+            }
+        });
     });
 });
 
@@ -164,5 +215,54 @@ describe("createAsync - tests", () => {
         expect(emitter).toBeDefined();
         expect(emitter).toBeInstanceOf(DomainEventEmitter);
         expect(emitter.concurrentSubscriptions).toBe(false);
+    });
+
+    test("disables ssl when ssl option is not provided", async () => {
+        const options: PostgreSQLModuleAsyncOptions = {
+            useFactory: () => {
+                return {
+                    connectionUri: "postgres://test:test@docker:32770/db",
+                    aggregatesTableName: "async-aggregates",
+                    eventsTableName: "async-events",
+                    schemaName: "the-async-schema"
+                };
+            }
+        };
+        const module = await Test.createTestingModule({ providers: ModuleProviders.createAsync(options) }).compile();
+        expect(mockedKnex).toHaveBeenCalledWith({
+            client: "pg",
+            connection: {
+                connectionString: "postgres://test:test@docker:32770/db",
+                ssl: { rejectUnauthorized: false }
+            }
+        });
+    });
+
+    test("enables ssl when ssl options are provided", async () => {
+        const options: PostgreSQLModuleAsyncOptions = {
+            useFactory: () => {
+                return {
+                    connectionUri: "postgres://test:test@docker:32770/db",
+                    aggregatesTableName: "async-aggregates",
+                    eventsTableName: "async-events",
+                    schemaName: "the-async-schema",
+                    ssl: {
+                        certificate: "ca-cert",
+                        rejectUnauthorized: true
+                    }
+                };
+            }
+        };
+        const module = await Test.createTestingModule({ providers: ModuleProviders.createAsync(options) }).compile();
+        expect(mockedKnex).toHaveBeenCalledWith({
+            client: "pg",
+            connection: {
+                connectionString: "postgres://test:test@docker:32770/db",
+                ssl: {
+                    ca: "ca-cert",
+                    rejectUnauthorized: true
+                }
+            }
+        });
     });
 });

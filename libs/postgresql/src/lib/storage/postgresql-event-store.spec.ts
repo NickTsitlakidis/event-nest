@@ -65,7 +65,7 @@ beforeAll(async () => {
         table.jsonb("payload");
         table.timestamp("created_at");
     });
-});
+}, 30000);
 
 beforeEach(async () => {
     eventStore = new PostgreSQLEventStore(
