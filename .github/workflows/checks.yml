@@ -46,6 +46,6 @@ jobs:
         uses: mansagroup/nrwl-nx-action@v3
         with:
           targets: lint,test
-          projects: core,mongodb
+          projects: core,mongodb,postgresql
       - name: Upload test coverage
         uses: coverallsapp/github-action@v2

@@ -5,6 +5,7 @@ export * from "./lib/aggregate-root/event-processor";
 export * from "./lib/exceptions/event-name-conflict-exception";
 export * from "./lib/exceptions/unknown-event-exception";
 export * from "./lib/exceptions/missing-aggregate-root-name-exception";
+export * from "./lib/exceptions/event-concurrency-exception";
 
 export * from "./lib/domain-event";
 export * from "./lib/published-domain-event";

@@ -17,7 +17,10 @@ export abstract class AggregateRoot {
     private _version: number;
     private readonly _logger: Logger;
 
-    protected constructor(private readonly _id: string, logger?: Logger) {
+    protected constructor(
+        private readonly _id: string,
+        logger?: Logger
+    ) {
         this._appendedEvents = [];
         this._version = 0;
         this._logger = isNil(logger) ? new Logger(AggregateRoot.name) : logger;

@@ -8,9 +8,9 @@ import {
     MissingAggregateRootNameException,
     DomainEvent,
     StoredAggregateRoot,
-    StoredEvent
+    StoredEvent,
+    EventConcurrencyException
 } from "@event-nest/core";
-import { EventConcurrencyException } from "./event-concurrency-exception";
 
 let eventStore: MongoEventStore;
 let eventsCollection: Collection<any>;

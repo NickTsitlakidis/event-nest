@@ -1,11 +1,11 @@
 import { MongoClient, ObjectId } from "mongodb";
 import { Logger } from "@nestjs/common";
-import { EventConcurrencyException } from "./event-concurrency-exception";
 import {
     AbstractEventStore,
     AggregateRoot,
     AggregateRootClass,
     DomainEventEmitter,
+    EventConcurrencyException,
     getAggregateRootName,
     isNil,
     MissingAggregateRootNameException,

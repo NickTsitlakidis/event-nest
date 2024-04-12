@@ -15,14 +15,10 @@
             "rules": {}
         },
         {
-            "files": ["*.spec.ts", "*.spec.tsx", "*.spec.js", "*.spec.jsx"],
-            "env": {
-                "jest": true
-            },
+            "files": ["*.json"],
+            "parser": "jsonc-eslint-parser",
             "rules": {
-                "sonarjs/no-duplicate-string": "off",
-                "@typescript-eslint/no-empty-function": "off",
-                "@typescript-eslint/no-explicit-any": "off"
+                "@nx/dependency-checks": "error"
             }
         }
     ]
