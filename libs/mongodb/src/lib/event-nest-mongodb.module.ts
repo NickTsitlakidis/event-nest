@@ -1,8 +1,9 @@
+import { DomainEventEmitter, EVENT_STORE } from "@event-nest/core";
 import { DynamicModule, Global, Module, OnApplicationBootstrap } from "@nestjs/common";
-import { MongoDbModuleAsyncOptions, MongodbModuleOptions } from "./mongodb-module-options";
-import { EVENT_STORE, DomainEventEmitter } from "@event-nest/core";
 import { ModulesContainer } from "@nestjs/core";
+
 import { ModuleProviders } from "./module-providers";
+import { MongoDbModuleAsyncOptions, MongodbModuleOptions } from "./mongodb-module-options";
 
 @Global()
 @Module({})
@@ -14,17 +15,17 @@ export class EventNestMongoDbModule implements OnApplicationBootstrap {
 
     static register(options: MongodbModuleOptions): DynamicModule {
         return {
+            exports: [EVENT_STORE],
             module: EventNestMongoDbModule,
-            providers: ModuleProviders.create(options),
-            exports: [EVENT_STORE]
+            providers: ModuleProviders.create(options)
         };
     }
 
     static registerAsync(options: MongoDbModuleAsyncOptions): DynamicModule {
         return {
+            exports: [EVENT_STORE],
             module: EventNestMongoDbModule,
-            providers: ModuleProviders.createAsync(options),
-            exports: [EVENT_STORE]
+            providers: ModuleProviders.createAsync(options)
         };
     }
 

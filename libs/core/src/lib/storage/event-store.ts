@@ -1,6 +1,6 @@
-import { StoredEvent } from "./stored-event";
-import { StoredAggregateRoot } from "./stored-aggregate-root";
 import { AggregateRoot } from "../aggregate-root/aggregate-root";
+import { StoredAggregateRoot } from "./stored-aggregate-root";
+import { StoredEvent } from "./stored-event";
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 export type AggregateRootClass<T> = Function & { prototype: T };
@@ -26,6 +26,13 @@ export interface EventStore {
     addPublisher<T extends AggregateRoot>(aggregateRoot: T): T;
 
     /**
+     * Finds the version of the aggregate root object that is associated with the provided id. If the aggregate root is not found
+     * or there's no version information, the method will return -1
+     * @param id The id of the aggregate root object
+     */
+    findAggregateRootVersion(id: string): Promise<number>;
+
+    /**
      * Finds all events that are associated with the provided aggregate root id and match the aggregate root name which
      * is resolved from the aggregate root class. These events can later be used to recreate an aggregate root object.
      * @param aggregateRootClass The class of the aggregate root for which the store will search for events
@@ -37,11 +44,11 @@ export interface EventStore {
     ): Promise<Array<StoredEvent>>;
 
     /**
-     * Finds the version of the aggregate root object that is associated with the provided id. If the aggregate root is not found
-     * or there's no version information, the method will return -1
-     * @param id The id of the aggregate root object
+     * Each storage solution has its own way of dealing with unique ids. This method's implementation should reflect
+     * the way the storage solution generates unique ids. For example, in a MongoDB database this would usually return
+     * a String representation of a MongoDB ObjectId.
      */
-    findAggregateRootVersion(id: string): Promise<number>;
+    generateEntityId(): Promise<string>;
 
     /**
      * Saves the provided event and aggregate root object. Before saving the aggregate root object, the method will check
@@ -52,11 +59,4 @@ export interface EventStore {
      * @param aggregate The aggregate root object that matches the events
      */
     save(events: Array<StoredEvent>, aggregate: StoredAggregateRoot): Promise<Array<StoredEvent>>;
-
-    /**
-     * Each storage solution has its own way of dealing with unique ids. This method's implementation should reflect
-     * the way the storage solution generates unique ids. For example, in a MongoDB database this would usually return
-     * a String representation of a MongoDB ObjectId.
-     */
-    generateEntityId(): Promise<string>;
 }

@@ -10,6 +10,7 @@ jest.mock("knex", () => {
 });
 
 import { DomainEventEmitter, EVENT_STORE } from "@event-nest/core";
+
 import { ModuleProviders } from "./module-providers";
 import { PostgreSQLModuleAsyncOptions, PostgreSQLModuleOptions } from "./postgresql-module-options";
 import { PostgreSQLEventStore } from "./storage/postgresql-event-store";
@@ -17,8 +18,8 @@ import { PostgreSQLEventStore } from "./storage/postgresql-event-store";
 describe("create - tests", () => {
     test("creates PostgresqlEventStore provider", async () => {
         const options: PostgreSQLModuleOptions = {
-            connectionUri: "postgres://test:test@docker:32770/db",
             aggregatesTableName: "aggregates",
+            connectionUri: "postgres://test:test@docker:32770/db",
             eventsTableName: "events",
             schemaName: "the-schema"
         };
@@ -33,11 +34,11 @@ describe("create - tests", () => {
 
     test("creates DomainEventEmitter provider with concurrent option", async () => {
         const options: PostgreSQLModuleOptions = {
-            connectionUri: "postgres://test:test@docker:32770/db",
             aggregatesTableName: "aggregates",
+            concurrentSubscriptions: true,
+            connectionUri: "postgres://test:test@docker:32770/db",
             eventsTableName: "events",
-            schemaName: "the-schema",
-            concurrentSubscriptions: true
+            schemaName: "the-schema"
         };
         const module = await Test.createTestingModule({ providers: ModuleProviders.create(options) }).compile();
         const emitter: DomainEventEmitter = module.get(DomainEventEmitter);
@@ -48,8 +49,8 @@ describe("create - tests", () => {
 
     test("creates DomainEventEmitter provider without concurrent option", async () => {
         const options: PostgreSQLModuleOptions = {
-            connectionUri: "postgres://test:test@docker:32770/db",
             aggregatesTableName: "aggregates",
+            connectionUri: "postgres://test:test@docker:32770/db",
             eventsTableName: "events",
             schemaName: "the-schema"
         };
@@ -62,8 +63,8 @@ describe("create - tests", () => {
 
     test("disables ssl when ssl option is not provided", async () => {
         const options: PostgreSQLModuleOptions = {
-            connectionUri: "postgres://test:test@docker:32770/db",
             aggregatesTableName: "aggregates",
+            connectionUri: "postgres://test:test@docker:32770/db",
             eventsTableName: "events",
             schemaName: "the-schema"
         };
@@ -79,8 +80,8 @@ describe("create - tests", () => {
 
     test("enables ssl when ssl options are provided", async () => {
         const options: PostgreSQLModuleOptions = {
-            connectionUri: "postgres://test:test@docker:32770/db",
             aggregatesTableName: "aggregates",
+            connectionUri: "postgres://test:test@docker:32770/db",
             eventsTableName: "events",
             schemaName: "the-schema",
             ssl: {
@@ -107,8 +108,8 @@ describe("createAsync - tests", () => {
         const options: PostgreSQLModuleAsyncOptions = {
             useFactory: () => {
                 return Promise.resolve({
-                    connectionUri: "postgres://test:test@docker:32770/db",
                     aggregatesTableName: "async-aggregates",
+                    connectionUri: "postgres://test:test@docker:32770/db",
                     eventsTableName: "async-events",
                     schemaName: "the-async-schema"
                 });
@@ -127,8 +128,8 @@ describe("createAsync - tests", () => {
         const options: PostgreSQLModuleAsyncOptions = {
             useFactory: () => {
                 return {
-                    connectionUri: "postgres://test:test@docker:32770/db",
                     aggregatesTableName: "async-aggregates",
+                    connectionUri: "postgres://test:test@docker:32770/db",
                     eventsTableName: "async-events",
                     schemaName: "the-async-schema"
                 };
@@ -147,11 +148,11 @@ describe("createAsync - tests", () => {
         const options: PostgreSQLModuleAsyncOptions = {
             useFactory: () => {
                 return Promise.resolve({
-                    connectionUri: "postgres://test:test@docker:32770/db",
                     aggregatesTableName: "async-aggregates",
+                    concurrentSubscriptions: true,
+                    connectionUri: "postgres://test:test@docker:32770/db",
                     eventsTableName: "async-events",
-                    schemaName: "the-async-schema",
-                    concurrentSubscriptions: true
+                    schemaName: "the-async-schema"
                 });
             }
         };
@@ -166,11 +167,11 @@ describe("createAsync - tests", () => {
         const options: PostgreSQLModuleAsyncOptions = {
             useFactory: () => {
                 return {
-                    connectionUri: "postgres://test:test@docker:32770/db",
                     aggregatesTableName: "async-aggregates",
+                    concurrentSubscriptions: true,
+                    connectionUri: "postgres://test:test@docker:32770/db",
                     eventsTableName: "async-events",
-                    schemaName: "the-async-schema",
-                    concurrentSubscriptions: true
+                    schemaName: "the-async-schema"
                 };
             }
         };
@@ -185,8 +186,8 @@ describe("createAsync - tests", () => {
         const options: PostgreSQLModuleAsyncOptions = {
             useFactory: () => {
                 return Promise.resolve({
-                    connectionUri: "postgres://test:test@docker:32770/db",
                     aggregatesTableName: "async-aggregates",
+                    connectionUri: "postgres://test:test@docker:32770/db",
                     eventsTableName: "async-events",
                     schemaName: "the-async-schema"
                 });
@@ -203,8 +204,8 @@ describe("createAsync - tests", () => {
         const options: PostgreSQLModuleAsyncOptions = {
             useFactory: () => {
                 return {
-                    connectionUri: "postgres://test:test@docker:32770/db",
                     aggregatesTableName: "async-aggregates",
+                    connectionUri: "postgres://test:test@docker:32770/db",
                     eventsTableName: "async-events",
                     schemaName: "the-async-schema"
                 };
@@ -221,8 +222,8 @@ describe("createAsync - tests", () => {
         const options: PostgreSQLModuleAsyncOptions = {
             useFactory: () => {
                 return {
-                    connectionUri: "postgres://test:test@docker:32770/db",
                     aggregatesTableName: "async-aggregates",
+                    connectionUri: "postgres://test:test@docker:32770/db",
                     eventsTableName: "async-events",
                     schemaName: "the-async-schema"
                 };
@@ -242,8 +243,8 @@ describe("createAsync - tests", () => {
         const options: PostgreSQLModuleAsyncOptions = {
             useFactory: () => {
                 return {
-                    connectionUri: "postgres://test:test@docker:32770/db",
                     aggregatesTableName: "async-aggregates",
+                    connectionUri: "postgres://test:test@docker:32770/db",
                     eventsTableName: "async-events",
                     schemaName: "the-async-schema",
                     ssl: {

@@ -1,16 +1,17 @@
-import { MongoEventStore } from "./mongo-event-store";
-import { Collection, MongoClient, ObjectId } from "mongodb";
-import { createMock } from "@golevelup/ts-jest";
 import {
     AggregateRoot,
     AggregateRootName,
-    DomainEventEmitter,
-    MissingAggregateRootNameException,
     DomainEvent,
+    DomainEventEmitter,
+    EventConcurrencyException,
+    MissingAggregateRootNameException,
     StoredAggregateRoot,
-    StoredEvent,
-    EventConcurrencyException
+    StoredEvent
 } from "@event-nest/core";
+import { createMock } from "@golevelup/ts-jest";
+import { Collection, MongoClient, ObjectId } from "mongodb";
+
+import { MongoEventStore } from "./mongo-event-store";
 
 let eventStore: MongoEventStore;
 let eventsCollection: Collection<any>;
@@ -181,9 +182,9 @@ describe("findByAggregateRootId tests", () => {
             aggregateRootId: id,
             aggregateRootName: "test-aggregate",
             aggregateRootVersion: 1,
+            createdAt: ev1Date,
             eventName: "test-event-1",
-            payload: {},
-            createdAt: ev1Date
+            payload: {}
         });
 
         await eventsCollection.insertOne({
@@ -191,9 +192,9 @@ describe("findByAggregateRootId tests", () => {
             aggregateRootId: id,
             aggregateRootName: "test-aggregate",
             aggregateRootVersion: 2,
+            createdAt: ev2Date,
             eventName: "test-event-2",
-            payload: {},
-            createdAt: ev2Date
+            payload: {}
         });
 
         const events = await eventStore.findByAggregateRootId(DecoratedAggregateRoot, id);
@@ -223,9 +224,9 @@ describe("findByAggregateRootId tests", () => {
             aggregateRootId: id,
             aggregateRootName: "Other",
             aggregateRootVersion: 1,
+            createdAt: new Date(),
             eventName: "test-event-1",
-            payload: {},
-            createdAt: new Date()
+            payload: {}
         });
 
         const events = await eventStore.findByAggregateRootId(DecoratedAggregateRoot, id);
@@ -240,9 +241,9 @@ describe("findByAggregateRootId tests", () => {
             aggregateRootId: id,
             aggregateRootName: "Other",
             aggregateRootVersion: 1,
+            createdAt: new Date(),
             eventName: "test-event-1",
-            payload: {},
-            createdAt: new Date()
+            payload: {}
         });
 
         await expect(eventStore.findByAggregateRootId(UndecoratedAggregateRoot, id)).rejects.toThrow(

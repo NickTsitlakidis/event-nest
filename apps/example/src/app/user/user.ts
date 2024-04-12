@@ -1,10 +1,22 @@
 import { AggregateRoot, AggregateRootName, EventProcessor, StoredEvent } from "@event-nest/core";
+
 import { UserCreatedEvent, UserUpdatedEvent } from "./user-events";
 
 @AggregateRootName("User")
 export class User extends AggregateRoot {
-    private _name: string;
     private _email: string;
+    private _name: string;
+
+    @EventProcessor(UserCreatedEvent)
+    private processUserCreatedEvent = (event: UserCreatedEvent) => {
+        this._name = event.name;
+        this._email = event.email;
+    };
+
+    @EventProcessor(UserUpdatedEvent)
+    private processUserUpdatedEvent = (event: UserUpdatedEvent) => {
+        this._name = event.newName;
+    };
 
     private constructor(id: string) {
         super(id);
@@ -24,28 +36,17 @@ export class User extends AggregateRoot {
         return user;
     }
 
-    public update(newName: string) {
-        const event = new UserUpdatedEvent(newName);
-        this.processUserUpdatedEvent(event);
-        this.append(event);
+    get email(): string {
+        return this._email;
     }
 
     public get name(): string {
         return this._name;
     }
 
-    get email(): string {
-        return this._email;
+    public update(newName: string) {
+        const event = new UserUpdatedEvent(newName);
+        this.processUserUpdatedEvent(event);
+        this.append(event);
     }
-
-    @EventProcessor(UserCreatedEvent)
-    private processUserCreatedEvent = (event: UserCreatedEvent) => {
-        this._name = event.name;
-        this._email = event.email;
-    };
-
-    @EventProcessor(UserUpdatedEvent)
-    private processUserUpdatedEvent = (event: UserUpdatedEvent) => {
-        this._name = event.newName;
-    };
 }

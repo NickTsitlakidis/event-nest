@@ -1,7 +1,7 @@
 {
     "root": true,
     "ignorePatterns": ["**/*"],
-    "plugins": ["@nx", "sonarjs", "prettier"],
+    "plugins": ["@nx", "sonarjs", "prettier", "perfectionist"],
     "overrides": [
         {
             "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
@@ -23,9 +23,29 @@
             }
         },
         {
-            "files": ["*.ts", "*.tsx"],
-            "extends": ["plugin:@nx/typescript", "plugin:sonarjs/recommended"],
-            "rules": {}
+            "files": ["*.ts"],
+            "extends": ["plugin:@nx/typescript", "plugin:sonarjs/recommended", "plugin:perfectionist/recommended-natural"],
+            "rules": {
+                "sonarjs/no-duplicate-string": "warn",
+                "perfectionist/sort-classes": [
+                    "error",
+                    {
+                        "type": "natural",
+                        "order": "asc",
+                        "groups": [
+                            "index-signature",
+                            "static-property",
+                            "property",
+                            "private-property",
+                            "constructor",
+                            "static-method",
+                            ["get-method", "set-method"],
+                            "method",
+                            "private-method"
+                        ]
+                    }
+                ]
+            }
         },
         {
             "files": ["*.js", "*.jsx"],

@@ -1,7 +1,8 @@
+import { DomainEventEmitter, EVENT_STORE } from "@event-nest/core";
 import { Provider } from "@nestjs/common";
-import { EVENT_STORE, DomainEventEmitter } from "@event-nest/core";
-import { MongoDbModuleAsyncOptions, MongodbModuleOptions } from "./mongodb-module-options";
 import { MongoClient } from "mongodb";
+
+import { MongoDbModuleAsyncOptions, MongodbModuleOptions } from "./mongodb-module-options";
 import { MongoEventStore } from "./storage/mongo-event-store";
 
 export class ModuleProviders {
@@ -14,6 +15,7 @@ export class ModuleProviders {
                 }
             },
             {
+                inject: [DomainEventEmitter],
                 provide: EVENT_STORE,
                 useFactory: (eventEmitter: DomainEventEmitter) => {
                     return new MongoEventStore(
@@ -22,30 +24,30 @@ export class ModuleProviders {
                         options.aggregatesCollection,
                         options.eventsCollection
                     );
-                },
-                inject: [DomainEventEmitter]
+                }
             }
         ];
     }
 
     static createAsync(options: MongoDbModuleAsyncOptions): Provider[] {
         const optionsProvider = {
+            inject: options.inject,
             provide: "EVENT_NEST_OPTIONS",
             useFactory: async (...args: unknown[]) => {
                 return await options.useFactory(...args);
-            },
-            inject: options.inject
+            }
         };
 
         const eventBusProvider = {
+            inject: ["EVENT_NEST_OPTIONS"],
             provide: DomainEventEmitter,
             useFactory: (options: MongodbModuleOptions) => {
                 return new DomainEventEmitter(options.concurrentSubscriptions);
-            },
-            inject: ["EVENT_NEST_OPTIONS"]
+            }
         };
 
         const eventStoreProvider = {
+            inject: ["EVENT_NEST_OPTIONS", DomainEventEmitter],
             provide: EVENT_STORE,
             useFactory: (options: MongodbModuleOptions, eventBus: DomainEventEmitter) => {
                 const mongoClient = new MongoClient(options.connectionUri);
@@ -55,8 +57,7 @@ export class ModuleProviders {
                     options.aggregatesCollection,
                     options.eventsCollection
                 );
-            },
-            inject: ["EVENT_NEST_OPTIONS", DomainEventEmitter]
+            }
         };
 
         return [optionsProvider, eventBusProvider, eventStoreProvider];

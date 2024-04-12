@@ -1,6 +1,6 @@
 import { DomainEvent } from "./domain-event";
-import { EventNameConflictException } from "./exceptions/event-name-conflict-exception";
 import { isRegistered } from "./domain-event-registrations";
+import { EventNameConflictException } from "./exceptions/event-name-conflict-exception";
 
 class TestClass1 {}
 

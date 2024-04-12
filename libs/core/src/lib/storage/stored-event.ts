@@ -1,6 +1,7 @@
 import { ClassConstructor, instanceToPlain, plainToClass } from "class-transformer";
-import { isNil } from "../utils/type-utils";
+
 import { getEventName } from "../domain-event-registrations";
+import { isNil } from "../utils/type-utils";
 
 /**
  * Represents an event that will be persisted according to the storage solution that is used.
@@ -15,12 +16,12 @@ import { getEventName } from "../domain-event-registrations";
 export class StoredEvent {
     aggregateRootVersion!: number;
 
-    private readonly _id: string;
     private readonly _aggregateRootId: string;
-    private _createdAt!: Date;
-    private _payload: unknown;
-    private _eventName!: string;
     private _aggregateRootName!: string;
+    private _createdAt!: Date;
+    private _eventName!: string;
+    private readonly _id: string;
+    private _payload: unknown;
 
     private constructor(id: string, aggregateRootId: string) {
         this._aggregateRootId = aggregateRootId;
@@ -88,20 +89,12 @@ export class StoredEvent {
         return newEvent;
     }
 
-    public getPayloadAs<T>(payloadClass: ClassConstructor<T>): T {
-        return plainToClass(payloadClass, this._payload);
-    }
-
-    get payload(): unknown {
-        return this._payload;
-    }
-
-    get id(): string {
-        return this._id;
-    }
-
     get aggregateRootId(): string {
         return this._aggregateRootId;
+    }
+
+    get aggregateRootName(): string {
+        return this._aggregateRootName;
     }
 
     get createdAt(): Date {
@@ -112,7 +105,15 @@ export class StoredEvent {
         return this._eventName;
     }
 
-    get aggregateRootName(): string {
-        return this._aggregateRootName;
+    get id(): string {
+        return this._id;
+    }
+
+    get payload(): unknown {
+        return this._payload;
+    }
+
+    public getPayloadAs<T>(payloadClass: ClassConstructor<T>): T {
+        return plainToClass(payloadClass, this._payload);
     }
 }

@@ -1,8 +1,9 @@
+import { DomainEventEmitter, EVENT_STORE, isNil } from "@event-nest/core";
 import { Provider } from "@nestjs/common";
-import { EVENT_STORE, DomainEventEmitter, isNil } from "@event-nest/core";
+import { knex } from "knex";
+
 import { PostgreSQLModuleAsyncOptions, PostgreSQLModuleOptions } from "./postgresql-module-options";
 import { PostgreSQLEventStore } from "./storage/postgresql-event-store";
-import { knex } from "knex";
 
 const KNEX_CONNECTION = Symbol("EVENT_NEST_KNEX_CONNECTION");
 
@@ -42,6 +43,7 @@ export class ModuleProviders {
                 useValue: buildKnexConnection(options)
             },
             {
+                inject: [DomainEventEmitter, KNEX_CONNECTION],
                 provide: EVENT_STORE,
                 useFactory: (eventEmitter: DomainEventEmitter, knexConnection: knex.Knex) => {
                     return new PostgreSQLEventStore(
@@ -51,38 +53,38 @@ export class ModuleProviders {
                         options.eventsTableName,
                         knexConnection
                     );
-                },
-                inject: [DomainEventEmitter, KNEX_CONNECTION]
+                }
             }
         ];
     }
 
     static createAsync(options: PostgreSQLModuleAsyncOptions): Provider[] {
         const optionsProvider = {
+            inject: options.inject,
             provide: "EVENT_NEST_PG_OPTIONS",
             useFactory: async (...args: unknown[]) => {
                 return await options.useFactory(...args);
-            },
-            inject: options.inject
+            }
         };
 
         const emitterProvider = {
+            inject: ["EVENT_NEST_PG_OPTIONS"],
             provide: DomainEventEmitter,
             useFactory: (options: PostgreSQLModuleOptions) => {
                 return new DomainEventEmitter(options.concurrentSubscriptions);
-            },
-            inject: ["EVENT_NEST_PG_OPTIONS"]
+            }
         };
 
         const knexProvider = {
+            inject: ["EVENT_NEST_PG_OPTIONS"],
             provide: KNEX_CONNECTION,
             useFactory: (options: PostgreSQLModuleOptions): knex.Knex => {
                 return buildKnexConnection(options);
-            },
-            inject: ["EVENT_NEST_PG_OPTIONS"]
+            }
         };
 
         const eventStoreProvider = {
+            inject: ["EVENT_NEST_PG_OPTIONS", DomainEventEmitter, KNEX_CONNECTION],
             provide: EVENT_STORE,
             useFactory: (options: PostgreSQLModuleOptions, emitter: DomainEventEmitter, knexConnection: knex.Knex) => {
                 return new PostgreSQLEventStore(
@@ -92,8 +94,7 @@ export class ModuleProviders {
                     options.eventsTableName,
                     knexConnection
                 );
-            },
-            inject: ["EVENT_NEST_PG_OPTIONS", DomainEventEmitter, KNEX_CONNECTION]
+            }
         };
 
         return [optionsProvider, knexProvider, emitterProvider, eventStoreProvider];

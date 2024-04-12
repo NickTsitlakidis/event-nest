@@ -1,11 +1,12 @@
-import { AggregateRoot } from "./aggregate-root";
-import { EventProcessor } from "./event-processor";
-import { DomainEvent } from "../domain-event";
 import { Logger } from "@nestjs/common";
-import { StoredEvent } from "../storage/stored-event";
-import { UnregisteredEventException } from "../exceptions/unregistered-event-exception";
+
+import { DomainEvent } from "../domain-event";
 import { UnknownEventException } from "../exceptions/unknown-event-exception";
+import { UnregisteredEventException } from "../exceptions/unregistered-event-exception";
+import { StoredEvent } from "../storage/stored-event";
+import { AggregateRoot } from "./aggregate-root";
 import { AggregateRootEvent } from "./aggregate-root-event";
+import { EventProcessor } from "./event-processor";
 
 @DomainEvent("test-event-1")
 class TestEvent1 {}
@@ -19,8 +20,6 @@ class ThrowingEvent {}
 class UnregisteredEvent {}
 
 class SubEntity extends AggregateRoot {
-    public published: Array<AggregateRootEvent<object>> = [];
-
     @EventProcessor(TestEvent1)
     processTestEvent1 = () => {};
 
@@ -31,6 +30,8 @@ class SubEntity extends AggregateRoot {
     processThrowingEvent = () => {
         throw new Error("ooops");
     };
+
+    public published: Array<AggregateRootEvent<object>> = [];
 
     constructor(id: string) {
         super(id);
@@ -200,13 +201,13 @@ describe("commit tests", () => {
         expect((result as SubEntity).published).toEqual([
             {
                 aggregateRootId: "entity-id",
-                payload: event1,
-                occurredAt: new Date("2020-01-01")
+                occurredAt: new Date("2020-01-01"),
+                payload: event1
             },
             {
                 aggregateRootId: "entity-id",
-                payload: event2,
-                occurredAt: new Date("2020-01-01")
+                occurredAt: new Date("2020-01-01"),
+                payload: event2
             }
         ]);
     });

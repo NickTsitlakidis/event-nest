@@ -1,7 +1,8 @@
-import { Inject, Injectable } from "@nestjs/common";
 import { EVENT_STORE, EventStore } from "@event-nest/core";
-import { User } from "./user";
+import { Inject, Injectable } from "@nestjs/common";
 import { ObjectId } from "mongodb";
+
+import { User } from "./user";
 
 @Injectable()
 export class UserService {

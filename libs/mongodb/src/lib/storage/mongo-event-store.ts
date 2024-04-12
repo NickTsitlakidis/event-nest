@@ -1,17 +1,17 @@
-import { MongoClient, ObjectId } from "mongodb";
-import { Logger } from "@nestjs/common";
 import {
     AbstractEventStore,
     AggregateRoot,
     AggregateRootClass,
     DomainEventEmitter,
     EventConcurrencyException,
-    getAggregateRootName,
-    isNil,
     MissingAggregateRootNameException,
     StoredAggregateRoot,
-    StoredEvent
+    StoredEvent,
+    getAggregateRootName,
+    isNil
 } from "@event-nest/core";
+import { Logger } from "@nestjs/common";
+import { MongoClient, ObjectId } from "mongodb";
 
 export class MongoEventStore extends AbstractEventStore {
     private readonly _logger: Logger;
@@ -32,6 +32,19 @@ export class MongoEventStore extends AbstractEventStore {
 
     get eventsCollectionName(): string {
         return this._eventsCollectionName;
+    }
+
+    async findAggregateRootVersion(id: string): Promise<number> {
+        const found = await this._mongoClient
+            .db()
+            .collection(this._aggregatesCollectionName)
+            .findOne({ _id: new ObjectId(id) });
+
+        if (isNil(found) || isNil(found["version"])) {
+            return -1;
+        }
+
+        return found["version"];
     }
 
     async findByAggregateRootId<T extends AggregateRoot>(
@@ -66,19 +79,6 @@ export class MongoEventStore extends AbstractEventStore {
         }
 
         return [];
-    }
-
-    async findAggregateRootVersion(id: string): Promise<number> {
-        const found = await this._mongoClient
-            .db()
-            .collection(this._aggregatesCollectionName)
-            .findOne({ _id: new ObjectId(id) });
-
-        if (isNil(found) || isNil(found["version"])) {
-            return -1;
-        }
-
-        return found["version"];
     }
 
     generateEntityId(): Promise<string> {
@@ -133,10 +133,10 @@ export class MongoEventStore extends AbstractEventStore {
             const mapped = events.map((ev) => {
                 return {
                     _id: new ObjectId(ev.id),
-                    createdAt: ev.createdAt,
                     aggregateRootId: ev.aggregateRootId,
-                    aggregateRootVersion: ev.aggregateRootVersion,
                     aggregateRootName: ev.aggregateRootName,
+                    aggregateRootVersion: ev.aggregateRootVersion,
+                    createdAt: ev.createdAt,
                     eventName: ev.eventName,
                     payload: ev.payload
                 };

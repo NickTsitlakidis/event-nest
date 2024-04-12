@@ -1,21 +1,22 @@
 import { Logger } from "@nestjs/common";
-import { StoredEvent } from "../storage/stored-event";
-import { getDecoratedPropertyKey } from "./event-processor";
-import { UnknownEventException } from "../exceptions/unknown-event-exception";
-import { isNil } from "../utils/type-utils";
-import { UnregisteredEventException } from "../exceptions/unregistered-event-exception";
-import { AggregateRootEvent } from "./aggregate-root-event";
+
 import { getEventClass, isRegistered } from "../domain-event-registrations";
+import { UnknownEventException } from "../exceptions/unknown-event-exception";
+import { UnregisteredEventException } from "../exceptions/unregistered-event-exception";
+import { StoredEvent } from "../storage/stored-event";
+import { isNil } from "../utils/type-utils";
+import { AggregateRootEvent } from "./aggregate-root-event";
+import { getDecoratedPropertyKey } from "./event-processor";
 
 type KnownEvent = {
-    processorKey: string;
     payload: unknown;
+    processorKey: string;
 };
 
 export abstract class AggregateRoot {
     private _appendedEvents: Array<AggregateRootEvent<object>>;
-    private _version: number;
     private readonly _logger: Logger;
+    private _version: number;
 
     protected constructor(
         private readonly _id: string,
@@ -26,16 +27,15 @@ export abstract class AggregateRoot {
         this._logger = isNil(logger) ? new Logger(AggregateRoot.name) : logger;
     }
 
-    get id(): string {
-        return this._id;
+    /**
+     * Returns a clone array of all the currently appended events of the entity.
+     */
+    get appendedEvents(): Array<AggregateRootEvent<object>> {
+        return this._appendedEvents.slice(0);
     }
 
-    /**
-     * Defines the current version of the aggregate root. The version is increased
-     * each time an event is persisted.
-     */
-    get version(): number {
-        return this._version;
+    get id(): string {
+        return this._id;
     }
 
     get logger(): Logger {
@@ -50,10 +50,30 @@ export abstract class AggregateRoot {
      * If a publisher is not connected, the method will return a rejected promise.
      * @param events The events to be published
      */
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    publish(events: Array<AggregateRootEvent<object>>): Promise<Array<StoredEvent>> {
-        this.logger.error("There is no event publisher assigned");
-        return Promise.reject("There is no event publisher assigned");
+    /**
+     * Defines the current version of the aggregate root. The version is increased
+     * each time an event is persisted.
+     */
+    get version(): number {
+        return this._version;
+    }
+
+    /**
+     * Adds an event to the currently existing events of the entity. This will not publish the event. Use the {@link commit}
+     * method once all the events you want are appended.
+     * @param event The event to be appended
+     */
+    append(event: object) {
+        if (!isRegistered(event)) {
+            this.logger.error(`Event ${event.constructor.name} is not registered.`);
+            throw new UnregisteredEventException(event.constructor.name);
+        }
+
+        this._appendedEvents.push({
+            aggregateRootId: this.id,
+            occurredAt: new Date(Date.now()),
+            payload: event
+        });
     }
 
     /**
@@ -72,29 +92,10 @@ export abstract class AggregateRoot {
         return Promise.resolve(this);
     }
 
-    /**
-     * Adds an event to the currently existing events of the entity. This will not publish the event. Use the {@link commit}
-     * method once all the events you want are appended.
-     * @param event The event to be appended
-     */
-    append(event: object) {
-        if (!isRegistered(event)) {
-            this.logger.error(`Event ${event.constructor.name} is not registered.`);
-            throw new UnregisteredEventException(event.constructor.name);
-        }
-
-        this._appendedEvents.push({
-            aggregateRootId: this.id,
-            payload: event,
-            occurredAt: new Date(Date.now())
-        });
-    }
-
-    /**
-     * Returns a clone array of all the currently appended events of the entity.
-     */
-    get appendedEvents(): Array<AggregateRootEvent<object>> {
-        return this._appendedEvents.slice(0);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    publish(events: Array<AggregateRootEvent<object>>): Promise<Array<StoredEvent>> {
+        this.logger.error("There is no event publisher assigned");
+        return Promise.reject("There is no event publisher assigned");
     }
 
     /**
@@ -149,8 +150,8 @@ export abstract class AggregateRoot {
                     missingProcessor.push(ev.eventName);
                 } else {
                     known.push({
-                        processorKey,
-                        payload: ev.getPayloadAs(eventClass)
+                        payload: ev.getPayloadAs(eventClass),
+                        processorKey
                     });
                 }
             }

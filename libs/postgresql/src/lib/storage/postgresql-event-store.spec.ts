@@ -1,4 +1,3 @@
-import { PostgreSQLEventStore } from "./postgresql-event-store";
 import {
     AggregateRoot,
     AggregateRootName,
@@ -9,12 +8,14 @@ import {
     StoredAggregateRoot,
     StoredEvent
 } from "@event-nest/core";
-import { v4 as uuidv4, validate } from "uuid";
+import { createMock } from "@golevelup/ts-jest";
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from "@testcontainers/postgresql";
 import { knex } from "knex";
-import { createMock } from "@golevelup/ts-jest";
-import { EventRow } from "./event-row";
+import { v4 as uuidv4, validate } from "uuid";
+
 import { AggregateRootRow } from "./aggregate-root-row";
+import { EventRow } from "./event-row";
+import { PostgreSQLEventStore } from "./postgresql-event-store";
 
 let eventStore: PostgreSQLEventStore;
 let container: StartedPostgreSqlContainer;
@@ -128,23 +129,23 @@ describe("findByAggregateRootId tests", () => {
         });
 
         await knexConnection<EventRow>(schema + ".es-events").insert({
-            id: ev1Id,
             aggregate_root_id: aggregateRootId,
-            aggregate_root_version: 34,
             aggregate_root_name: "test-aggregate",
+            aggregate_root_version: 34,
+            created_at: ev1Date,
             event_name: "sql-event-1",
-            payload: "{}",
-            created_at: ev1Date
+            id: ev1Id,
+            payload: "{}"
         });
 
         await knexConnection<EventRow>(schema + ".es-events").insert({
-            id: ev2Id,
             aggregate_root_id: aggregateRootId,
-            aggregate_root_version: 35,
             aggregate_root_name: "test-aggregate",
+            aggregate_root_version: 35,
+            created_at: ev2Date,
             event_name: "sql-event-2",
-            payload: "{}",
-            created_at: ev2Date
+            id: ev2Id,
+            payload: "{}"
         });
 
         const events = await eventStore.findByAggregateRootId(DecoratedAggregateRoot, aggregateRootId);
@@ -179,13 +180,13 @@ describe("findByAggregateRootId tests", () => {
         });
 
         await knexConnection<EventRow>(schema + ".es-events").insert({
-            id: ev1Id,
             aggregate_root_id: aggregateRootId,
-            aggregate_root_version: 34,
             aggregate_root_name: "test-aggregate",
+            aggregate_root_version: 34,
+            created_at: ev1Date,
             event_name: "sql-event-1",
-            payload: "{}",
-            created_at: ev1Date
+            id: ev1Id,
+            payload: "{}"
         });
 
         const events = await eventStore.findByAggregateRootId(DecoratedAggregateRoot, uuidv4());
@@ -205,13 +206,13 @@ describe("findByAggregateRootId tests", () => {
         });
 
         await knexConnection<EventRow>(schema + ".es-events").insert({
-            id: ev1Id,
             aggregate_root_id: aggregateRootId,
-            aggregate_root_version: 34,
             aggregate_root_name: "test-aggregate",
+            aggregate_root_version: 34,
+            created_at: ev1Date,
             event_name: "sql-event-1",
-            payload: "{}",
-            created_at: ev1Date
+            id: ev1Id,
+            payload: "{}"
         });
 
         await expect(eventStore.findByAggregateRootId(UndecoratedAggregateRoot, aggregateRootId)).rejects.toThrow(

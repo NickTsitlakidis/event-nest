@@ -1,12 +1,13 @@
-import { DomainEventEmitter } from "./domain-event-emitter";
-import { OnDomainEvent } from "./on-domain-event";
 import { createMock } from "@golevelup/ts-jest";
-import { Module } from "@nestjs/core/injector/module";
-import { DomainEventSubscription } from "./domain-event-subscription";
 import { InjectionToken } from "@nestjs/common";
-import { InstanceWrapper } from "@nestjs/core/injector/instance-wrapper";
 import { Injectable } from "@nestjs/common/interfaces";
+import { InstanceWrapper } from "@nestjs/core/injector/instance-wrapper";
+import { Module } from "@nestjs/core/injector/module";
 import { firstValueFrom, map, mergeMap, throwError, timer } from "rxjs";
+
+import { DomainEventEmitter } from "./domain-event-emitter";
+import { DomainEventSubscription } from "./domain-event-subscription";
+import { OnDomainEvent } from "./on-domain-event";
 
 class TestEvent1 {
     constructor(public readonly test: string) {}
@@ -59,20 +60,20 @@ test("onModuleDestroy - stops calling subscriptions", () => {
     bus.bindSubscriptions(injectorModules);
 
     bus.emit({
-        payload: new TestEvent1(""),
         aggregateRootId: "test",
+        eventId: "ev-id",
         occurredAt: creationDate,
-        version: 1,
-        eventId: "ev-id"
+        payload: new TestEvent1(""),
+        version: 1
     });
     bus.onModuleDestroy();
 
     bus.emit({
-        payload: new TestEvent1(""),
         aggregateRootId: "test",
+        eventId: "ev-id2",
         occurredAt: creationDate,
-        version: 2,
-        eventId: "ev-id2"
+        payload: new TestEvent1(""),
+        version: 2
     });
 
     expect(handleSpy).toHaveBeenCalledTimes(1);
@@ -93,20 +94,20 @@ describe("emit tests", () => {
 
         const creationDate = new Date();
         await bus.emit({
-            payload: new TestEvent1("apollo"),
             aggregateRootId: "test",
+            eventId: "ev-id",
             occurredAt: creationDate,
-            version: 1,
-            eventId: "ev-id"
+            payload: new TestEvent1("apollo"),
+            version: 1
         });
 
         expect(handleSpy).toHaveBeenCalledTimes(1);
         expect(handleSpy).toHaveBeenCalledWith({
-            payload: new TestEvent1("apollo"),
             aggregateRootId: "test",
+            eventId: "ev-id",
             occurredAt: creationDate,
-            version: 1,
-            eventId: "ev-id"
+            payload: new TestEvent1("apollo"),
+            version: 1
         });
     });
 
@@ -127,28 +128,28 @@ describe("emit tests", () => {
 
         const creationDate = new Date();
         await bus.emit({
-            payload: new TestEvent1("apollo"),
             aggregateRootId: "test",
+            eventId: "ev-id",
             occurredAt: creationDate,
-            version: 1,
-            eventId: "ev-id"
+            payload: new TestEvent1("apollo"),
+            version: 1
         });
 
         expect(handleSpy).toHaveBeenCalledTimes(1);
         expect(handleSpy).toHaveBeenCalledWith({
-            payload: new TestEvent1("apollo"),
             aggregateRootId: "test",
+            eventId: "ev-id",
             occurredAt: creationDate,
-            version: 1,
-            eventId: "ev-id"
+            payload: new TestEvent1("apollo"),
+            version: 1
         });
         expect(handleSpy2).toHaveBeenCalledTimes(1);
         expect(handleSpy2).toHaveBeenCalledWith({
-            payload: new TestEvent1("apollo"),
             aggregateRootId: "test",
+            eventId: "ev-id",
             occurredAt: creationDate,
-            version: 1,
-            eventId: "ev-id"
+            payload: new TestEvent1("apollo"),
+            version: 1
         });
     });
 
@@ -169,11 +170,11 @@ describe("emit tests", () => {
 
         const creationDate = new Date();
         await bus.emit({
-            payload: new TestEvent2(),
             aggregateRootId: "test",
+            eventId: "ev-id",
             occurredAt: creationDate,
-            version: 1,
-            eventId: "ev-id"
+            payload: new TestEvent2(),
+            version: 1
         });
 
         expect(handleSpy).toHaveBeenCalledTimes(0);
@@ -202,43 +203,43 @@ describe("emitMultiple tests", () => {
         const creationDate2 = new Date();
         await bus.emitMultiple([
             {
-                payload: new TestEvent1("apollo"),
                 aggregateRootId: "test",
+                eventId: "ev-id",
                 occurredAt: creationDate1,
-                version: 1,
-                eventId: "ev-id"
+                payload: new TestEvent1("apollo"),
+                version: 1
             },
             {
-                payload: new TestEvent2(),
                 aggregateRootId: "cc",
+                eventId: "ev-id2",
                 occurredAt: creationDate2,
-                version: 2,
-                eventId: "ev-id2"
+                payload: new TestEvent2(),
+                version: 2
             }
         ]);
 
         expect(handleSpy).toHaveBeenCalledTimes(1);
         expect(handleSpy).toHaveBeenCalledWith({
-            payload: new TestEvent1("apollo"),
             aggregateRootId: "test",
+            eventId: "ev-id",
             occurredAt: creationDate1,
-            version: 1,
-            eventId: "ev-id"
+            payload: new TestEvent1("apollo"),
+            version: 1
         });
         expect(handleSpy2).toHaveBeenCalledTimes(2);
         expect(handleSpy2).toHaveBeenNthCalledWith(1, {
-            payload: new TestEvent1("apollo"),
             aggregateRootId: "test",
+            eventId: "ev-id",
             occurredAt: creationDate1,
-            version: 1,
-            eventId: "ev-id"
+            payload: new TestEvent1("apollo"),
+            version: 1
         });
         expect(handleSpy2).toHaveBeenNthCalledWith(2, {
-            payload: new TestEvent2(),
             aggregateRootId: "cc",
+            eventId: "ev-id2",
             occurredAt: creationDate2,
-            version: 2,
-            eventId: "ev-id2"
+            payload: new TestEvent2(),
+            version: 2
         });
     });
     test("returns when events have no bound subscriptions", async () => {
@@ -257,18 +258,18 @@ describe("emitMultiple tests", () => {
         const creationDate2 = new Date();
         await bus.emitMultiple([
             {
-                payload: new TestEvent2(),
                 aggregateRootId: "test",
+                eventId: "ev-id2",
                 occurredAt: creationDate1,
-                version: 1,
-                eventId: "ev-id2"
+                payload: new TestEvent2(),
+                version: 1
             },
             {
-                payload: new TestEvent3(),
                 aggregateRootId: "test",
+                eventId: "ev-id",
                 occurredAt: creationDate2,
-                version: 2,
-                eventId: "ev-id"
+                payload: new TestEvent3(),
+                version: 2
             }
         ]);
 
@@ -291,28 +292,28 @@ describe("emitMultiple tests", () => {
         const creationDate2 = new Date();
         await bus.emitMultiple([
             {
-                payload: new TestEvent2(),
                 aggregateRootId: "test2",
+                eventId: "ev-id2",
                 occurredAt: creationDate2,
-                version: 2,
-                eventId: "ev-id2"
+                payload: new TestEvent2(),
+                version: 2
             },
             {
-                payload: new TestEvent1("ev1"),
                 aggregateRootId: "test1",
+                eventId: "ev-id",
                 occurredAt: creationDate1,
-                version: 1,
-                eventId: "ev-id"
+                payload: new TestEvent1("ev1"),
+                version: 1
             }
         ]);
 
         expect(handleSpy).toHaveBeenCalledTimes(1);
         expect(handleSpy).toHaveBeenCalledWith({
-            payload: new TestEvent1("ev1"),
             aggregateRootId: "test1",
+            eventId: "ev-id",
             occurredAt: creationDate1,
-            version: 1,
-            eventId: "ev-id"
+            payload: new TestEvent1("ev1"),
+            version: 1
         });
     });
 
@@ -354,36 +355,36 @@ describe("emitMultiple tests", () => {
         const creationDate2 = new Date();
         await bus.emitMultiple([
             {
-                payload: new TestEvent2(),
                 aggregateRootId: "test2",
+                eventId: "ev-id2",
                 occurredAt: creationDate2,
-                version: 2,
-                eventId: "ev-id2"
+                payload: new TestEvent2(),
+                version: 2
             },
             {
-                payload: new TestEvent1("ev1"),
                 aggregateRootId: "test1",
+                eventId: "ev-id",
                 occurredAt: creationDate1,
-                version: 1,
-                eventId: "ev-id"
+                payload: new TestEvent1("ev1"),
+                version: 1
             }
         ]);
 
         expect(handleSpy).toHaveBeenCalledTimes(1);
         expect(handleSpy).toHaveBeenCalledWith({
-            payload: new TestEvent1("ev1"),
             aggregateRootId: "test1",
+            eventId: "ev-id",
             occurredAt: creationDate1,
-            version: 1,
-            eventId: "ev-id"
+            payload: new TestEvent1("ev1"),
+            version: 1
         });
         expect(handleSpy2).toHaveBeenCalledTimes(1);
         expect(handleSpy2).toHaveBeenCalledWith({
-            payload: new TestEvent2(),
             aggregateRootId: "test2",
+            eventId: "ev-id2",
             occurredAt: creationDate2,
-            version: 2,
-            eventId: "ev-id2"
+            payload: new TestEvent2(),
+            version: 2
         });
         expect(handledParameters).toEqual([2, 1]);
     }, 10000);
@@ -426,28 +427,28 @@ describe("emitMultiple tests", () => {
 
         await bus.emitMultiple([
             {
-                payload: new TestEvent2(),
                 aggregateRootId: "test2",
+                eventId: "ev-id2",
                 occurredAt: creationDate2,
-                version: 2,
-                eventId: "ev-id2"
+                payload: new TestEvent2(),
+                version: 2
             },
             {
-                payload: new TestEvent1("ev1"),
                 aggregateRootId: "test1",
+                eventId: "ev-id",
                 occurredAt: creationDate1,
-                version: 1,
-                eventId: "ev-id"
+                payload: new TestEvent1("ev1"),
+                version: 1
             }
         ]);
 
         expect(handleSpy2).toHaveBeenCalledTimes(1);
         expect(handleSpy2).toHaveBeenCalledWith({
-            payload: new TestEvent2(),
             aggregateRootId: "test2",
+            eventId: "ev-id2",
             occurredAt: creationDate2,
-            version: 2,
-            eventId: "ev-id2"
+            payload: new TestEvent2(),
+            version: 2
         });
         expect(handleSpy).toHaveBeenCalledTimes(0);
         expect(handledParameters).toEqual([]);

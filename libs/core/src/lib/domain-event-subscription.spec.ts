@@ -11,8 +11,8 @@ import {
     getEventsFromDomainEventSubscription,
     isDomainEventSubscription
 } from "./domain-event-subscription";
-import { OnDomainEvent } from "./on-domain-event";
 import { DOMAIN_EVENT_KEY, DOMAIN_EVENT_SUBSCRIPTION_KEY } from "./metadata-keys";
+import { OnDomainEvent } from "./on-domain-event";
 
 randomUUID.mockReturnValue("the-id");
 

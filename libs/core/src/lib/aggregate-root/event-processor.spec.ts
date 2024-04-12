@@ -1,5 +1,5 @@
-import { EventProcessor, getDecoratedPropertyKey } from "./event-processor";
 import { AggregateRoot } from "./aggregate-root";
+import { EventProcessor, getDecoratedPropertyKey } from "./event-processor";
 
 class TestEvent {}
 

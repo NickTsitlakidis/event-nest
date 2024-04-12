@@ -14,8 +14,8 @@ import { registerEvent } from "./domain-event-registrations";
 export function DomainEvent(eventName: string): ClassDecorator {
     return (target) => {
         registerEvent({
-            eventName: eventName,
-            eventClass: target
+            eventClass: target,
+            eventName: eventName
         });
     };
 }

@@ -1,14 +1,15 @@
+import { Logger, OnModuleDestroy } from "@nestjs/common";
 import { Module } from "@nestjs/core/injector/module";
+import { concatMap, from, lastValueFrom, toArray } from "rxjs";
+
 import {
     getEventId,
     getEventsFromDomainEventSubscription,
     isDomainEventSubscription
 } from "./domain-event-subscription";
-import { isNil } from "./utils/type-utils";
-import { Logger, OnModuleDestroy } from "@nestjs/common";
 import { OnDomainEvent } from "./on-domain-event";
-import { concatMap, from, lastValueFrom, toArray } from "rxjs";
 import { PublishedDomainEvent } from "./published-domain-event";
+import { isNil } from "./utils/type-utils";
 
 export class DomainEventEmitter implements OnModuleDestroy {
     private readonly _handlers: Map<string, Array<OnDomainEvent<object>>>;
@@ -21,10 +22,6 @@ export class DomainEventEmitter implements OnModuleDestroy {
 
     get concurrentSubscriptions(): boolean {
         return this._concurrentSubscriptions;
-    }
-
-    onModuleDestroy() {
-        this._handlers.clear();
     }
 
     bindSubscriptions(injectorModules: Map<string, Module>) {
@@ -97,5 +94,9 @@ export class DomainEventEmitter implements OnModuleDestroy {
         ).catch((error) => {
             this._logger.debug(`Error while emitting events sequentially: ${(error as any).message}`);
         });
+    }
+
+    onModuleDestroy() {
+        this._handlers.clear();
     }
 }

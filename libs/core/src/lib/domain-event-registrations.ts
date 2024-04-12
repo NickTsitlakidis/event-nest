@@ -1,10 +1,11 @@
-import { EventNameConflictException } from "./exceptions/event-name-conflict-exception";
 import { ClassConstructor } from "class-transformer";
+
+import { EventNameConflictException } from "./exceptions/event-name-conflict-exception";
 import { isNil } from "./utils/type-utils";
 
 type Registration = {
-    eventName: string;
     eventClass: unknown;
+    eventName: string;
 };
 
 const registrations: Array<Registration> = [];

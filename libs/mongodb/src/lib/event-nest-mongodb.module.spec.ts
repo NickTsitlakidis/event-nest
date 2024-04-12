@@ -1,11 +1,12 @@
-import { Test } from "@nestjs/testing";
-import { EventNestMongoDbModule } from "./event-nest-mongodb.module";
-import { Provider } from "@nestjs/common";
-import { createMock } from "@golevelup/ts-jest";
-import { MongoEventStore } from "./storage/mongo-event-store";
 import { DomainEventEmitter, EVENT_STORE } from "@event-nest/core";
-import { ModuleProviders } from "./module-providers";
+import { createMock } from "@golevelup/ts-jest";
+import { Provider } from "@nestjs/common";
 import { ModulesContainer } from "@nestjs/core";
+import { Test } from "@nestjs/testing";
+
+import { EventNestMongoDbModule } from "./event-nest-mongodb.module";
+import { ModuleProviders } from "./module-providers";
+import { MongoEventStore } from "./storage/mongo-event-store";
 
 test("binds subscriptions on startup", async () => {
     const emitter = createMock<DomainEventEmitter>();
@@ -25,9 +26,9 @@ test("binds subscriptions on startup", async () => {
     const module = await Test.createTestingModule({
         imports: [
             EventNestMongoDbModule.register({
-                eventsCollection: "events",
                 aggregatesCollection: "aggregates",
-                connectionUri: "mongodb://localhost:27017/event-nest"
+                connectionUri: "mongodb://localhost:27017/event-nest",
+                eventsCollection: "events"
             })
         ]
     }).compile();

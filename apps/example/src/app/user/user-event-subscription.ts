@@ -1,6 +1,7 @@
 import { DomainEventSubscription, OnDomainEvent, PublishedDomainEvent } from "@event-nest/core";
-import { UserCreatedEvent, UserUpdatedEvent } from "./user-events";
 import { Injectable } from "@nestjs/common";
+
+import { UserCreatedEvent, UserUpdatedEvent } from "./user-events";
 
 @Injectable()
 @DomainEventSubscription(UserCreatedEvent, UserUpdatedEvent)

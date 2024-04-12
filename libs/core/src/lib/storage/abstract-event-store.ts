@@ -1,15 +1,15 @@
-import { AggregateRootClass, EventStore } from "./event-store";
-import { StoredEvent } from "./stored-event";
 import { AggregateRoot } from "../aggregate-root/aggregate-root";
-import { StoredAggregateRoot } from "./stored-aggregate-root";
-import { IdGenerationException } from "../exceptions/id-generation-exception";
 import { AggregateRootEvent } from "../aggregate-root/aggregate-root-event";
-import { hasAllValues, isNil } from "../utils/type-utils";
-import { DomainEventEmitter } from "../domain-event-emitter";
 import { getAggregateRootName } from "../aggregate-root/aggregate-root-name";
+import { DomainEventEmitter } from "../domain-event-emitter";
+import { IdGenerationException } from "../exceptions/id-generation-exception";
 import { MissingAggregateRootNameException } from "../exceptions/missing-aggregate-root-name-exception";
-import { PublishedDomainEvent } from "../published-domain-event";
 import { UnknownEventVersionException } from "../exceptions/unknown-event-version-exception";
+import { PublishedDomainEvent } from "../published-domain-event";
+import { hasAllValues, isNil } from "../utils/type-utils";
+import { AggregateRootClass, EventStore } from "./event-store";
+import { StoredAggregateRoot } from "./stored-aggregate-root";
+import { StoredEvent } from "./stored-event";
 
 /**
  * An abstract implementation of the {@link EventStore} interface.
@@ -19,17 +19,6 @@ import { UnknownEventVersionException } from "../exceptions/unknown-event-versio
 export abstract class AbstractEventStore implements EventStore {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     protected constructor(private _eventEmitter: DomainEventEmitter) {}
-
-    abstract findByAggregateRootId<T extends AggregateRoot>(
-        aggregateRootClass: AggregateRootClass<T>,
-        id: string
-    ): Promise<Array<StoredEvent>>;
-
-    abstract findAggregateRootVersion(id: string): Promise<number>;
-
-    abstract save(events: Array<StoredEvent>, aggregate: StoredAggregateRoot): Promise<Array<StoredEvent>>;
-
-    abstract generateEntityId(): Promise<string>;
 
     addPublisher<T extends AggregateRoot>(aggregateRoot: T): T {
         aggregateRoot.publish = async (events: Array<AggregateRootEvent<object>>) => {
@@ -84,4 +73,15 @@ export abstract class AbstractEventStore implements EventStore {
         };
         return aggregateRoot;
     }
+
+    abstract findAggregateRootVersion(id: string): Promise<number>;
+
+    abstract findByAggregateRootId<T extends AggregateRoot>(
+        aggregateRootClass: AggregateRootClass<T>,
+        id: string
+    ): Promise<Array<StoredEvent>>;
+
+    abstract generateEntityId(): Promise<string>;
+
+    abstract save(events: Array<StoredEvent>, aggregate: StoredAggregateRoot): Promise<Array<StoredEvent>>;
 }

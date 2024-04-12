@@ -1,7 +1,9 @@
 import "reflect-metadata";
-import { AggregateRoot } from "./aggregate-root";
+// eslint-disable-next-line perfectionist/sort-imports
 import { ClassConstructor } from "class-transformer";
+
 import { EVENT_PROCESSOR_KEY } from "../metadata-keys";
+import { AggregateRoot } from "./aggregate-root";
 
 export function getDecoratedPropertyKey(
     entity: AggregateRoot,

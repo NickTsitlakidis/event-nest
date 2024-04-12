@@ -1,14 +1,15 @@
-import { Test } from "@nestjs/testing";
-import { MongoDbModuleAsyncOptions, MongodbModuleOptions } from "./mongodb-module-options";
 import { DomainEventEmitter, EVENT_STORE } from "@event-nest/core";
-import { MongoEventStore } from "./storage/mongo-event-store";
+import { Test } from "@nestjs/testing";
+
 import { ModuleProviders } from "./module-providers";
+import { MongoDbModuleAsyncOptions, MongodbModuleOptions } from "./mongodb-module-options";
+import { MongoEventStore } from "./storage/mongo-event-store";
 
 describe("create - tests", () => {
     test("creates MongoEventStore provider", async () => {
         const options: MongodbModuleOptions = {
-            connectionUri: "mongodb://localhost:27017",
             aggregatesCollection: "aggregates",
+            connectionUri: "mongodb://localhost:27017",
             eventsCollection: "events"
         };
         const module = await Test.createTestingModule({ providers: ModuleProviders.create(options) }).compile();
@@ -21,10 +22,10 @@ describe("create - tests", () => {
 
     test("creates DomainEventEmitter provider with concurrent option", async () => {
         const options: MongodbModuleOptions = {
-            connectionUri: "mongodb://localhost:27017",
             aggregatesCollection: "aggregates",
-            eventsCollection: "events",
-            concurrentSubscriptions: true
+            concurrentSubscriptions: true,
+            connectionUri: "mongodb://localhost:27017",
+            eventsCollection: "events"
         };
         const module = await Test.createTestingModule({ providers: ModuleProviders.create(options) }).compile();
         const emitter: DomainEventEmitter = module.get(DomainEventEmitter);
@@ -35,8 +36,8 @@ describe("create - tests", () => {
 
     test("creates DomainEventEmitter provider without concurrent option", async () => {
         const options: MongodbModuleOptions = {
-            connectionUri: "mongodb://localhost:27017",
             aggregatesCollection: "aggregates",
+            connectionUri: "mongodb://localhost:27017",
             eventsCollection: "events"
         };
         const module = await Test.createTestingModule({ providers: ModuleProviders.create(options) }).compile();
@@ -52,8 +53,8 @@ describe("createAsync - tests", () => {
         const options: MongoDbModuleAsyncOptions = {
             useFactory: () => {
                 return Promise.resolve({
-                    connectionUri: "mongodb://localhost:27017",
                     aggregatesCollection: "async-aggregates",
+                    connectionUri: "mongodb://localhost:27017",
                     eventsCollection: "async-events"
                 });
             }
@@ -70,8 +71,8 @@ describe("createAsync - tests", () => {
         const options: MongoDbModuleAsyncOptions = {
             useFactory: () => {
                 return {
-                    connectionUri: "mongodb://localhost:27017",
                     aggregatesCollection: "async-aggregates",
+                    connectionUri: "mongodb://localhost:27017",
                     eventsCollection: "async-events"
                 };
             }
@@ -88,10 +89,10 @@ describe("createAsync - tests", () => {
         const options: MongoDbModuleAsyncOptions = {
             useFactory: () => {
                 return Promise.resolve({
-                    connectionUri: "mongodb://localhost:27017",
                     aggregatesCollection: "async-aggregates",
-                    eventsCollection: "async-events",
-                    concurrentSubscriptions: true
+                    concurrentSubscriptions: true,
+                    connectionUri: "mongodb://localhost:27017",
+                    eventsCollection: "async-events"
                 });
             }
         };
@@ -106,10 +107,10 @@ describe("createAsync - tests", () => {
         const options: MongoDbModuleAsyncOptions = {
             useFactory: () => {
                 return {
-                    connectionUri: "mongodb://localhost:27017",
                     aggregatesCollection: "async-aggregates",
-                    eventsCollection: "async-events",
-                    concurrentSubscriptions: true
+                    concurrentSubscriptions: true,
+                    connectionUri: "mongodb://localhost:27017",
+                    eventsCollection: "async-events"
                 };
             }
         };
@@ -124,8 +125,8 @@ describe("createAsync - tests", () => {
         const options: MongoDbModuleAsyncOptions = {
             useFactory: () => {
                 return Promise.resolve({
-                    connectionUri: "mongodb://localhost:27017",
                     aggregatesCollection: "async-aggregates",
+                    connectionUri: "mongodb://localhost:27017",
                     eventsCollection: "async-events"
                 });
             }
@@ -141,8 +142,8 @@ describe("createAsync - tests", () => {
         const options: MongoDbModuleAsyncOptions = {
             useFactory: () => {
                 return {
-                    connectionUri: "mongodb://localhost:27017",
                     aggregatesCollection: "async-aggregates",
+                    connectionUri: "mongodb://localhost:27017",
                     eventsCollection: "async-events"
                 };
             }
