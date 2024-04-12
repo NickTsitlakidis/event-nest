@@ -22,10 +22,12 @@ It would also probably help to make some distinctions about what Event Nest is n
 ## Table of contents
 - [Why?](#why)
 - [Getting Started](#getting-started)
+    - [MongoDB setup](#mongodb-setup)
+    - [PostgreSQL setup](#postgresql-setup)
 - [Concepts](#concepts)
-  - [Event](#event)
-  - [Aggregate Root](#aggregate-root)
-  - [Domain Event Subscription](#domain-event-subscription)
+    - [Event](#event)
+    - [Aggregate Root](#aggregate-root)
+    - [Domain Event Subscription](#domain-event-subscription)
 
 
 ## Why?
@@ -42,15 +44,17 @@ simpler, the library is not depending on the official module, so you can use it 
 
 ## Getting Started
 Depending on the storage solution you intend to use, you will need to install the corresponding packages.
-At the moment, only MongoDB is supported, hopefully soon there will be more.
+At the moment, the supported storage solutions are MongoDB and PostgreSQL.
+
+### MongoDB setup
 
 ```bash
 npm install --save @event-nest/core @event-nest/mongodb
 ```
 After installation, import the `EventNestMongoDbModule` to your nest.js application :
 ```typescript
-import { Module } from "@nestjs/common";
 import { EventNestMongoDbModule } from "@event-nest/mongodb";
+import { Module } from "@nestjs/common";
 
 @Module({
     imports: [
@@ -64,8 +68,52 @@ import { EventNestMongoDbModule } from "@event-nest/mongodb";
 export class AppModule {}
 ```
 The collection settings define which MongoDB collections will be used to store the aggregates and the events.
-Use any collection you want but be sure to create it before running the application.
 
+
+### PostgreSQL setup
+
+```bash
+npm install --save @event-nest/core @event-nest/postgresql
+```
+
+After installation, import the `EventNestPostgreSQLModule` to your nest.js application :
+```typescript
+import { EventNestPostgreSQLModule } from "@event-nest/postgresql";
+import { Module } from "@nestjs/common";
+
+@Module({
+    imports: [
+        EventNestPostgreSQLModule.register({
+            aggregatesTableName: "aggregates",
+            connectionUri: "postgresql://postgres:password@localhost:5432/event_nest",
+            eventsTableName: "events",
+            schemaName: "event_nest_schema"
+        })
+    ]
+})
+export class AppModule {}
+```
+
+To avoid requiring a user with elevated privileges, the library will not create the tables in your database. You will have to create them manually based on the following guidelines.
+
+**Aggregates Table :**
+
+| Column Name | Type    | Description                                                                                                 |
+|-------------|---------|-------------------------------------------------------------------------------------------------------------|
+| id          | uuid    | The unique identifier of the aggregate root. <br/>Must be set as NOT NULL and it is the table's primary key |
+| version     | integer | The current version of the aggregate root. <br/>Must be set as NOT NULL                                     |
+
+**Events Table :**
+
+| Column Name            | Type                     | Description                                                                                                                   |
+|------------------------|--------------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| id                     | uuid                     | The unique identifier of the event. <br/>Must be set as NOT NULL and it is the table's primary key                            |
+| aggregate_root_id      | uuid                     | The id of the aggregate that produced the event.<br/> Must be set as NOT NULL and it is a foreign key to the aggregates table |
+| aggregate_root_version | integer                  | The version of the aggregate root when the event was produced. <br/>Must be set as NOT NULL                                   |
+| aggregate_root_name    | text                     | The unique name of the aggregate root. <br/>Must be set as NOT NULL                                                           |
+| event_name             | text                     | The unique name of the event. <br/>Must be set as NOT NULL                                                                    |
+| payload                | jsonb                    | A JSON representation of the event's additional data.                                                                         |
+| created_at             | timestamp with time zone | The timestamp when the event was produced. <br/>Must be set as NOT NULL                                                       |
 
 
 ## Concepts
@@ -239,10 +287,10 @@ import { PublishedDomainEvent, DomainEventSubscription, OnDomainEvent } from "@e
 @DomainEventSubscription(UserCreatedEvent, UserUpdatedEvent)
 export class UserEventSubscription implements OnDomainEvent<UserCreatedEvent | UserUpdatedEvent> {
 
-  onDomainEvent(event: PublishedDomainEvent<UserCreatedEvent | UserUpdatedEvent>): Promise<unknown> {
-    //Here you can create/update your read model based on the event and your custom logic.
-    return Promise.resolve(undefined);
-  }
+    onDomainEvent(event: PublishedDomainEvent<UserCreatedEvent | UserUpdatedEvent>): Promise<unknown> {
+        //Here you can create/update your read model based on the event and your custom logic.
+        return Promise.resolve(undefined);
+    }
 
 }
 ```
@@ -255,14 +303,14 @@ and your logic doesn't depend on the order of the events, you can change this se
 
 ```typescript
 @Module({
-  imports: [
-    EventNestMongoDbModule.register({
-      connectionUri: "mongodb://localhost:27017/example",
-      aggregatesCollection: "aggregates-collection",
-      eventsCollection: "events-collection",
-      concurrentSubscriptions:true
-    })
-  ]
+    imports: [
+        EventNestMongoDbModule.register({
+            connectionUri: "mongodb://localhost:27017/example",
+            aggregatesCollection: "aggregates-collection",
+            eventsCollection: "events-collection",
+            concurrentSubscriptions:true
+        })
+    ]
 })
 export class AppModule {}
 ```

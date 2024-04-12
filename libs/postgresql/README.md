@@ -1,11 +1,4 @@
-# postgresql
+# Event Nest | PostgreSQL
+The PostgreSQL module for [Event Nest](https://www.npmjs.com/package/@event-nest/core)
 
-This library was generated with [Nx](https://nx.dev).
-
-## Building
-
-Run `nx build postgresql` to build the library.
-
-## Running unit tests
-
-Run `nx test postgresql` to execute the unit tests via [Jest](https://jestjs.io).
+For a full documentation, please visit the [Event Nest](https://www.npmjs.com/package/@event-nest/core) package.
