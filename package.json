@@ -55,9 +55,9 @@
         "verdaccio": "5.29.1"
     },
     "dependencies": {
-        "@nestjs/common": "^10.3.2",
-        "@nestjs/core": "^10.3.2",
-        "@nestjs/platform-express": "^10.3.2",
+        "@nestjs/common": "^10.3.7",
+        "@nestjs/core": "^10.3.7",
+        "@nestjs/platform-express": "10.3.7",
         "class-transformer": "^0.5.1",
         "knex": "^3.1.0",
         "mongodb": "5.9.2",
