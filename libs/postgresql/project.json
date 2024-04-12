@@ -12,7 +12,8 @@
                 "tsConfig": "libs/postgresql/tsconfig.lib.json",
                 "packageJson": "libs/postgresql/package.json",
                 "main": "libs/postgresql/src/index.ts",
-                "assets": ["libs/postgresql/*.md"]
+                "assets": ["libs/postgresql/*.md"],
+                "updateBuildableProjectDepsInPackageJson": true
             }
         },
         "publish": {
