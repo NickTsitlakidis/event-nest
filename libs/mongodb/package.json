@@ -17,7 +17,9 @@
         "event sourcing",
         "cqrs",
         "ddd",
-        "mongodb"
+        "mongodb",
+        "sql",
+        "postgresql"
     ],
     "peerDependencies": {
         "@nestjs/common": "^9.0.0 || ^10.0.0",

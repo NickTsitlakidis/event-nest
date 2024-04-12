@@ -8,7 +8,10 @@
         "nestjs",
         "event sourcing",
         "cqrs",
-        "ddd"
+        "ddd",
+        "mongodb",
+        "sql",
+        "postgresql"
     ],
     "repository": {
         "type": "git",
