@@ -15,7 +15,7 @@
         "url": "https://github.com/NickTsitlakidis/event-nest.git"
     },
     "engines": {
-        "node": ">= 16"
+        "node": ">= 18"
     },
     "devDependencies": {
         "@golevelup/ts-jest": "0.4.0",
