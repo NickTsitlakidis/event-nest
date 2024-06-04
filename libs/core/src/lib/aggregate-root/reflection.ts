@@ -2,7 +2,6 @@ import "reflect-metadata";
 // eslint-disable-next-line perfectionist/sort-imports
 import { ClassConstructor } from "class-transformer";
 
-import { EVENT_PROCESSOR_KEY } from "../metadata-keys";
 import { AggregateRoot } from "./aggregate-root";
 
 export function getDecoratedPropertyKey(
@@ -24,22 +23,4 @@ export function getDecoratedPropertyKey(
     }
 
     return Reflect.getMetadata(matchingKey, entity).key;
-}
-
-/**
- * A decorator to mark a method as an event processor.
- * When an aggregate root has to be recreated based on database events, these methods
- * are called to process the events.
- *
- * @param eventClass The event class that this method processes.
- * @constructor
- */
-export function EventProcessor(eventClass: ClassConstructor<unknown>): PropertyDecorator {
-    return (propertyParent, propertyKey) => {
-        Reflect.defineMetadata(
-            EVENT_PROCESSOR_KEY + "-" + propertyKey.toString(),
-            { eventClass: eventClass, key: propertyKey },
-            propertyParent
-        );
-    };
 }

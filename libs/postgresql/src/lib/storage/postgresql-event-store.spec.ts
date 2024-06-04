@@ -10,8 +10,8 @@ import {
 } from "@event-nest/core";
 import { createMock } from "@golevelup/ts-jest";
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from "@testcontainers/postgresql";
+import { randomUUID } from "crypto";
 import { knex } from "knex";
-import { v4 as uuidv4, validate } from "uuid";
 
 import { AggregateRootRow } from "./aggregate-root-row";
 import { EventRow } from "./event-row";
@@ -91,15 +91,15 @@ afterEach(async () => {
 describe("findAggregateRootVersion tests", () => {
     test("returns -1 when the aggregate root is not found", async () => {
         await knexConnection(schema + ".es-aggregates").insert({
-            id: uuidv4(),
+            id: randomUUID(),
             version: 33
         });
-        const version = await eventStore.findAggregateRootVersion(uuidv4());
+        const version = await eventStore.findAggregateRootVersion(randomUUID());
         expect(version).toBe(-1);
     });
 
     test("returns version when aggregate root is found", async () => {
-        const id = uuidv4();
+        const id = randomUUID();
         await knexConnection(schema + ".es-aggregates").insert({
             id: id,
             version: 88
@@ -111,14 +111,14 @@ describe("findAggregateRootVersion tests", () => {
 
 describe("findByAggregateRootId tests", () => {
     test("returns empty array when no events found", async () => {
-        const events = await eventStore.findByAggregateRootId(DecoratedAggregateRoot, uuidv4());
+        const events = await eventStore.findByAggregateRootId(DecoratedAggregateRoot, randomUUID());
         expect(events).toEqual([]);
     });
 
     test("returns mapped events when they are found and matched", async () => {
-        const aggregateRootId = uuidv4();
-        const ev1Id = uuidv4();
-        const ev2Id = uuidv4();
+        const aggregateRootId = randomUUID();
+        const ev1Id = randomUUID();
+        const ev2Id = randomUUID();
 
         const ev1Date = new Date();
         const ev2Date = new Date();
@@ -169,8 +169,8 @@ describe("findByAggregateRootId tests", () => {
     });
 
     test("returns empty array when events don't match the aggregate", async () => {
-        const aggregateRootId = uuidv4();
-        const ev1Id = uuidv4();
+        const aggregateRootId = randomUUID();
+        const ev1Id = randomUUID();
 
         const ev1Date = new Date();
 
@@ -189,14 +189,14 @@ describe("findByAggregateRootId tests", () => {
             payload: "{}"
         });
 
-        const events = await eventStore.findByAggregateRootId(DecoratedAggregateRoot, uuidv4());
+        const events = await eventStore.findByAggregateRootId(DecoratedAggregateRoot, randomUUID());
 
         expect(events.length).toBe(0);
     });
 
     test("throws when aggregate is not decorated", async () => {
-        const aggregateRootId = uuidv4();
-        const ev1Id = uuidv4();
+        const aggregateRootId = randomUUID();
+        const ev1Id = randomUUID();
 
         const ev1Date = new Date();
 
@@ -223,7 +223,7 @@ describe("findByAggregateRootId tests", () => {
 
 describe("save tests", () => {
     test("does nothing for empty events array", async () => {
-        const ag = new StoredAggregateRoot(uuidv4(), 5);
+        const ag = new StoredAggregateRoot(randomUUID(), 5);
 
         await eventStore.save([], ag);
 
@@ -235,14 +235,14 @@ describe("save tests", () => {
     });
 
     test("throws when there's a concurrency issue", async () => {
-        const id = uuidv4();
+        const id = randomUUID();
         const root = new StoredAggregateRoot(id, 5);
 
         await knexConnection<AggregateRootRow>(schema + ".es-aggregates").insert({ id: id, version: 6 });
 
         await expect(
             eventStore.save(
-                [StoredEvent.fromPublishedEvent(uuidv4(), root.id, "Test", new SqlEvent1(), new Date())],
+                [StoredEvent.fromPublishedEvent(randomUUID(), root.id, "Test", new SqlEvent1(), new Date())],
                 root
             )
         ).rejects.toThrow(EventConcurrencyException);
@@ -258,10 +258,10 @@ describe("save tests", () => {
     });
 
     test("saves new aggregate with its event", async () => {
-        const rootId = uuidv4();
+        const rootId = randomUUID();
         const root = new StoredAggregateRoot(rootId, 1);
 
-        const events = [StoredEvent.fromPublishedEvent(uuidv4(), rootId, "Test", new SqlEvent2(), new Date())];
+        const events = [StoredEvent.fromPublishedEvent(randomUUID(), rootId, "Test", new SqlEvent2(), new Date())];
 
         const saved = await eventStore.save(events, root);
 
@@ -287,7 +287,7 @@ describe("save tests", () => {
     });
 
     test("increases version and stores events and aggregate", async () => {
-        const rootId = uuidv4();
+        const rootId = randomUUID();
         const root = new StoredAggregateRoot(rootId, 38);
 
         await knexConnection<AggregateRootRow>(schema + ".es-aggregates").insert({
@@ -296,8 +296,8 @@ describe("save tests", () => {
         });
 
         const events = [
-            StoredEvent.fromPublishedEvent(uuidv4(), rootId, "Test", new SqlEvent2(), new Date()),
-            StoredEvent.fromPublishedEvent(uuidv4(), rootId, "Test", new SqlEvent1(), new Date())
+            StoredEvent.fromPublishedEvent(randomUUID(), rootId, "Test", new SqlEvent2(), new Date()),
+            StoredEvent.fromPublishedEvent(randomUUID(), rootId, "Test", new SqlEvent1(), new Date())
         ];
 
         const saved = await eventStore.save(events, root);
@@ -332,5 +332,5 @@ describe("save tests", () => {
 
 test("generateEntityId - returns string with UUID format", async () => {
     const id = await eventStore.generateEntityId();
-    expect(validate(id)).toBe(true);
+    expect(/^[a-z,0-9,-]{36,36}$/.test(id)).toBe(true);
 });

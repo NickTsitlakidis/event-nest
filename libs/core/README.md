@@ -123,7 +123,7 @@ An event is a representation of something that has happened in the past. It is i
 Each event serves three purposes :
 * It will be persisted so that it can be used to reconstruct the state of an aggregate root
 * It will be passed to any internal subscribers that need to react to this event (e.g. updating the read model)
-* When it's time to recreate the aggregate root, the event will be processed by the correct method in the aggregate root
+* When it's time to recreate the aggregate root, the event will be applied by the correct method in the aggregate root
 
 There is no specific requirement for the structure of an event, but it is recommended to keep it simple and immutable. The [class-transformer](https://github.com/typestack/class-transformer) library is utilized under the hood to save and read the events from the database. Therefore, your event classes should adhere to the rules of class-transformer to be properly serialized and deserialized.
 
@@ -175,7 +175,7 @@ export class UserUpdatedEvent {
 We start this example by defining two simple events for a user: a creation event and an update event. Each one has its own data, and they are identified by a unique name which is set with the `@DomainEvent` decorator.
 
 ```typescript
-import { AggregateRoot, AggregateRootName, EventProcessor, StoredEvent } from "@event-nest/core";
+import { AggregateRoot, AggregateRootName, ApplyEvent, StoredEvent } from "@event-nest/core";
 
 @AggregateRootName("User")
 export class User extends AggregateRoot {
@@ -189,7 +189,7 @@ export class User extends AggregateRoot {
     public static createNew(id: string, name: string, email: string): User {
         const user = new User(id);
         const event = new UserCreatedEvent(name, email);
-        user.processUserCreatedEvent(event);
+        user.applyUserCreatedEvent(event);
         user.append(event);
         return user;
     }
@@ -202,18 +202,18 @@ export class User extends AggregateRoot {
 
     public update(newName: string) {
         const event = new UserUpdatedEvent(newName);
-        this.processUserUpdatedEvent(event);
+        this.applyUserUpdatedEvent(event);
         this.append(event);
     }
 
-    @EventProcessor(UserCreatedEvent)
-    private processUserCreatedEvent = (event: UserCreatedEvent) => {
+    @ApplyEvent(UserCreatedEvent)
+    private applyUserCreatedEvent = (event: UserCreatedEvent) => {
         this.name = event.name;
         this.email = event.email;
     };
 
-    @EventProcessor(UserUpdatedEvent)
-    private processUserUpdatedEvent = (event: UserUpdatedEvent) => {
+    @ApplyEvent(UserUpdatedEvent)
+    private applyUserUpdatedEvent = (event: UserUpdatedEvent) => {
         this.name = event.newName;
     };
     
@@ -232,7 +232,7 @@ In our case, we have the following creation cases :
 
 The `reconstitute` method will initiate the event processing based on the events order.
 
-To process each event, we have defined two private methods which are decorated with the `@EventProcessor` decorator. Each method will be called when the corresponding event is retrieved, and it's ready to be processed.
+To apply each event, we have defined two private methods which are decorated with the `@ApplyEvent` decorator. Each method will be called when the corresponding event is retrieved, and it's ready to be processed.
 This is the place to update the object's internal state based on the event's data. **Make sure that these methods are defined as arrow functions, otherwise they won't be called.**
 
 

@@ -44,7 +44,7 @@ describe("DomainEventSubscription tests", () => {
 
         const eventId = Reflect.getMetadata(DOMAIN_EVENT_KEY, TheEvent);
         expect(eventId).toBeDefined();
-        expect(eventId.eventSubscriptionId).toBe("the-id");
+        expect(eventId.eventSubscriptionId).toBe("TheEvent-the-id");
     });
 
     test("adds same id if called for the same event", () => {
@@ -58,7 +58,7 @@ describe("DomainEventSubscription tests", () => {
         randomUUID.mockReturnValueOnce("two");
         DomainEventSubscription(OtherEvent)(Sub2);
 
-        expect(Reflect.getMetadata(DOMAIN_EVENT_KEY, OtherEvent).eventSubscriptionId).toBe("one");
+        expect(Reflect.getMetadata(DOMAIN_EVENT_KEY, OtherEvent).eventSubscriptionId).toBe("OtherEvent-one");
     });
 });
 
@@ -82,7 +82,7 @@ describe("getEventId tests", () => {
     });
 
     test("returns id based on metadata", () => {
-        expect(getEventId(new TheEvent().constructor)).toBe("the-id");
+        expect(getEventId(new TheEvent().constructor)).toBe("TheEvent-the-id");
     });
 });
 
