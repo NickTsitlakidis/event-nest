@@ -83,13 +83,14 @@ export abstract class AggregateRoot {
      * handlers will be called to take care of async updates.
      * Call this once all the events you want, have been appended.
      */
-    commit(): Promise<AggregateRoot> {
+    async commit(): Promise<AggregateRoot> {
         const toPublish = this._appendedEvents.slice(0);
-        this._appendedEvents = [];
         if (toPublish.length > 0) {
-            return this.publish(toPublish).then(() => Promise.resolve(this));
+            await this.publish(toPublish);
+            this._appendedEvents = [];
+            return this;
         }
-        return Promise.resolve(this);
+        return this;
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

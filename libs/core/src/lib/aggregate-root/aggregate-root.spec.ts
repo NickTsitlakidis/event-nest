@@ -189,6 +189,24 @@ describe("commit tests", () => {
         expect((result as SubEntity).published).toEqual([]);
     });
 
+    test("does not clear appended events if commit fails", async () => {
+        const entity = new SubEntity("entity-id");
+        const event1 = new TestEvent2();
+        const event2 = new TestEvent2();
+        entity.append(event1);
+        entity.append(event2);
+
+        entity.publish = () => Promise.reject("error");
+
+        try {
+            await entity.commit();
+            expect(fail("Should have thrown"));
+        } catch (error) {
+            expect(entity.appendedEvents.length).toBe(2);
+            expect((entity as SubEntity).published).toEqual([]);
+        }
+    });
+
     test("publishes and clears appended events", async () => {
         const entity = new SubEntity("entity-id");
         const event1 = new TestEvent2();
