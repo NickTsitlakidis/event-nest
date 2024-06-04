@@ -3,6 +3,7 @@
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "sourceRoot": "libs/mongodb/src",
     "projectType": "library",
+    "tags": ["publishable"],
     "targets": {
         "build": {
             "executor": "@nx/js:tsc",
@@ -20,10 +21,6 @@
             "command": "node tools/scripts/publish.mjs mongodb {args.ver} {args.tag}",
             "dependsOn": ["build"]
         },
-        "lint": {
-            "executor": "@nx/eslint:lint",
-            "outputs": ["{options.outputFile}"]
-        },
         "test": {
             "executor": "@nx/jest:jest",
             "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
@@ -34,6 +31,5 @@
                 "codeCoverage": true
             }
         }
-    },
-    "tags": ["publishable"]
+    }
 }
