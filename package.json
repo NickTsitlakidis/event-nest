@@ -36,7 +36,6 @@
         "@testcontainers/postgresql": "10.8.1",
         "@types/jest": "^29.4.0",
         "@types/node": "18.19.15",
-        "@types/uuid": "^9.0.8",
         "@typescript-eslint/eslint-plugin": "7.6.0",
         "@typescript-eslint/parser": "7.6.0",
         "eslint": "8.57.0",
@@ -64,7 +63,6 @@
         "pg": "^8.11.5",
         "reflect-metadata": "^0.1.13",
         "rxjs": "^7.8.0",
-        "tslib": "^2.3.0",
-        "uuid": "^9.0.1"
+        "tslib": "^2.3.0"
     }
 }

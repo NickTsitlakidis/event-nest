@@ -8,7 +8,11 @@ export const DomainEventSubscription = (...events: any[]): ClassDecorator => {
     return (target: object) => {
         events.forEach((event) => {
             if (!Reflect.hasOwnMetadata(DOMAIN_EVENT_KEY, event)) {
-                Reflect.defineMetadata(DOMAIN_EVENT_KEY, { eventSubscriptionId: randomUUID() }, event);
+                Reflect.defineMetadata(
+                    DOMAIN_EVENT_KEY,
+                    { eventSubscriptionId: `${event.name}-${randomUUID()}` },
+                    event
+                );
             }
         });
 

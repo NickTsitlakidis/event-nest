@@ -11,8 +11,8 @@ import {
     isNil
 } from "@event-nest/core";
 import { Logger } from "@nestjs/common";
+import { randomUUID } from "crypto";
 import * as knex from "knex";
-import { v4 as uuidv4 } from "uuid";
 
 import { AggregateRootRow } from "./aggregate-root-row";
 import { EventRow } from "./event-row";
@@ -92,7 +92,7 @@ export class PostgreSQLEventStore extends AbstractEventStore {
     }
 
     generateEntityId(): Promise<string> {
-        return Promise.resolve(uuidv4());
+        return Promise.resolve(randomUUID());
     }
 
     async save(events: Array<StoredEvent>, aggregate: StoredAggregateRoot): Promise<Array<StoredEvent>> {
