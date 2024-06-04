@@ -1,6 +1,6 @@
 export * from "./lib/aggregate-root/aggregate-root";
 export * from "./lib/aggregate-root/aggregate-root-name";
-export * from "./lib/aggregate-root/event-processor";
+export * from "./lib/aggregate-root/apply-event.decorator";
 
 export * from "./lib/exceptions/event-name-conflict-exception";
 export * from "./lib/exceptions/unknown-event-exception";

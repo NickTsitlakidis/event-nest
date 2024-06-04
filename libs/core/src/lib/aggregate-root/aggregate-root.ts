@@ -6,7 +6,7 @@ import { UnregisteredEventException } from "../exceptions/unregistered-event-exc
 import { StoredEvent } from "../storage/stored-event";
 import { isNil } from "../utils/type-utils";
 import { AggregateRootEvent } from "./aggregate-root-event";
-import { getDecoratedPropertyKey } from "./event-processor";
+import { getDecoratedPropertyKey } from "./reflection";
 
 type KnownEvent = {
     payload: unknown;

@@ -1,4 +1,4 @@
-import { AggregateRoot, AggregateRootName, EventProcessor, StoredEvent } from "@event-nest/core";
+import { AggregateRoot, AggregateRootName, ApplyEvent, StoredEvent } from "@event-nest/core";
 
 import { UserCreatedEvent, UserUpdatedEvent } from "./user-events";
 
@@ -7,13 +7,13 @@ export class User extends AggregateRoot {
     private _email: string;
     private _name: string;
 
-    @EventProcessor(UserCreatedEvent)
+    @ApplyEvent(UserCreatedEvent)
     private processUserCreatedEvent = (event: UserCreatedEvent) => {
         this._name = event.name;
         this._email = event.email;
     };
 
-    @EventProcessor(UserUpdatedEvent)
+    @ApplyEvent(UserUpdatedEvent)
     private processUserUpdatedEvent = (event: UserUpdatedEvent) => {
         this._name = event.newName;
     };

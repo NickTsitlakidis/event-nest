@@ -1,5 +1,6 @@
 import { AggregateRoot } from "./aggregate-root";
-import { EventProcessor, getDecoratedPropertyKey } from "./event-processor";
+import { ApplyEvent } from "./apply-event.decorator";
+import { getDecoratedPropertyKey } from "./reflection";
 
 class TestEvent {}
 
@@ -16,7 +17,7 @@ class TestEntity extends AggregateRoot {
         super("id");
     }
 
-    @EventProcessor(TestEvent)
+    @ApplyEvent(TestEvent)
     processTestEvent() {
         // do something
     }

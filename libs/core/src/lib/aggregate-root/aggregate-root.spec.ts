@@ -6,7 +6,7 @@ import { UnregisteredEventException } from "../exceptions/unregistered-event-exc
 import { StoredEvent } from "../storage/stored-event";
 import { AggregateRoot } from "./aggregate-root";
 import { AggregateRootEvent } from "./aggregate-root-event";
-import { EventProcessor } from "./event-processor";
+import { ApplyEvent } from "./apply-event.decorator";
 
 @DomainEvent("test-event-1")
 class TestEvent1 {}
@@ -20,13 +20,13 @@ class ThrowingEvent {}
 class UnregisteredEvent {}
 
 class SubEntity extends AggregateRoot {
-    @EventProcessor(TestEvent1)
+    @ApplyEvent(TestEvent1)
     processTestEvent1 = () => {};
 
-    @EventProcessor(TestEvent2)
+    @ApplyEvent(TestEvent2)
     processTestEvent2 = () => {};
 
-    @EventProcessor(ThrowingEvent)
+    @ApplyEvent(ThrowingEvent)
     processThrowingEvent = () => {
         throw new Error("ooops");
     };
@@ -75,7 +75,7 @@ describe("constructor tests", () => {
 });
 
 describe("reconstitute tests", () => {
-    test("calls mapped processors after sorting", () => {
+    test("calls mapped apply methods after sorting", () => {
         const ev1 = StoredEvent.fromStorage("ev1", "id1", "test-event-2", new Date(), 10, "ag-name", {});
         const ev2 = StoredEvent.fromStorage("ev2", "id1", "test-event-1", new Date(), 2, "ag-name", {});
 
@@ -100,7 +100,7 @@ describe("reconstitute tests", () => {
         expect(last).toBe(1);
     });
 
-    test("throws when an event processor throws", () => {
+    test("throws when an event applier throws", () => {
         const ev1 = StoredEvent.fromStorage("ev1", "id1", "throwing-event", new Date(), 10, "ag-name", {});
         const entity = new SubEntity("id1");
         expect(() => entity.reconstitute([ev1])).toThrow();
