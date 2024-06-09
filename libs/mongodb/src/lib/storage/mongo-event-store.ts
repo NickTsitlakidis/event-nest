@@ -114,9 +114,9 @@ export class MongoEventStore extends AbstractEventStore {
                 foundAggregate = aggregate;
             }
 
-            if (foundAggregate.version !== aggregate.version) {
+            if (aggregate.isOutdated(foundAggregate)) {
                 this._logger.error(
-                    `Concurrency issue for aggregate ${aggregate.id}. Expected ${aggregate.version}. Stored ${foundAggregate.version}`
+                    `Version conflict detected for aggregate ${aggregate.id}. Expected ${aggregate.version}. Stored ${foundAggregate.version}`
                 );
                 throw new EventConcurrencyException(aggregate.id, foundAggregate.version, aggregate.version);
             }
