@@ -1,12 +1,13 @@
 import { randomUUID } from "crypto";
+import { Class } from "type-fest";
 
 import { DOMAIN_EVENT_KEY, DOMAIN_EVENT_SUBSCRIPTION_KEY } from "./metadata-keys";
 import { OnDomainEvent } from "./on-domain-event";
 import { isNil } from "./utils/type-utils";
 
-export const DomainEventSubscription = (...events: any[]): ClassDecorator => {
+export const DomainEventSubscription = (...eventClasses: Class<unknown>[]): ClassDecorator => {
     return (target: object) => {
-        events.forEach((event) => {
+        eventClasses.forEach((event) => {
             if (!Reflect.hasOwnMetadata(DOMAIN_EVENT_KEY, event)) {
                 Reflect.defineMetadata(
                     DOMAIN_EVENT_KEY,
@@ -16,7 +17,7 @@ export const DomainEventSubscription = (...events: any[]): ClassDecorator => {
             }
         });
 
-        Reflect.defineMetadata(DOMAIN_EVENT_SUBSCRIPTION_KEY, { events }, target);
+        Reflect.defineMetadata(DOMAIN_EVENT_SUBSCRIPTION_KEY, { events: eventClasses }, target);
     };
 };
 

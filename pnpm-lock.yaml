@@ -75,7 +75,7 @@ devDependencies:
     version: 4.2.0(jest-environment-node@29.7.0)(mongodb@5.9.2)
   '@swc-node/register':
     specifier: 1.9.2
-    version: 1.9.2(@swc/core@1.5.7)(@swc/types@0.1.6)(typescript@5.4.5)
+    version: 1.9.2(@swc/core@1.5.7)(@swc/types@0.1.7)(typescript@5.4.5)
   '@swc/core':
     specifier: 1.5.7
     version: 1.5.7(@swc/helpers@0.5.11)
@@ -133,6 +133,9 @@ devDependencies:
   ts-node:
     specifier: 10.9.1
     version: 10.9.1(@swc/core@1.5.7)(@types/node@18.19.15)(typescript@5.4.5)
+  type-fest:
+    specifier: 4.20.0
+    version: 4.20.0
   typescript:
     specifier: 5.4.5
     version: 5.4.5
@@ -2631,7 +2634,7 @@ packages:
       '@sinonjs/commons': 3.0.0
     dev: true
 
-  /@swc-node/core@1.13.1(@swc/core@1.5.7)(@swc/types@0.1.6):
+  /@swc-node/core@1.13.1(@swc/core@1.5.7)(@swc/types@0.1.7):
     resolution: {integrity: sha512-emB5l2nZsXjUEAuusqjYvWnQMLWZp6K039Mv8aq5SX1rsNM/N7DNhw1i4/DX7AyzNZ0tT+ASWyTvqEURldp5HA==}
     engines: {node: '>= 10'}
     peerDependencies:
@@ -2639,16 +2642,16 @@ packages:
       '@swc/types': '>= 0.1'
     dependencies:
       '@swc/core': 1.5.7(@swc/helpers@0.5.11)
-      '@swc/types': 0.1.6
+      '@swc/types': 0.1.7
     dev: true
 
-  /@swc-node/register@1.9.2(@swc/core@1.5.7)(@swc/types@0.1.6)(typescript@5.4.5):
+  /@swc-node/register@1.9.2(@swc/core@1.5.7)(@swc/types@0.1.7)(typescript@5.4.5):
     resolution: {integrity: sha512-BBjg0QNuEEmJSoU/++JOXhrjWdu3PTyYeJWsvchsI0Aqtj8ICkz/DqlwtXbmZVZ5vuDPpTfFlwDBZe81zgShMA==}
     peerDependencies:
       '@swc/core': '>= 1.4.13'
       typescript: '>= 4.3'
     dependencies:
-      '@swc-node/core': 1.13.1(@swc/core@1.5.7)(@swc/types@0.1.6)
+      '@swc-node/core': 1.13.1(@swc/core@1.5.7)(@swc/types@0.1.7)
       '@swc-node/sourcemap-support': 0.5.0
       '@swc/core': 1.5.7(@swc/helpers@0.5.11)
       colorette: 2.0.20
@@ -2792,12 +2795,6 @@ packages:
     resolution: {integrity: sha512-YNlnKRWF2sVojTpIyzwou9XoTNbzbzONwRhOoniEioF1AtaitTvVZblaQRrAzChWQ1bLYyYSWzM18y4WwgzJ+A==}
     dependencies:
       tslib: 2.6.2
-    dev: true
-
-  /@swc/types@0.1.6:
-    resolution: {integrity: sha512-/JLo/l2JsT/LRd80C3HfbmVpxOAJ11FO2RCEslFrgzLltoP9j8XIbsyDcfCt2WWyX+CM96rBoNM+IToAkFOugg==}
-    dependencies:
-      '@swc/counter': 0.1.3
     dev: true
 
   /@swc/types@0.1.7:
@@ -7816,7 +7813,7 @@ packages:
         optional: true
     dependencies:
       '@nrwl/tao': 19.2.2(@swc-node/register@1.9.2)(@swc/core@1.5.7)
-      '@swc-node/register': 1.9.2(@swc/core@1.5.7)(@swc/types@0.1.6)(typescript@5.4.5)
+      '@swc-node/register': 1.9.2(@swc/core@1.5.7)(@swc/types@0.1.7)(typescript@5.4.5)
       '@swc/core': 1.5.7(@swc/helpers@0.5.11)
       '@yarnpkg/lockfile': 1.1.0
       '@yarnpkg/parsers': 3.0.0-rc.46
@@ -9931,6 +9928,11 @@ packages:
   /type-fest@0.21.3:
     resolution: {integrity: sha512-t0rzBq87m3fVcduHDUFhKmyyX+9eo6WQjZvf51Ea/M0Q7+T374Jp1aUiyUl0GKxp8M/OETVHSDvmkyPgvX+X2w==}
     engines: {node: '>=10'}
+    dev: true
+
+  /type-fest@4.20.0:
+    resolution: {integrity: sha512-MBh+PHUHHisjXf4tlx0CFWoMdjx8zCMLJHOjnV1prABYZFHqtFOyauCIK2/7w4oIfwkF8iNhLtnJEfVY2vn3iw==}
+    engines: {node: '>=16'}
     dev: true
 
   /type-is@1.6.18:
