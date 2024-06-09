@@ -7,4 +7,8 @@ export class StoredAggregateRoot {
         public id: string,
         public version: number
     ) {}
+
+    isOutdated(toCompare: StoredAggregateRoot) {
+        return this.version !== toCompare.version;
+    }
 }

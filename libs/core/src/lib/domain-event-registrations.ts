@@ -1,4 +1,4 @@
-import { ClassConstructor } from "class-transformer";
+import { Class } from "type-fest";
 
 import { EventNameConflictException } from "./exceptions/event-name-conflict-exception";
 import { isNil } from "./utils/type-utils";
@@ -23,9 +23,9 @@ export function getEventName(target: object): string | undefined {
  * Returns the class that matches the provided name. Or undefined.
  * @param name The event name to be checked.
  */
-export function getEventClass<T>(name: string): ClassConstructor<T> | undefined {
+export function getEventClass<T>(name: string): Class<T> | undefined {
     const found = registrations.find((registration) => registration.eventName === name);
-    return isNil(found) ? undefined : (found.eventClass as ClassConstructor<T>);
+    return isNil(found) ? undefined : (found.eventClass as Class<T>);
 }
 
 export function isRegistered(event: object): boolean {

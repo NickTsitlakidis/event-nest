@@ -17,14 +17,14 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-      - uses: pnpm/action-setup@v2
+      - uses: pnpm/action-setup@v3
         name: Install pnpm
         with:
           version: 8
@@ -33,7 +33,7 @@ jobs:
         shell: bash
         run: |
           echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         name: Setup pnpm cache
         with:
           path: ${{ env.STORE_PATH }}
@@ -42,10 +42,11 @@ jobs:
             ${{ runner.os }}-pnpm-store-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Nx checks
-        uses: mansagroup/nrwl-nx-action@v3
-        with:
-          targets: lint,test
-          projects: core,mongodb,postgresql
+      - name: Check core
+        run: pnpm nx run core:lint && pnpm nx run core:test
+      - name: Check mongodb
+        run: pnpm nx run mongodb:lint && pnpm nx run mongodb:test
+      - name: Check postgresql
+        run: pnpm nx run postgresql:lint && pnpm nx run postgresql:test
       - name: Upload test coverage
         uses: coverallsapp/github-action@v2

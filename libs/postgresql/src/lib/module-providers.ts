@@ -12,8 +12,7 @@ function buildKnexConnection(options: PostgreSQLModuleOptions): knex.Knex {
         return knex({
             client: "pg",
             connection: {
-                connectionString: options.connectionUri,
-                ssl: { rejectUnauthorized: false }
+                connectionString: options.connectionUri
             }
         });
     }

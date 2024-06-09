@@ -40,3 +40,4 @@ Thumbs.db
 **/*/coverage
 
 .nx/cache
+.nx/workspace-data
