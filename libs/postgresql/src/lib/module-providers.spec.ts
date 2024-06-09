@@ -61,7 +61,7 @@ describe("create - tests", () => {
         expect(emitter.concurrentSubscriptions).toBe(false);
     });
 
-    test("disables ssl when ssl option is not provided", async () => {
+    test("skips ssl configuration when it is not provided", async () => {
         const options: PostgreSQLModuleOptions = {
             aggregatesTableName: "aggregates",
             connectionUri: "postgres://test:test@docker:32770/db",
@@ -72,8 +72,7 @@ describe("create - tests", () => {
         expect(mockedKnex).toHaveBeenCalledWith({
             client: "pg",
             connection: {
-                connectionString: options.connectionUri,
-                ssl: { rejectUnauthorized: false }
+                connectionString: options.connectionUri
             }
         });
     });
@@ -218,7 +217,7 @@ describe("createAsync - tests", () => {
         expect(emitter.concurrentSubscriptions).toBe(false);
     });
 
-    test("disables ssl when ssl option is not provided", async () => {
+    test("skips ssl configuration when it is not provided", async () => {
         const options: PostgreSQLModuleAsyncOptions = {
             useFactory: () => {
                 return {
@@ -233,8 +232,7 @@ describe("createAsync - tests", () => {
         expect(mockedKnex).toHaveBeenCalledWith({
             client: "pg",
             connection: {
-                connectionString: "postgres://test:test@docker:32770/db",
-                ssl: { rejectUnauthorized: false }
+                connectionString: "postgres://test:test@docker:32770/db"
             }
         });
     });
