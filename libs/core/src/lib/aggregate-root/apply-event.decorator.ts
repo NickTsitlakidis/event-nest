@@ -1,6 +1,7 @@
 import "reflect-metadata";
 // eslint-disable-next-line perfectionist/sort-imports
-import { ClassConstructor } from "class-transformer";
+
+import { Class } from "type-fest";
 
 import { APPLY_EVENT_DECORATOR_KEY } from "../metadata-keys";
 
@@ -12,7 +13,7 @@ import { APPLY_EVENT_DECORATOR_KEY } from "../metadata-keys";
  * @param eventClass The class of the event to be applied.
  * @constructor
  */
-export function ApplyEvent(eventClass: ClassConstructor<unknown>): PropertyDecorator {
+export function ApplyEvent(eventClass: Class<unknown>): PropertyDecorator {
     return (propertyParent, propertyKey) => {
         Reflect.defineMetadata(
             APPLY_EVENT_DECORATOR_KEY + "-" + propertyKey.toString(),

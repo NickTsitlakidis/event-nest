@@ -1,4 +1,5 @@
-import { ClassConstructor, instanceToPlain, plainToClass } from "class-transformer";
+import { instanceToPlain, plainToClass } from "class-transformer";
+import { Class } from "type-fest";
 
 import { getEventName } from "../domain-event-registrations";
 import { isNil } from "../utils/type-utils";
@@ -113,7 +114,7 @@ export class StoredEvent {
         return this._payload;
     }
 
-    public getPayloadAs<T>(payloadClass: ClassConstructor<T>): T {
+    public getPayloadAs<T>(payloadClass: Class<T>): T {
         return plainToClass(payloadClass, this._payload);
     }
 }
