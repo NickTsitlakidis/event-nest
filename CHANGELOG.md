@@ -1,3 +1,15 @@
+## 3.0.1 (2024-06-10)
+
+
+### 🩹 Fixes
+
+- **core:** Fixing parameter type of domain event subscription to accept only rest parameters ([edab002](https://github.com/NickTsitlakidis/event-nest/commit/edab002))
+- **postgresql:** Database connection is now using default ssl options if an options parameter is not given. ([fe5c5fa](https://github.com/NickTsitlakidis/event-nest/commit/fe5c5fa))
+
+### ❤️  Thank You
+
+- Nick Tsitlakidis
+
 # 3.0.0 (2024-06-04)
 
 
