@@ -1,6 +1,4 @@
 import "reflect-metadata";
-// eslint-disable-next-line perfectionist/sort-imports
-
 import { Class } from "type-fest";
 
 import { APPLY_EVENT_DECORATOR_KEY } from "../metadata-keys";

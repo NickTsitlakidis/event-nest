@@ -7,7 +7,12 @@
             "cache": true
         },
         "lint": {
-            "inputs": ["default", "{workspaceRoot}/.eslintrc.json", "{workspaceRoot}/.eslintignore"],
+            "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/.eslintignore",
+                "{workspaceRoot}/eslint.config.js"
+            ],
             "cache": true
         },
         "test": {
@@ -15,7 +20,12 @@
             "cache": true
         },
         "@nx/eslint:lint": {
-            "inputs": ["default", "{workspaceRoot}/.eslintrc.json", "{workspaceRoot}/.eslintignore"],
+            "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/.eslintignore",
+                "{workspaceRoot}/eslint.config.js"
+            ],
             "cache": true
         },
         "@nx/jest:jest": {
@@ -45,7 +55,8 @@
             "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
             "!{projectRoot}/tsconfig.spec.json",
             "!{projectRoot}/jest.config.[jt]s",
-            "!{projectRoot}/src/test-setup.[jt]s"
+            "!{projectRoot}/src/test-setup.[jt]s",
+            "!{projectRoot}/eslint.config.js"
         ],
         "sharedGlobals": []
     },

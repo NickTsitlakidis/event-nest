@@ -17,7 +17,6 @@ import { StoredEvent } from "./stored-event";
  * of the {@link EventStore:addPublisher} method and this is why this class exists.
  */
 export abstract class AbstractEventStore implements EventStore {
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
     protected constructor(private _eventEmitter: DomainEventEmitter) {}
 
     addPublisher<T extends AggregateRoot>(aggregateRoot: T): T {

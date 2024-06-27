@@ -18,6 +18,8 @@
         "node": ">= 18"
     },
     "devDependencies": {
+        "@eslint/eslintrc": "^2.1.1",
+        "@eslint/js": "^9.5.0",
         "@golevelup/ts-jest": "0.5.0",
         "@nestjs/schematics": "^10.0.1",
         "@nestjs/testing": "^10.0.2",
@@ -36,9 +38,10 @@
         "@testcontainers/postgresql": "10.10.0",
         "@types/jest": "^29.4.0",
         "@types/node": "18.19.15",
-        "@typescript-eslint/eslint-plugin": "7.6.0",
-        "@typescript-eslint/parser": "7.6.0",
-        "eslint": "8.57.0",
+        "@typescript-eslint/eslint-plugin": "7.14.1",
+        "@typescript-eslint/parser": "7.14.1",
+        "@typescript-eslint/utils": "8.0.0-alpha.34",
+        "eslint": "9.5.0",
         "eslint-config-prettier": "9.1.0",
         "eslint-plugin-perfectionist": "2.11.0",
         "eslint-plugin-prettier": "5.1.3",

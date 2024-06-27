@@ -65,7 +65,6 @@ export class DomainEventEmitter implements OnModuleDestroy {
         const handlers = this._handlers.get(eventId) as Array<OnDomainEvent<object>>;
         const withErrorHandling = handlers.map((handler) => {
             return async () => {
-                // eslint-disable-next-line no-useless-catch
                 try {
                     return await handler.onDomainEvent(withAggregate);
                 } catch (error) {
