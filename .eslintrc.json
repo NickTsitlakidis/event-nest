@@ -26,7 +26,7 @@
             "files": ["*.ts"],
             "extends": [
                 "plugin:@nx/typescript",
-                "plugin:sonarjs/recommended",
+                "plugin:sonarjs/recommended-legacy",
                 "plugin:perfectionist/recommended-natural"
             ],
             "rules": {

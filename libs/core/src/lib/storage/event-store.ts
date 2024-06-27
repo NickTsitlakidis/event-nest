@@ -3,7 +3,7 @@ import { StoredAggregateRoot } from "./stored-aggregate-root";
 import { StoredEvent } from "./stored-event";
 
 // eslint-disable-next-line @typescript-eslint/ban-types
-export type AggregateRootClass<T> = Function & { prototype: T };
+export type AggregateRootClass<T> = { prototype: T } & Function;
 
 export /**
  * A unique symbol that can be used to inject the event store into other classes.
