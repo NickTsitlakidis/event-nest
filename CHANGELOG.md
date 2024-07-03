@@ -1,3 +1,18 @@
+## 3.1.0 (2024-07-03)
+
+
+### 🚀 Features
+
+- Addition of event store method to retrieve events of a specific aggregate root class based on multiple entity ids. ([ead4e8f](https://github.com/NickTsitlakidis/event-nest/commit/ead4e8f))
+
+### 🩹 Fixes
+
+- Upgrading mongo,nest and reflect-metadata dependencies to resolve security issues. ([617d475](https://github.com/NickTsitlakidis/event-nest/commit/617d475))
+
+### ❤️  Thank You
+
+- Nick Tsitlakidis
+
 ## 3.0.1 (2024-06-10)
 
 
