@@ -1,6 +1,6 @@
 {
     "name": "@event-nest/postgresql",
-    "version": "3.0.1",
+    "version": "3.1.0",
     "license": "MIT",
     "description": "Event sourcing module for NestJS using PostgreSQL. It uses SQL tables and transactions to store events",
     "author": "Nick Tsitlakidis",
