@@ -37,11 +37,24 @@ export interface EventStore {
      * is resolved from the aggregate root class. These events can later be used to recreate an aggregate root object.
      * @param aggregateRootClass The class of the aggregate root for which the store will search for events
      * @param id The unique id of the aggregate root object
+     * @returns An array of events that are associated with the provided id
      */
     findByAggregateRootId<T extends AggregateRoot>(
         aggregateRootClass: AggregateRootClass<T>,
         id: string
     ): Promise<Array<StoredEvent>>;
+
+    /**
+     * Finds all events that are associated with the provided aggregate root ids and match the aggregate root name which
+     * is resolved from the aggregate root class. These events can later be used to recreate an aggregate root object.
+     * @param aggregateRootClass The class of the aggregate root for which the store will search for events
+     * @param ids The unique ids of the aggregate root objects
+     * @returns A map where the key is the aggregate root id and the value is an array of events that are associated with that id
+     */
+    findByAggregateRootIds<T extends AggregateRoot>(
+        aggregateRootClass: AggregateRootClass<T>,
+        ids: string[]
+    ): Promise<Record<string, Array<StoredEvent>>>;
 
     /**
      * Each storage solution has its own way of dealing with unique ids. This method's implementation should reflect

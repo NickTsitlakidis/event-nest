@@ -81,6 +81,46 @@ export class MongoEventStore extends AbstractEventStore {
         return [];
     }
 
+    async findByAggregateRootIds<T extends AggregateRoot>(
+        aggregateRootClass: AggregateRootClass<T>,
+        ids: string[]
+    ): Promise<Record<string, Array<StoredEvent>>> {
+        const aggregateRootName = getAggregateRootName(aggregateRootClass);
+        if (isNil(aggregateRootName)) {
+            this._logger.error(
+                `Missing aggregate root name for class: ${aggregateRootClass.name}. Use the @AggregateRootName decorator.`
+            );
+            throw new MissingAggregateRootNameException(aggregateRootClass.name);
+        }
+
+        const documents = await this._mongoClient
+            .db()
+            .collection(this._eventsCollectionName)
+            .find({ aggregateRootId: { $in: ids }, aggregateRootName: aggregateRootName })
+            .toArray();
+
+        const grouped: Record<string, Array<StoredEvent>> = {};
+
+        documents.forEach((doc) => {
+            if (isNil(grouped[doc["aggregateRootId"]])) {
+                grouped[doc["aggregateRootId"]] = [];
+            }
+            grouped[doc["aggregateRootId"]].push(
+                StoredEvent.fromStorage(
+                    doc._id.toHexString(),
+                    doc["aggregateRootId"],
+                    doc["eventName"],
+                    doc["createdAt"],
+                    doc["aggregateRootVersion"],
+                    doc["aggregateRootName"],
+                    doc["payload"]
+                )
+            );
+        });
+
+        return grouped;
+    }
+
     generateEntityId(): Promise<string> {
         return Promise.resolve(new ObjectId().toHexString());
     }

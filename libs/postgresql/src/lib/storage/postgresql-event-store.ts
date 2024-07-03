@@ -91,6 +91,46 @@ export class PostgreSQLEventStore extends AbstractEventStore {
         return [];
     }
 
+    async findByAggregateRootIds<T extends AggregateRoot>(
+        aggregateRootClass: AggregateRootClass<T>,
+        ids: string[]
+    ): Promise<Record<string, Array<StoredEvent>>> {
+        const aggregateRootName = getAggregateRootName(aggregateRootClass);
+        if (isNil(aggregateRootName)) {
+            this._logger.error(
+                `Missing aggregate root name for class: ${aggregateRootClass.name}. Use the @AggregateRootName decorator.`
+            );
+            throw new MissingAggregateRootNameException(aggregateRootClass.name);
+        }
+
+        const rows = await this._knexConnection<EventRow>(this._fullEventsTableName)
+            .select("*")
+            .whereIn("aggregate_root_id", ids)
+            .andWhere({
+                aggregate_root_name: aggregateRootName
+            });
+
+        const grouped: Record<string, Array<StoredEvent>> = {};
+        rows.forEach((row) => {
+            if (isNil(grouped[row.aggregate_root_id])) {
+                grouped[row.aggregate_root_id] = [];
+            }
+            grouped[row.aggregate_root_id].push(
+                StoredEvent.fromStorage(
+                    row.id,
+                    row.aggregate_root_id,
+                    row.event_name,
+                    row.created_at,
+                    row.aggregate_root_version,
+                    row.aggregate_root_name,
+                    row.payload
+                )
+            );
+        });
+
+        return grouped;
+    }
+
     generateEntityId(): Promise<string> {
         return Promise.resolve(randomUUID());
     }

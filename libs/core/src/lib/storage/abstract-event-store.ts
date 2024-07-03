@@ -80,6 +80,11 @@ export abstract class AbstractEventStore implements EventStore {
         id: string
     ): Promise<Array<StoredEvent>>;
 
+    abstract findByAggregateRootIds<T extends AggregateRoot>(
+        aggregateRootClass: AggregateRootClass<T>,
+        ids: string[]
+    ): Promise<Record<string, Array<StoredEvent>>>;
+
     abstract generateEntityId(): Promise<string>;
 
     abstract save(events: Array<StoredEvent>, aggregate: StoredAggregateRoot): Promise<Array<StoredEvent>>;

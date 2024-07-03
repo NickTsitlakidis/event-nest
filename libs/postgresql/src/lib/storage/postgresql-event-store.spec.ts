@@ -109,6 +109,147 @@ describe("findAggregateRootVersion tests", () => {
     });
 });
 
+describe("findByAggregateRootIds tests", () => {
+    test("returns empty array when no events found", async () => {
+        const events = await eventStore.findByAggregateRootIds(DecoratedAggregateRoot, [
+            randomUUID(),
+            randomUUID(),
+            randomUUID()
+        ]);
+        expect(events).toEqual({});
+    });
+
+    test("returns mapped events when they are found and matched", async () => {
+        const aggregateRootId1 = randomUUID();
+        const aggregateRootId2 = randomUUID();
+        const aggregateRootId3 = randomUUID();
+        const otherId = randomUUID();
+
+        const ev1Id = randomUUID();
+        const ev2Id = randomUUID();
+        const ev3Id = randomUUID();
+        const ev4Id = randomUUID();
+
+        const ev1Date = new Date();
+        const ev2Date = new Date();
+        const ev3Date = new Date();
+        const ev4Date = new Date();
+
+        await knexConnection(schema + ".es-aggregates").insert({
+            id: aggregateRootId1,
+            version: 11
+        });
+
+        await knexConnection(schema + ".es-aggregates").insert({
+            id: aggregateRootId2,
+            version: 11
+        });
+
+        await knexConnection(schema + ".es-aggregates").insert({
+            id: aggregateRootId3,
+            version: 11
+        });
+
+        await knexConnection(schema + ".es-aggregates").insert({
+            id: otherId,
+            version: 110
+        });
+
+        await knexConnection<EventRow>(schema + ".es-events").insert({
+            aggregate_root_id: aggregateRootId1,
+            aggregate_root_name: "test-aggregate",
+            aggregate_root_version: 34,
+            created_at: ev1Date,
+            event_name: "sql-event-1",
+            id: ev1Id,
+            payload: "{}"
+        });
+
+        await knexConnection<EventRow>(schema + ".es-events").insert({
+            aggregate_root_id: aggregateRootId2,
+            aggregate_root_name: "test-aggregate",
+            aggregate_root_version: 35,
+            created_at: ev2Date,
+            event_name: "sql-event-2",
+            id: ev2Id,
+            payload: "{}"
+        });
+
+        await knexConnection<EventRow>(schema + ".es-events").insert({
+            aggregate_root_id: aggregateRootId2,
+            aggregate_root_name: "test-aggregate",
+            aggregate_root_version: 12,
+            created_at: ev3Date,
+            event_name: "sql-event-2-2",
+            id: ev3Id,
+            payload: "{}"
+        });
+
+        await knexConnection<EventRow>(schema + ".es-events").insert({
+            aggregate_root_id: aggregateRootId3,
+            aggregate_root_name: "test-aggregate",
+            aggregate_root_version: 36,
+            created_at: ev4Date,
+            event_name: "sql-event-3",
+            id: ev4Id,
+            payload: "{}"
+        });
+
+        await knexConnection<EventRow>(schema + ".es-events").insert({
+            aggregate_root_id: otherId,
+            aggregate_root_name: "other",
+            aggregate_root_version: 36,
+            created_at: ev4Date,
+            event_name: "other-event",
+            id: randomUUID(),
+            payload: "{}"
+        });
+
+        const events = await eventStore.findByAggregateRootIds(DecoratedAggregateRoot, [
+            aggregateRootId1,
+            aggregateRootId2,
+            aggregateRootId3,
+            randomUUID()
+        ]);
+
+        expect(Object.keys(events).length).toBe(3);
+        expect(events[aggregateRootId1].length).toBe(1);
+        expect(events[aggregateRootId1][0].id).toBe(ev1Id);
+        expect(events[aggregateRootId1][0].aggregateRootVersion).toBe(34);
+        expect(events[aggregateRootId1][0].eventName).toBe("sql-event-1");
+        expect(events[aggregateRootId1][0].aggregateRootId).toBe(aggregateRootId1);
+        expect(events[aggregateRootId1][0].aggregateRootName).toBe("test-aggregate");
+        expect(events[aggregateRootId1][0].payload).toEqual({});
+        expect(events[aggregateRootId1][0].createdAt).toEqual(ev1Date);
+
+        expect(events[aggregateRootId2].length).toBe(2);
+        expect(events[aggregateRootId2][0].id).toBe(ev2Id);
+        expect(events[aggregateRootId2][0].aggregateRootVersion).toBe(35);
+        expect(events[aggregateRootId2][0].eventName).toBe("sql-event-2");
+        expect(events[aggregateRootId2][0].aggregateRootId).toBe(aggregateRootId2);
+        expect(events[aggregateRootId2][0].aggregateRootName).toBe("test-aggregate");
+        expect(events[aggregateRootId2][0].payload).toEqual({});
+        expect(events[aggregateRootId2][0].createdAt).toEqual(ev2Date);
+
+        expect(events[aggregateRootId2][1].id).toBe(ev3Id);
+        expect(events[aggregateRootId2][1].aggregateRootVersion).toBe(12);
+        expect(events[aggregateRootId2][1].eventName).toBe("sql-event-2-2");
+        expect(events[aggregateRootId2][1].aggregateRootId).toBe(aggregateRootId2);
+        expect(events[aggregateRootId2][1].aggregateRootName).toBe("test-aggregate");
+        expect(events[aggregateRootId2][1].payload).toEqual({});
+        expect(events[aggregateRootId2][1].createdAt).toEqual(ev3Date);
+
+        expect(events[aggregateRootId3].length).toBe(1);
+        expect(events[aggregateRootId3][0].id).toBe(ev4Id);
+        expect(events[aggregateRootId3][0].aggregateRootVersion).toBe(36);
+        expect(events[aggregateRootId3][0].eventName).toBe("sql-event-3");
+        expect(events[aggregateRootId3][0].aggregateRootId).toBe(aggregateRootId3);
+        expect(events[aggregateRootId3][0].aggregateRootName).toBe("test-aggregate");
+        expect(events[aggregateRootId3][0].payload).toEqual({});
+        expect(events[aggregateRootId3][0].createdAt).toEqual(ev4Date);
+    });
+});
+
 describe("findByAggregateRootId tests", () => {
     test("returns empty array when no events found", async () => {
         const events = await eventStore.findByAggregateRootId(DecoratedAggregateRoot, randomUUID());

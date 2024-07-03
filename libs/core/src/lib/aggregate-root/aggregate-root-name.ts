@@ -1,3 +1,5 @@
+import "reflect-metadata";
+
 import { AGGREGATE_ROOT_NAME_KEY } from "../metadata-keys";
 
 /**

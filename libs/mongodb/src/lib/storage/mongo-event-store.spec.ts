@@ -28,7 +28,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-    mongoClient.close(true);
+    await mongoClient.close(true);
 });
 
 @DomainEvent("test-event-1")
@@ -160,6 +160,124 @@ describe("save tests", () => {
 
         expect(saved).toEqual(events);
         expect(saved[0].aggregateRootVersion).toBe(1);
+    });
+});
+
+describe("findByAggregateRootIds tests", () => {
+    test("returns empty object when no events found", async () => {
+        const events = await eventStore.findByAggregateRootIds(DecoratedAggregateRoot, [
+            new ObjectId().toHexString(),
+            new ObjectId().toHexString(),
+            new ObjectId().toHexString()
+        ]);
+        expect(events).toEqual({});
+    });
+
+    test("returns mapped events when they are found and matched", async () => {
+        const aggregateRootId1 = new ObjectId().toHexString();
+        const aggregateRootId2 = new ObjectId().toHexString();
+        const aggregateRootId3 = new ObjectId().toHexString();
+        const ev1Id = new ObjectId().toHexString();
+        const ev2Id = new ObjectId().toHexString();
+        const ev3Id = new ObjectId().toHexString();
+        const ev4Id = new ObjectId().toHexString();
+
+        const ev1Date = new Date();
+        const ev2Date = new Date();
+        const ev3Date = new Date();
+        const ev4Date = new Date();
+
+        await eventsCollection.insertOne({
+            _id: new ObjectId(ev1Id),
+            aggregateRootId: aggregateRootId1,
+            aggregateRootName: "test-aggregate",
+            aggregateRootVersion: 1,
+            createdAt: ev1Date,
+            eventName: "test-event-1",
+            payload: {}
+        });
+
+        await eventsCollection.insertOne({
+            _id: new ObjectId(ev2Id),
+            aggregateRootId: aggregateRootId2,
+            aggregateRootName: "test-aggregate",
+            aggregateRootVersion: 2,
+            createdAt: ev2Date,
+            eventName: "test-event-2",
+            payload: {}
+        });
+
+        await eventsCollection.insertOne({
+            _id: new ObjectId(ev3Id),
+            aggregateRootId: aggregateRootId2,
+            aggregateRootName: "test-aggregate",
+            aggregateRootVersion: 2,
+            createdAt: ev3Date,
+            eventName: "test-event-2-2",
+            payload: {}
+        });
+
+        await eventsCollection.insertOne({
+            _id: new ObjectId(ev4Id),
+            aggregateRootId: aggregateRootId3,
+            aggregateRootName: "test-aggregate",
+            aggregateRootVersion: 2,
+            createdAt: ev4Date,
+            eventName: "test-event-3",
+            payload: {}
+        });
+
+        await eventsCollection.insertOne({
+            _id: new ObjectId(),
+            aggregateRootId: "other",
+            aggregateRootName: "other",
+            aggregateRootVersion: 2,
+            createdAt: ev4Date,
+            eventName: "other-event",
+            payload: {}
+        });
+
+        const events = await eventStore.findByAggregateRootIds(DecoratedAggregateRoot, [
+            aggregateRootId1,
+            aggregateRootId2,
+            aggregateRootId3
+        ]);
+        expect(Object.keys(events).length).toBe(3);
+
+        expect(events[aggregateRootId1].length).toBe(1);
+        expect(events[aggregateRootId1][0].id).toBe(ev1Id);
+        expect(events[aggregateRootId1][0].aggregateRootVersion).toBe(1);
+        expect(events[aggregateRootId1][0].eventName).toBe("test-event-1");
+        expect(events[aggregateRootId1][0].aggregateRootId).toBe(aggregateRootId1);
+        expect(events[aggregateRootId1][0].aggregateRootName).toBe("test-aggregate");
+        expect(events[aggregateRootId1][0].payload).toEqual({});
+        expect(events[aggregateRootId1][0].createdAt).toEqual(ev1Date);
+
+        expect(events[aggregateRootId2].length).toBe(2);
+        expect(events[aggregateRootId2][0].id).toBe(ev2Id);
+        expect(events[aggregateRootId2][0].aggregateRootVersion).toBe(2);
+        expect(events[aggregateRootId2][0].eventName).toBe("test-event-2");
+        expect(events[aggregateRootId2][0].aggregateRootId).toBe(aggregateRootId2);
+        expect(events[aggregateRootId2][0].aggregateRootName).toBe("test-aggregate");
+        expect(events[aggregateRootId2][0].payload).toEqual({});
+        expect(events[aggregateRootId2][0].createdAt).toEqual(ev2Date);
+
+        expect(events[aggregateRootId2][1].id).toBe(ev3Id);
+        expect(events[aggregateRootId2][1].aggregateRootVersion).toBe(2);
+        expect(events[aggregateRootId2][1].eventName).toBe("test-event-2-2");
+        expect(events[aggregateRootId2][1].aggregateRootId).toBe(aggregateRootId2);
+        expect(events[aggregateRootId2][1].aggregateRootName).toBe("test-aggregate");
+        expect(events[aggregateRootId2][1].payload).toEqual({});
+        expect(events[aggregateRootId2][1].createdAt).toEqual(ev3Date);
+
+        expect(events[aggregateRootId3].length).toBe(1);
+        expect(events[aggregateRootId3][0].id).toBe(ev4Id);
+        expect(events[aggregateRootId3][0].aggregateRootVersion).toBe(2);
+        expect(events[aggregateRootId3][0].eventName).toBe("test-event-3");
+        expect(events[aggregateRootId3][0].aggregateRootId).toBe(aggregateRootId3);
+        expect(events[aggregateRootId3][0].aggregateRootName).toBe("test-aggregate");
+        expect(events[aggregateRootId3][0].payload).toEqual({});
+        expect(events[aggregateRootId3][0].createdAt).toEqual(ev4Date);
     });
 });
 

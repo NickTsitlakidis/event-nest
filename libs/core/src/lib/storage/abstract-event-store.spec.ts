@@ -8,6 +8,7 @@ import { MissingAggregateRootNameException } from "../exceptions/missing-aggrega
 import { UnknownEventVersionException } from "../exceptions/unknown-event-version-exception";
 import { PublishedDomainEvent } from "../published-domain-event";
 import { AbstractEventStore } from "./abstract-event-store";
+import { AggregateRootClass } from "./event-store";
 import { StoredAggregateRoot } from "./stored-aggregate-root";
 import { StoredEvent } from "./stored-event";
 
@@ -26,6 +27,13 @@ class TestStore extends AbstractEventStore {
 
     findByAggregateRootId(): Promise<Array<StoredEvent>> {
         return Promise.resolve([]);
+    }
+
+    async findByAggregateRootIds<T extends AggregateRoot>(
+        aggregateRootClass: AggregateRootClass<T>,
+        ids: string[]
+    ): Promise<Record<string, Array<StoredEvent>>> {
+        return {};
     }
 
     generateEntityId(): Promise<string> {
