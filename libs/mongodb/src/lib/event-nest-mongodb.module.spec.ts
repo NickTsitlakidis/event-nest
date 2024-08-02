@@ -8,34 +8,156 @@ import { EventNestMongoDbModule } from "./event-nest-mongodb.module";
 import { ModuleProviders } from "./module-providers";
 import { MongoEventStore } from "./storage/mongo-event-store";
 
-test("binds subscriptions on startup", async () => {
-    const emitter = createMock<DomainEventEmitter>();
+describe("global factories", () => {
+    test("forRoot returns configured global module", () => {
+        const options = {
+            aggregatesCollection: "aggregates",
+            connectionUri: "mongodb://localhost:27017/event-nest",
+            eventsCollection: "events"
+        };
 
-    const mockedProviders: Provider[] = [
-        {
-            provide: EVENT_STORE,
-            useValue: createMock<MongoEventStore>()
-        },
-        {
-            provide: DomainEventEmitter,
-            useValue: emitter
-        }
-    ];
-    jest.spyOn(ModuleProviders, "create").mockReturnValue(mockedProviders);
+        const emitter = createMock<DomainEventEmitter>();
 
-    const module = await Test.createTestingModule({
-        imports: [
-            EventNestMongoDbModule.register({
+        const mockedProviders: Provider[] = [
+            {
+                provide: EVENT_STORE,
+                useValue: createMock<MongoEventStore>()
+            },
+            {
+                provide: DomainEventEmitter,
+                useValue: emitter
+            }
+        ];
+        jest.spyOn(ModuleProviders, "create").mockReturnValue(mockedProviders);
+
+        const module = EventNestMongoDbModule.forRoot(options);
+
+        expect(module.global).toBe(true);
+        expect(module.exports).toEqual([EVENT_STORE]);
+        expect(module.providers).toEqual(mockedProviders);
+    });
+
+    test("forRootAsync returns configured global module", () => {
+        const options = {
+            useFactory: () => ({
                 aggregatesCollection: "aggregates",
                 connectionUri: "mongodb://localhost:27017/event-nest",
                 eventsCollection: "events"
             })
-        ]
-    }).compile();
+        };
 
-    const app = module.createNestApplication();
-    await app.init();
+        const emitter = createMock<DomainEventEmitter>();
 
-    expect(emitter.bindSubscriptions).toHaveBeenCalledTimes(1);
-    expect(emitter.bindSubscriptions).toHaveBeenCalledWith(module.get(ModulesContainer));
+        const mockedProviders: Provider[] = [
+            {
+                provide: EVENT_STORE,
+                useValue: createMock<MongoEventStore>()
+            },
+            {
+                provide: DomainEventEmitter,
+                useValue: emitter
+            }
+        ];
+        jest.spyOn(ModuleProviders, "createAsync").mockReturnValue(mockedProviders);
+
+        const module = EventNestMongoDbModule.forRootAsync(options);
+
+        expect(module.global).toBe(true);
+        expect(module.exports).toEqual([EVENT_STORE]);
+        expect(module.providers).toEqual(mockedProviders);
+    });
+});
+
+describe("scoped factories", () => {
+    test("register returns configured module", () => {
+        const options = {
+            aggregatesCollection: "aggregates",
+            connectionUri: "mongodb://localhost:27017/event-nest",
+            eventsCollection: "events"
+        };
+
+        const emitter = createMock<DomainEventEmitter>();
+
+        const mockedProviders: Provider[] = [
+            {
+                provide: EVENT_STORE,
+                useValue: createMock<MongoEventStore>()
+            },
+            {
+                provide: DomainEventEmitter,
+                useValue: emitter
+            }
+        ];
+        jest.spyOn(ModuleProviders, "create").mockReturnValue(mockedProviders);
+
+        const module = EventNestMongoDbModule.register(options);
+
+        expect(module.global).toBe(false);
+        expect(module.exports).toEqual([EVENT_STORE]);
+        expect(module.providers).toEqual(mockedProviders);
+    });
+
+    test("registerAsync returns configured module", () => {
+        const options = {
+            useFactory: () => ({
+                aggregatesCollection: "aggregates",
+                connectionUri: "mongodb://localhost:27017/event-nest",
+                eventsCollection: "events"
+            })
+        };
+
+        const emitter = createMock<DomainEventEmitter>();
+
+        const mockedProviders: Provider[] = [
+            {
+                provide: EVENT_STORE,
+                useValue: createMock<MongoEventStore>()
+            },
+            {
+                provide: DomainEventEmitter,
+                useValue: emitter
+            }
+        ];
+        jest.spyOn(ModuleProviders, "createAsync").mockReturnValue(mockedProviders);
+
+        const module = EventNestMongoDbModule.registerAsync(options);
+
+        expect(module.global).toBe(false);
+        expect(module.exports).toEqual([EVENT_STORE]);
+        expect(module.providers).toEqual(mockedProviders);
+    });
+});
+
+describe("onApplicationBootstrap", () => {
+    test("binds subscriptions on startup", async () => {
+        const emitter = createMock<DomainEventEmitter>();
+
+        const mockedProviders: Provider[] = [
+            {
+                provide: EVENT_STORE,
+                useValue: createMock<MongoEventStore>()
+            },
+            {
+                provide: DomainEventEmitter,
+                useValue: emitter
+            }
+        ];
+        jest.spyOn(ModuleProviders, "create").mockReturnValue(mockedProviders);
+
+        const module = await Test.createTestingModule({
+            imports: [
+                EventNestMongoDbModule.register({
+                    aggregatesCollection: "aggregates",
+                    connectionUri: "mongodb://localhost:27017/event-nest",
+                    eventsCollection: "events"
+                })
+            ]
+        }).compile();
+
+        const app = module.createNestApplication();
+        await app.init();
+
+        expect(emitter.bindSubscriptions).toHaveBeenCalledTimes(1);
+        expect(emitter.bindSubscriptions).toHaveBeenCalledWith(module.get(ModulesContainer));
+    });
 });

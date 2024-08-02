@@ -8,7 +8,7 @@ import { UserEventSubscription } from "./user/user-event-subscription";
 @Module({
     controllers: [AppController],
     imports: [
-        EventNestMongoDbModule.registerAsync({
+        EventNestMongoDbModule.forRootAsync({
             useFactory: async () => {
                 return {
                     aggregatesCollection: "aggregates-collection",
