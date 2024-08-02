@@ -58,7 +58,7 @@ import { Module } from "@nestjs/common";
 
 @Module({
     imports: [
-        EventNestMongoDbModule.register({
+        EventNestMongoDbModule.forRoot({
             connectionUri: "mongodb://localhost:27017/example",
             aggregatesCollection: "aggregates-collection",
             eventsCollection: "events-collection"
@@ -83,7 +83,7 @@ import { Module } from "@nestjs/common";
 
 @Module({
     imports: [
-        EventNestPostgreSQLModule.register({
+        EventNestPostgreSQLModule.forRoot({
             aggregatesTableName: "aggregates",
             connectionUri: "postgresql://postgres:password@localhost:5432/event_nest",
             eventsTableName: "events",
@@ -304,7 +304,7 @@ and your logic doesn't depend on the order of the events, you can change this se
 ```typescript
 @Module({
     imports: [
-        EventNestMongoDbModule.register({
+        EventNestMongoDbModule.forRoot({
             connectionUri: "mongodb://localhost:27017/example",
             aggregatesCollection: "aggregates-collection",
             eventsCollection: "events-collection",
