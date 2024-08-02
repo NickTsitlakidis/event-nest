@@ -43,14 +43,6 @@ export abstract class AggregateRoot {
     }
 
     /**
-     * Publishes all the provided events using a connected event publisher. To connect a publisher, use the
-     * {@link EventStore}. Normally this should never be called by application logic. Instead, after you append the
-     * events, you should call the commit method which will end up calling this method.
-     *
-     * If a publisher is not connected, the method will return a rejected promise.
-     * @param events The events to be published
-     */
-    /**
      * Defines the current version of the aggregate root. The version is increased
      * each time an event is persisted.
      */
@@ -93,7 +85,14 @@ export abstract class AggregateRoot {
         return this;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    /**
+     * Publishes all the provided events using a connected event publisher. To connect a publisher, use the
+     * {@link EventStore}. Normally this should never be called by application logic. Instead, after you append the
+     * events, you should call the commit method which will end up calling this method.
+     *
+     * If a publisher is not connected, the method will return a rejected promise.
+     * @param events The events to be published
+     */
     publish(events: Array<AggregateRootEvent<object>>): Promise<Array<StoredEvent>> {
         this.logger.error("There is no event publisher assigned");
         return Promise.reject("There is no event publisher assigned");
@@ -101,9 +100,9 @@ export abstract class AggregateRoot {
 
     /**
      * Used when a set of events have been retrieved from the database. These events can be passed to the method and the
-     * method will trigger all the matching {@link EventProcessor} functions of the entity to populate the object based on
+     * method will trigger all the matching {@link ApplyEvent} functions of the entity to populate the object based on
      * application logic.
-     * @param events The events that will be sent to EventProcessor functions
+     * @param events The events that will be sent to {@link ApplyEvent} functions
      */
     reconstitute(events: Array<StoredEvent>) {
         if (events.length > 0) {

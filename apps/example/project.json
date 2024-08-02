@@ -17,7 +17,6 @@
                 "tsConfig": "apps/example/tsconfig.app.json",
                 "assets": ["apps/example/src/assets"],
                 "sourceMap": true,
-                "isolatedConfig": true,
                 "webpackConfig": "apps/example/webpack.config.js"
             },
             "configurations": {

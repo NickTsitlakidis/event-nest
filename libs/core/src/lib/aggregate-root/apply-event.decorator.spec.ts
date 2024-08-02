@@ -23,7 +23,7 @@ class TestEntity extends AggregateRoot {
     }
 }
 
-test("EventProcessor - adds metadata", () => {
+test("ApplyEvent - adds metadata", () => {
     const metadata = Reflect.getMetadata("event-nest-process-event-meta-processTestEvent", new TestEntity());
     expect(metadata).toBeDefined();
     expect(metadata.eventClass).toBe(TestEvent);
