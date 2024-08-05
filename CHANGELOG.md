@@ -1,3 +1,15 @@
+## 3.2.0 (2024-08-05)
+
+
+### 🚀 Features
+
+- Adding support for scoped module registration in Postgres library ([c19a72c](https://github.com/NickTsitlakidis/event-nest/commit/c19a72c))
+- Adding support for scoped module registration in MongoDB library ([96f800c](https://github.com/NickTsitlakidis/event-nest/commit/96f800c))
+
+### ❤️  Thank You
+
+- Nick Tsitlakidis
+
 ## 3.1.0 (2024-07-03)
 
 
