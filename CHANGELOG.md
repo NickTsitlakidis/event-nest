@@ -1,3 +1,14 @@
+## 3.2.1 (2024-09-04)
+
+
+### 🩹 Fixes
+
+- Event store implementations are exported properly from their modules ([c1fe9ba](https://github.com/NickTsitlakidis/event-nest/commit/c1fe9ba))
+
+### ❤️  Thank You
+
+- Nick Tsitlakidis
+
 ## 3.2.0 (2024-08-05)
 
 
