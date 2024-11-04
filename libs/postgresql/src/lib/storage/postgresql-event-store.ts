@@ -62,6 +62,7 @@ export class PostgreSQLEventStore extends AbstractEventStore {
         aggregateRootClass: AggregateRootClass<T>,
         id: string
     ): Promise<Array<StoredEvent>> {
+        const startedAt = Date.now();
         const aggregateRootName = getAggregateRootName(aggregateRootClass);
         if (isNil(aggregateRootName)) {
             this._logger.error(
@@ -74,6 +75,8 @@ export class PostgreSQLEventStore extends AbstractEventStore {
             aggregate_root_id: id,
             aggregate_root_name: aggregateRootName
         });
+        const duration = Date.now() - startedAt;
+        this._logger.debug(`Finding events for aggregate ${id} took ${duration}ms`);
         if (rows.length > 0) {
             return rows.map((row) => {
                 return StoredEvent.fromStorage(
@@ -136,6 +139,7 @@ export class PostgreSQLEventStore extends AbstractEventStore {
     }
 
     async save(events: Array<StoredEvent>, aggregate: StoredAggregateRoot): Promise<Array<StoredEvent>> {
+        const startedAt = Date.now();
         if (events.length === 0) {
             return [];
         }
@@ -202,6 +206,8 @@ export class PostgreSQLEventStore extends AbstractEventStore {
             this._logger.error("Unable to complete transaction for aggregate root with id : " + aggregate.id);
             throw error;
         }
+        const duration = Date.now() - startedAt;
+        this._logger.debug(`Saving events for aggregate ${aggregate.id} took ${duration}ms`);
         return events;
     }
 }

@@ -51,6 +51,7 @@ export class MongoEventStore extends AbstractEventStore {
         aggregateRootClass: AggregateRootClass<T>,
         id: string
     ): Promise<Array<StoredEvent>> {
+        const startedAt = Date.now();
         const aggregateRootName = getAggregateRootName(aggregateRootClass);
         if (isNil(aggregateRootName)) {
             this._logger.error(
@@ -64,6 +65,8 @@ export class MongoEventStore extends AbstractEventStore {
             .collection(this._eventsCollectionName)
             .find({ aggregateRootId: id, aggregateRootName: aggregateRootName })
             .toArray();
+        const duration = Date.now() - startedAt;
+        this._logger.debug(`Finding events for aggregate ${id} took ${duration}ms`);
         if (documents.length > 0) {
             return documents.map((doc) => {
                 return StoredEvent.fromStorage(
@@ -126,6 +129,7 @@ export class MongoEventStore extends AbstractEventStore {
     }
 
     async save(events: Array<StoredEvent>, aggregate: StoredAggregateRoot): Promise<Array<StoredEvent>> {
+        const startedAt = Date.now();
         if (events.length === 0) {
             return events;
         }
@@ -194,6 +198,8 @@ export class MongoEventStore extends AbstractEventStore {
                     }
                 );
         });
+        const duration = Date.now() - startedAt;
+        this._logger.debug(`Saving events for aggregate ${aggregate.id} took ${duration}ms`);
         return events;
     }
 }

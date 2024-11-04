@@ -105,6 +105,7 @@ export abstract class AggregateRoot {
      * @param events The events that will be sent to {@link ApplyEvent} functions
      */
     reconstitute(events: Array<StoredEvent>) {
+        const startedAt = Date.now();
         if (events.length > 0) {
             const [unregistered, missingProcessor, known] = this.splitEvents(this.sortEvents(events));
 
@@ -124,6 +125,8 @@ export abstract class AggregateRoot {
             });
             this.resolveVersion(events);
         }
+        const duration = Date.now() - startedAt;
+        this._logger.debug(`Reconstitution of ${this.constructor.name} took ${duration}ms`);
     }
 
     resolveVersion(events: Array<StoredEvent>) {
