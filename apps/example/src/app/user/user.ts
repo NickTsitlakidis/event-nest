@@ -7,17 +7,6 @@ export class User extends AggregateRoot {
     private _email: string;
     private _name: string;
 
-    @ApplyEvent(UserCreatedEvent)
-    private processUserCreatedEvent = (event: UserCreatedEvent) => {
-        this._name = event.name;
-        this._email = event.email;
-    };
-
-    @ApplyEvent(UserUpdatedEvent)
-    private processUserUpdatedEvent = (event: UserUpdatedEvent) => {
-        this._name = event.newName;
-    };
-
     private constructor(id: string) {
         super(id);
     }
@@ -48,5 +37,17 @@ export class User extends AggregateRoot {
         const event = new UserUpdatedEvent(newName);
         this.processUserUpdatedEvent(event);
         this.append(event);
+    }
+
+    @ApplyEvent(UserCreatedEvent)
+    private processUserCreatedEvent(event: UserCreatedEvent) {
+        console.log(this);
+        this._name = event.name;
+        this._email = event.email;
+    }
+
+    @ApplyEvent(UserUpdatedEvent)
+    private processUserUpdatedEvent(event: UserUpdatedEvent) {
+        this._name = event.newName;
     }
 }

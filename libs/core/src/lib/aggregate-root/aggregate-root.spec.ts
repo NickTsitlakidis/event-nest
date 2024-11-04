@@ -14,6 +14,9 @@ class TestEvent1 {}
 @DomainEvent("test-event-2")
 class TestEvent2 {}
 
+@DomainEvent("test-event-for-this-binding")
+class TestEventForThisBinding {}
+
 @DomainEvent("throwing-event")
 class ThrowingEvent {}
 
@@ -21,20 +24,26 @@ class UnregisteredEvent {}
 
 class SubEntity extends AggregateRoot {
     @ApplyEvent(TestEvent1)
-    processTestEvent1 = () => {};
-
+    applyTestEvent1 = () => {};
     @ApplyEvent(TestEvent2)
-    processTestEvent2 = () => {};
+    applyTestEvent2 = () => {};
 
     @ApplyEvent(ThrowingEvent)
-    processThrowingEvent = () => {
+    applyThrowingEvent = () => {
         throw new Error("ooops");
     };
 
     public published: Array<AggregateRootEvent<object>> = [];
 
+    someProperty!: string;
+
     constructor(id: string) {
         super(id);
+    }
+
+    @ApplyEvent(TestEventForThisBinding)
+    applyThisBindingEvent() {
+        this.someProperty = "test";
     }
 
     override publish(events: Array<AggregateRootEvent<object>>): Promise<Array<StoredEvent>> {
@@ -82,10 +91,10 @@ describe("reconstitute tests", () => {
         const entity = new SubEntity("id1");
 
         let last = 0;
-        const processor1Spy = jest.spyOn(entity, "processTestEvent2").mockImplementation(() => {
+        const processor1Spy = jest.spyOn(entity, "applyTestEvent2").mockImplementation(() => {
             last = 1;
         });
-        const processor2Spy = jest.spyOn(entity, "processTestEvent1").mockImplementation(() => {
+        const processor2Spy = jest.spyOn(entity, "applyTestEvent1").mockImplementation(() => {
             last = 2;
         });
 
@@ -112,8 +121,8 @@ describe("reconstitute tests", () => {
 
         const entity = new SubEntity("id1");
 
-        const processor1Spy = jest.spyOn(entity, "processTestEvent1").mockImplementation(() => {});
-        const processor2Spy = jest.spyOn(entity, "processTestEvent2").mockImplementation(() => {});
+        const processor1Spy = jest.spyOn(entity, "applyTestEvent1").mockImplementation(() => {});
+        const processor2Spy = jest.spyOn(entity, "applyTestEvent2").mockImplementation(() => {});
 
         expect(() => entity.reconstitute([ev1, ev3])).toThrow(UnknownEventException);
 
@@ -127,13 +136,23 @@ describe("reconstitute tests", () => {
 
         const entity = new SubEntity("id1");
 
-        const processor1Spy = jest.spyOn(entity, "processTestEvent1").mockImplementation(() => {});
-        const processor2Spy = jest.spyOn(entity, "processTestEvent2").mockImplementation(() => {});
+        const processor1Spy = jest.spyOn(entity, "applyTestEvent1").mockImplementation(() => {});
+        const processor2Spy = jest.spyOn(entity, "applyTestEvent2").mockImplementation(() => {});
 
         expect(() => entity.reconstitute([ev1, ev3])).toThrow(UnknownEventException);
 
         expect(processor1Spy).not.toHaveBeenCalled();
         expect(processor2Spy).not.toHaveBeenCalled();
+    });
+
+    test("works with non-fat-arrow apply methods", () => {
+        const ev1 = StoredEvent.fromStorage("ev1", "id1", "test-event-for-this-binding", new Date(), 10, "ag-name", {});
+
+        const entity = new SubEntity("id1");
+
+        entity.reconstitute([ev1]);
+
+        expect(entity.someProperty).toBe("test");
     });
 });
 

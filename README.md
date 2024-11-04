@@ -207,15 +207,15 @@ export class User extends AggregateRoot {
     }
 
     @ApplyEvent(UserCreatedEvent)
-    private applyUserCreatedEvent = (event: UserCreatedEvent) => {
+    private applyUserCreatedEvent(event: UserCreatedEvent) {
         this.name = event.name;
         this.email = event.email;
-    };
+    }
 
     @ApplyEvent(UserUpdatedEvent)
-    private applyUserUpdatedEvent = (event: UserUpdatedEvent) => {
+    private applyUserUpdatedEvent(event: UserUpdatedEvent) {
         this.name = event.newName;
-    };
+    }
     
 }
 ```
@@ -233,7 +233,7 @@ In our case, we have the following creation cases :
 The `reconstitute` method will initiate the event processing based on the events order.
 
 To apply each event, we have defined two private methods which are decorated with the `@ApplyEvent` decorator. Each method will be called when the corresponding event is retrieved, and it's ready to be processed.
-This is the place to update the object's internal state based on the event's data. **Make sure that these methods are defined as arrow functions, otherwise they won't be called.**
+This is the place to update the object's internal state based on the event's data.
 
 
 Finally, we define an `update` method which is the place to run any business logic we need and append the corresponding event (`UserUpdatedEvent`) to the event stream.
