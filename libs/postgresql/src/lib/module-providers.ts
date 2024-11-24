@@ -3,7 +3,9 @@ import { Provider } from "@nestjs/common";
 import { knex } from "knex";
 
 import { PostgreSQLModuleAsyncOptions, PostgreSQLModuleOptions } from "./postgresql-module-options";
+import { SchemaConfiguration } from "./schema-configuration";
 import { PostgreSQLEventStore } from "./storage/postgresql-event-store";
+import { TableInitializer } from "./table-initializer";
 
 const KNEX_CONNECTION = Symbol("EVENT_NEST_KNEX_CONNECTION");
 
@@ -53,6 +55,21 @@ export class ModuleProviders {
                         knexConnection
                     );
                 }
+            },
+            {
+                inject: [KNEX_CONNECTION],
+                provide: TableInitializer,
+                useFactory: (knexConnection: knex.Knex) => {
+                    return new TableInitializer(
+                        new SchemaConfiguration(
+                            options.schemaName,
+                            options.aggregatesTableName,
+                            options.eventsTableName
+                        ),
+                        isNil(options.ensureTablesExist) ? false : options.ensureTablesExist,
+                        knexConnection
+                    );
+                }
             }
         ];
     }
@@ -96,6 +113,18 @@ export class ModuleProviders {
             }
         };
 
-        return [optionsProvider, knexProvider, emitterProvider, eventStoreProvider];
+        const tableInitializerProvider = {
+            inject: [KNEX_CONNECTION, "EVENT_NEST_PG_OPTIONS"],
+            provide: TableInitializer,
+            useFactory: (knexConnection: knex.Knex, options: PostgreSQLModuleOptions) => {
+                return new TableInitializer(
+                    new SchemaConfiguration(options.schemaName, options.aggregatesTableName, options.eventsTableName),
+                    isNil(options.ensureTablesExist) ? false : options.ensureTablesExist,
+                    knexConnection
+                );
+            }
+        };
+
+        return [optionsProvider, knexProvider, emitterProvider, eventStoreProvider, tableInitializerProvider];
     }
 }

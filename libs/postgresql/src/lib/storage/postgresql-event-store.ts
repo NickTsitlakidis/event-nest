@@ -12,43 +12,57 @@ import {
 } from "@event-nest/core";
 import { Logger } from "@nestjs/common";
 import { randomUUID } from "crypto";
-import * as knex from "knex";
+import { knex } from "knex";
 
+import { SchemaConfiguration } from "../schema-configuration";
 import { AggregateRootRow } from "./aggregate-root-row";
 import { EventRow } from "./event-row";
 
 export class PostgreSQLEventStore extends AbstractEventStore {
-    private readonly _fullAggregatesTableName: string;
-    private readonly _fullEventsTableName: string;
     private readonly _logger: Logger;
+    private readonly _schemaConfiguration: SchemaConfiguration;
 
     constructor(
         eventEmitter: DomainEventEmitter,
-        private _schemaName: string,
-        private _aggregatesTableName: string,
-        private _eventsTableName: string,
+        schemaName: string,
+        aggregatesTableName: string,
+        eventsTableName: string,
         private readonly _knexConnection: knex.Knex
     ) {
         super(eventEmitter);
         this._logger = new Logger(PostgreSQLEventStore.name);
-        this._fullAggregatesTableName = this._schemaName + "." + this._aggregatesTableName;
-        this._fullEventsTableName = this._schemaName + "." + this._eventsTableName;
+        this._schemaConfiguration = new SchemaConfiguration(schemaName, aggregatesTableName, eventsTableName);
     }
 
+    /**
+     * @deprecated Use {@link schemaConfiguration} instead
+     */
     get aggregatesTableName(): string {
-        return this._aggregatesTableName;
+        return this.schemaConfiguration.aggregatesTable;
     }
 
+    /**
+     * @deprecated Use {@link schemaConfiguration} instead
+     */
     get eventsTableName(): string {
-        return this._eventsTableName;
+        return this.schemaConfiguration.eventsTable;
     }
 
+    get schemaConfiguration(): SchemaConfiguration {
+        return this._schemaConfiguration;
+    }
+
+    /**
+     * @deprecated Use {@link schemaConfiguration} instead
+     */
     get schemaName(): string {
-        return this._schemaName;
+        return this.schemaConfiguration.schema;
     }
 
     async findAggregateRootVersion(id: string): Promise<number> {
-        const aggregate = await this._knexConnection<AggregateRootRow>(this._fullAggregatesTableName)
+        const aggregate = await this._knexConnection<AggregateRootRow>(
+            this._schemaConfiguration.schemaAwareAggregatesTable
+        )
             .select("version")
             .where("id", id)
             .first();
@@ -71,10 +85,12 @@ export class PostgreSQLEventStore extends AbstractEventStore {
             throw new MissingAggregateRootNameException(aggregateRootClass.name);
         }
 
-        const rows = await this._knexConnection<EventRow>(this._fullEventsTableName).select("*").where({
-            aggregate_root_id: id,
-            aggregate_root_name: aggregateRootName
-        });
+        const rows = await this._knexConnection<EventRow>(this._schemaConfiguration.schemaAwareEventsTable)
+            .select("*")
+            .where({
+                aggregate_root_id: id,
+                aggregate_root_name: aggregateRootName
+            });
         const duration = Date.now() - startedAt;
         this._logger.debug(`Finding events for aggregate ${id} took ${duration}ms`);
         if (rows.length > 0) {
@@ -106,7 +122,7 @@ export class PostgreSQLEventStore extends AbstractEventStore {
             throw new MissingAggregateRootNameException(aggregateRootClass.name);
         }
 
-        const rows = await this._knexConnection<EventRow>(this._fullEventsTableName)
+        const rows = await this._knexConnection<EventRow>(this._schemaConfiguration.schemaAwareEventsTable)
             .select("*")
             .whereIn("aggregate_root_id", ids)
             .andWhere({
@@ -149,7 +165,7 @@ export class PostgreSQLEventStore extends AbstractEventStore {
 
         try {
             await this._knexConnection.transaction(async (trx) => {
-                const aggregateInDb = await trx<AggregateRootRow>(this._fullAggregatesTableName)
+                const aggregateInDb = await trx<AggregateRootRow>(this._schemaConfiguration.schemaAwareAggregatesTable)
                     .select("*")
                     .forUpdate()
                     .where("id", aggregate.id)
@@ -162,7 +178,7 @@ export class PostgreSQLEventStore extends AbstractEventStore {
                 if (isNil(foundAggregate)) {
                     aggregate.version = 0;
                     this._logger.debug(`Aggregate ${aggregate.id} does not exist. Will save it`);
-                    await trx(this._fullAggregatesTableName).insert({
+                    await trx(this._schemaConfiguration.schemaAwareAggregatesTable).insert({
                         id: aggregate.id,
                         version: aggregate.version
                     });
@@ -197,8 +213,8 @@ export class PostgreSQLEventStore extends AbstractEventStore {
                     };
                 });
 
-                await trx<EventRow>(this._fullEventsTableName).insert(mapped);
-                await trx<AggregateRootRow>(this._fullAggregatesTableName)
+                await trx<EventRow>(this._schemaConfiguration.schemaAwareEventsTable).insert(mapped);
+                await trx<AggregateRootRow>(this._schemaConfiguration.schemaAwareAggregatesTable)
                     .update("version", finalAggregate.version)
                     .where("id", finalAggregate.id);
             });
