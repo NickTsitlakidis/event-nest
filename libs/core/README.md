@@ -24,6 +24,7 @@ It would also probably help to make some distinctions about what Event Nest is n
 - [Getting Started](#getting-started)
     - [MongoDB setup](#mongodb-setup)
     - [PostgreSQL setup](#postgresql-setup)
+        - [Manual creation of PostgreSQL tables](#manual-creation-of-postgresql-tables)
 - [Concepts](#concepts)
     - [Event](#event)
     - [Aggregate Root](#aggregate-root)
@@ -87,14 +88,21 @@ import { Module } from "@nestjs/common";
             aggregatesTableName: "aggregates",
             connectionUri: "postgresql://postgres:password@localhost:5432/event_nest",
             eventsTableName: "events",
-            schemaName: "event_nest_schema"
+            schemaName: "event_nest_schema",
+            ensureTablesExist: true
         })
     ]
 })
 export class AppModule {}
 ```
 
-To avoid requiring a user with elevated privileges, the library will not create the tables in your database. You will have to create them manually based on the following guidelines.
+If the database user has privileges to create tables, you can set the `ensureTablesExist` option to `true`. This will create the necessary tables in your database during application bootstrap.
+By default, this option is disabled to avoid requiring a user with elevated privileges.
+
+
+
+#### Manual creation of PostgreSQL tables
+If you prefer to create the tables manually, the following guidelines describe the structure of the tables that need to be created.
 
 **Aggregates Table :**
 
