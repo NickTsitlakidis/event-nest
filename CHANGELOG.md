@@ -1,3 +1,14 @@
+## 3.3.0 (2024-11-24)
+
+
+### 🚀 Features
+
+- New configuration flag to initialize Postgresql tables on application bootstrap. ([#38](https://github.com/NickTsitlakidis/event-nest/pull/38))
+
+### ❤️  Thank You
+
+- Nick Tsitlakidis
+
 ## 3.2.1 (2024-09-04)
 
 
