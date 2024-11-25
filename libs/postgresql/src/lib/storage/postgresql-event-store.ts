@@ -4,11 +4,11 @@ import {
     AggregateRootClass,
     DomainEventEmitter,
     EventConcurrencyException,
+    getAggregateRootName,
+    isNil,
     MissingAggregateRootNameException,
     StoredAggregateRoot,
-    StoredEvent,
-    getAggregateRootName,
-    isNil
+    StoredEvent
 } from "@event-nest/core";
 import { Logger } from "@nestjs/common";
 import { randomUUID } from "crypto";

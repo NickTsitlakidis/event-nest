@@ -16,35 +16,35 @@ import { OnDomainEvent } from "./on-domain-event";
 
 randomUUID.mockReturnValue("the-id");
 
-class TheEvent {}
+class DomainEvent1 {}
+
+@DomainEventSubscription(DomainEvent1)
+class NoInterfaceSubscription {}
 
 class UnusedEvent {}
 
-@DomainEventSubscription(TheEvent)
-class DecoratedSubscription implements OnDomainEvent<TheEvent> {
+@DomainEventSubscription(DomainEvent1)
+class WithDecorator implements OnDomainEvent<DomainEvent1> {
     onDomainEvent(): Promise<unknown> {
         return Promise.resolve(undefined);
     }
 }
 
-class UndecoratedSubscription implements OnDomainEvent<TheEvent> {
+class WithoutDecorator implements OnDomainEvent<DomainEvent1> {
     onDomainEvent(): Promise<unknown> {
         return Promise.resolve(undefined);
     }
 }
-
-@DomainEventSubscription(TheEvent)
-class NoInterfaceSubscription {}
 
 describe("DomainEventSubscription tests", () => {
     test("adds metadata to handler and event", () => {
-        const metadata = Reflect.getMetadata(DOMAIN_EVENT_SUBSCRIPTION_KEY, new DecoratedSubscription().constructor);
+        const metadata = Reflect.getMetadata(DOMAIN_EVENT_SUBSCRIPTION_KEY, new WithDecorator().constructor);
         expect(metadata).toBeDefined();
-        expect(metadata.events).toEqual([TheEvent]);
+        expect(metadata.events).toEqual([DomainEvent1]);
 
-        const eventId = Reflect.getMetadata(DOMAIN_EVENT_KEY, TheEvent);
+        const eventId = Reflect.getMetadata(DOMAIN_EVENT_KEY, DomainEvent1);
         expect(eventId).toBeDefined();
-        expect(eventId.eventSubscriptionId).toBe("TheEvent-the-id");
+        expect(eventId.eventSubscriptionId).toBe("DomainEvent1-the-id");
     });
 
     test("adds same id if called for the same event", () => {
@@ -64,7 +64,7 @@ describe("DomainEventSubscription tests", () => {
 
 describe("isDomainEventSubscription tests", () => {
     test("returns false if not decorated", () => {
-        expect(isDomainEventSubscription(new UndecoratedSubscription())).toBe(false);
+        expect(isDomainEventSubscription(new WithoutDecorator())).toBe(false);
     });
 
     test("returns false if not implementing interface", () => {
@@ -72,7 +72,7 @@ describe("isDomainEventSubscription tests", () => {
     });
 
     test("returns true if decorated and has interface", () => {
-        expect(isDomainEventSubscription(new DecoratedSubscription())).toBe(true);
+        expect(isDomainEventSubscription(new WithDecorator())).toBe(true);
     });
 });
 
@@ -82,16 +82,16 @@ describe("getEventId tests", () => {
     });
 
     test("returns id based on metadata", () => {
-        expect(getEventId(new TheEvent().constructor)).toBe("TheEvent-the-id");
+        expect(getEventId(new DomainEvent1().constructor)).toBe("DomainEvent1-the-id");
     });
 });
 
 describe("getEventsFromDomainEventSubscription tests", () => {
     test("returns events from metadata", () => {
-        expect(getEventsFromDomainEventSubscription(new DecoratedSubscription())).toEqual([TheEvent]);
+        expect(getEventsFromDomainEventSubscription(new WithDecorator())).toEqual([DomainEvent1]);
     });
 
     test("returns empty array if no metadata", () => {
-        expect(getEventsFromDomainEventSubscription(new UndecoratedSubscription())).toEqual([]);
+        expect(getEventsFromDomainEventSubscription(new WithoutDecorator())).toEqual([]);
     });
 });

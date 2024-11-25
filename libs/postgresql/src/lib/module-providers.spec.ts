@@ -1,6 +1,7 @@
 import { Test } from "@nestjs/testing";
+// eslint-disable-next-line
 import * as knex from "knex";
-const mockedKnex = jest.fn().mockImplementation((options) => {
+const mockedKnex = jest.fn().mockImplementation(() => {
     return {};
 });
 jest.mock("knex", () => {
@@ -123,7 +124,7 @@ describe("PostgreSQLModuleProviders", () => {
                 eventsTableName: "events",
                 schemaName: "the-schema"
             };
-            const module = await Test.createTestingModule({ providers: ModuleProviders.create(options) }).compile();
+            await Test.createTestingModule({ providers: ModuleProviders.create(options) }).compile();
             expect(mockedKnex).toHaveBeenCalledWith({
                 client: "pg",
                 connection: {
@@ -143,7 +144,7 @@ describe("PostgreSQLModuleProviders", () => {
                     rejectUnauthorized: true
                 }
             };
-            const module = await Test.createTestingModule({ providers: ModuleProviders.create(options) }).compile();
+            await Test.createTestingModule({ providers: ModuleProviders.create(options) }).compile();
             expect(mockedKnex).toHaveBeenCalledWith({
                 client: "pg",
                 connection: {
@@ -437,7 +438,7 @@ describe("PostgreSQLModuleProviders", () => {
                     };
                 }
             };
-            const module = await Test.createTestingModule({
+            await Test.createTestingModule({
                 providers: ModuleProviders.createAsync(options)
             }).compile();
             expect(mockedKnex).toHaveBeenCalledWith({
@@ -463,7 +464,7 @@ describe("PostgreSQLModuleProviders", () => {
                     };
                 }
             };
-            const module = await Test.createTestingModule({
+            await Test.createTestingModule({
                 providers: ModuleProviders.createAsync(options)
             }).compile();
             expect(mockedKnex).toHaveBeenCalledWith({

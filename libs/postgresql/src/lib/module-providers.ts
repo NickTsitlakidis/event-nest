@@ -9,27 +9,6 @@ import { TableInitializer } from "./table-initializer";
 
 const KNEX_CONNECTION = Symbol("EVENT_NEST_KNEX_CONNECTION");
 
-function buildKnexConnection(options: PostgreSQLModuleOptions): knex.Knex {
-    if (isNil(options.ssl)) {
-        return knex({
-            client: "pg",
-            connection: {
-                connectionString: options.connectionUri
-            }
-        });
-    }
-
-    return knex({
-        client: "pg",
-        connection: {
-            connectionString: options.connectionUri,
-            ssl: {
-                ca: options.ssl.certificate,
-                rejectUnauthorized: options.ssl.rejectUnauthorized
-            }
-        }
-    });
-}
 export class ModuleProviders {
     static create(options: PostgreSQLModuleOptions): Provider[] {
         return [
@@ -127,4 +106,25 @@ export class ModuleProviders {
 
         return [optionsProvider, knexProvider, emitterProvider, eventStoreProvider, tableInitializerProvider];
     }
+}
+function buildKnexConnection(options: PostgreSQLModuleOptions): knex.Knex {
+    if (isNil(options.ssl)) {
+        return knex({
+            client: "pg",
+            connection: {
+                connectionString: options.connectionUri
+            }
+        });
+    }
+
+    return knex({
+        client: "pg",
+        connection: {
+            connectionString: options.connectionUri,
+            ssl: {
+                ca: options.ssl.certificate,
+                rejectUnauthorized: options.ssl.rejectUnauthorized
+            }
+        }
+    });
 }

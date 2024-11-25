@@ -18,17 +18,15 @@ class TestEvent2 {}
 class TestEventForThisBinding {}
 
 @DomainEvent("throwing-event")
-class ThrowingEvent {}
+class TestEventWithException {}
 
-class UnregisteredEvent {}
-
-class SubEntity extends AggregateRoot {
+class TestRoot extends AggregateRoot {
     @ApplyEvent(TestEvent1)
     applyTestEvent1 = () => {};
     @ApplyEvent(TestEvent2)
     applyTestEvent2 = () => {};
 
-    @ApplyEvent(ThrowingEvent)
+    @ApplyEvent(TestEventWithException)
     applyThrowingEvent = () => {
         throw new Error("ooops");
     };
@@ -60,6 +58,8 @@ class SubEntity extends AggregateRoot {
     }
 }
 
+class UnregisteredEvent {}
+
 beforeAll(() => {
     jest.useFakeTimers().setSystemTime(new Date("2020-01-01"));
 });
@@ -76,7 +76,7 @@ class SubEntity2 extends AggregateRoot {
 
 describe("constructor tests", () => {
     test("initializes values", () => {
-        const entity = new SubEntity("entity-id");
+        const entity = new TestRoot("entity-id");
         expect(entity.appendedEvents).toEqual([]);
         expect(entity.id).toBe("entity-id");
         expect(entity.version).toBe(0);
@@ -88,7 +88,7 @@ describe("reconstitute tests", () => {
         const ev1 = StoredEvent.fromStorage("ev1", "id1", "test-event-2", new Date(), 10, "ag-name", {});
         const ev2 = StoredEvent.fromStorage("ev2", "id1", "test-event-1", new Date(), 2, "ag-name", {});
 
-        const entity = new SubEntity("id1");
+        const entity = new TestRoot("id1");
 
         let last = 0;
         const processor1Spy = jest.spyOn(entity, "applyTestEvent2").mockImplementation(() => {
@@ -111,7 +111,7 @@ describe("reconstitute tests", () => {
 
     test("throws when an event applier throws", () => {
         const ev1 = StoredEvent.fromStorage("ev1", "id1", "throwing-event", new Date(), 10, "ag-name", {});
-        const entity = new SubEntity("id1");
+        const entity = new TestRoot("id1");
         expect(() => entity.reconstitute([ev1])).toThrow();
     });
 
@@ -119,7 +119,7 @@ describe("reconstitute tests", () => {
         const ev1 = StoredEvent.fromStorage("ev1", "id1", "test-event-1", new Date(), 10, "ag-name", {});
         const ev3 = StoredEvent.fromStorage("ev3", "id1", "test-event-3", new Date(), 10, "ag-name", {});
 
-        const entity = new SubEntity("id1");
+        const entity = new TestRoot("id1");
 
         const processor1Spy = jest.spyOn(entity, "applyTestEvent1").mockImplementation(() => {});
         const processor2Spy = jest.spyOn(entity, "applyTestEvent2").mockImplementation(() => {});
@@ -134,7 +134,7 @@ describe("reconstitute tests", () => {
         const ev1 = StoredEvent.fromStorage("ev1", "id1", "test-event-1", new Date(), 10, "ag-name", {});
         const ev3 = StoredEvent.fromStorage("ev3", "id1", "other", new Date(), 12, "ag-name", {});
 
-        const entity = new SubEntity("id1");
+        const entity = new TestRoot("id1");
 
         const processor1Spy = jest.spyOn(entity, "applyTestEvent1").mockImplementation(() => {});
         const processor2Spy = jest.spyOn(entity, "applyTestEvent2").mockImplementation(() => {});
@@ -148,7 +148,7 @@ describe("reconstitute tests", () => {
     test("works with non-fat-arrow apply methods", () => {
         const ev1 = StoredEvent.fromStorage("ev1", "id1", "test-event-for-this-binding", new Date(), 10, "ag-name", {});
 
-        const entity = new SubEntity("id1");
+        const entity = new TestRoot("id1");
 
         entity.reconstitute([ev1]);
 
@@ -158,14 +158,14 @@ describe("reconstitute tests", () => {
 
 describe("append tests", () => {
     test("throws when event is not registered", () => {
-        const entity = new SubEntity("entity-id");
+        const entity = new TestRoot("entity-id");
         expect(() => entity.append(new UnregisteredEvent())).toThrow(
             new UnregisteredEventException(UnregisteredEvent.name)
         );
     });
 
     test("adds event to array", () => {
-        const entity = new SubEntity("entity-id");
+        const entity = new TestRoot("entity-id");
         const event = new TestEvent2();
         entity.append(event);
 
@@ -178,7 +178,7 @@ describe("append tests", () => {
     });
 
     test("adds multiple events to array", () => {
-        const entity = new SubEntity("entity-id");
+        const entity = new TestRoot("entity-id");
         const event1 = new TestEvent2();
         const event2 = new TestEvent2();
         entity.append(event1);
@@ -201,15 +201,15 @@ describe("append tests", () => {
 
 describe("commit tests", () => {
     test("returns for no appended events", async () => {
-        const entity = new SubEntity("entity-id");
+        const entity = new TestRoot("entity-id");
 
         const result = await entity.commit();
         expect(result.appendedEvents.length).toBe(0);
-        expect((result as SubEntity).published).toEqual([]);
+        expect((result as TestRoot).published).toEqual([]);
     });
 
     test("does not clear appended events if commit fails", async () => {
-        const entity = new SubEntity("entity-id");
+        const entity = new TestRoot("entity-id");
         const event1 = new TestEvent2();
         const event2 = new TestEvent2();
         entity.append(event1);
@@ -217,17 +217,14 @@ describe("commit tests", () => {
 
         entity.publish = () => Promise.reject("error");
 
-        try {
-            await entity.commit();
-            expect(fail("Should have thrown"));
-        } catch (error) {
-            expect(entity.appendedEvents.length).toBe(2);
-            expect((entity as SubEntity).published).toEqual([]);
-        }
+        await expect(entity.commit()).rejects.toBeDefined();
+
+        expect(entity.appendedEvents.length).toBe(2);
+        expect((entity as TestRoot).published).toEqual([]);
     });
 
     test("publishes and clears appended events", async () => {
-        const entity = new SubEntity("entity-id");
+        const entity = new TestRoot("entity-id");
         const event1 = new TestEvent2();
         const event2 = new TestEvent2();
         entity.append(event1);
@@ -235,7 +232,7 @@ describe("commit tests", () => {
 
         const result = await entity.commit();
         expect(result.appendedEvents.length).toBe(0);
-        expect((result as SubEntity).published).toEqual([
+        expect((result as TestRoot).published).toEqual([
             {
                 aggregateRootId: "entity-id",
                 occurredAt: new Date("2020-01-01"),
@@ -265,7 +262,7 @@ test("sortEvents - sorts multiple events by version", () => {
     const ev3 = StoredEvent.fromPublishedEvent("ev3", "id1", "ag-name", new TestEvent1(), new Date());
     ev3.aggregateRootVersion = 41;
 
-    const sorted = new SubEntity("id").sortEvents([ev1, ev2, ev3]);
+    const sorted = new TestRoot("id").sortEvents([ev1, ev2, ev3]);
     expect(sorted).toEqual([ev2, ev1, ev3]);
 });
 
@@ -277,7 +274,7 @@ test("resolveVersion - finds greatest version for multiple events", () => {
     const ev3 = StoredEvent.fromPublishedEvent("ev3", "id1", "ag-name", new TestEvent1(), new Date());
     ev3.aggregateRootVersion = 30;
 
-    const entity = new SubEntity("id");
+    const entity = new TestRoot("id");
     entity.resolveVersion([ev1, ev2, ev3]);
     expect(entity.version).toBe(30);
 });

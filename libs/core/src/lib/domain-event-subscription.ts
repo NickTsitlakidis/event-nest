@@ -21,9 +21,9 @@ export const DomainEventSubscription = (...eventClasses: Class<unknown>[]): Clas
     };
 };
 
-export function isDomainEventSubscription(targetInstance: object): boolean {
-    const hasMetadata = Reflect.hasOwnMetadata(DOMAIN_EVENT_SUBSCRIPTION_KEY, targetInstance.constructor);
-    return hasMetadata && typeof (targetInstance as OnDomainEvent<unknown>).onDomainEvent === "function";
+// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+export function getEventId(eventConstructor: Function): string | undefined {
+    return Reflect.getMetadata(DOMAIN_EVENT_KEY, eventConstructor)?.eventSubscriptionId;
 }
 
 export function getEventsFromDomainEventSubscription(subscriptionInstance: OnDomainEvent<unknown>): any[] {
@@ -31,7 +31,7 @@ export function getEventsFromDomainEventSubscription(subscriptionInstance: OnDom
     return isNil(metadata) ? [] : metadata.events;
 }
 
-// eslint-disable-next-line @typescript-eslint/ban-types
-export function getEventId(eventConstructor: Function): string | undefined {
-    return Reflect.getMetadata(DOMAIN_EVENT_KEY, eventConstructor)?.eventSubscriptionId;
+export function isDomainEventSubscription(targetInstance: object): boolean {
+    const hasMetadata = Reflect.hasOwnMetadata(DOMAIN_EVENT_SUBSCRIPTION_KEY, targetInstance.constructor);
+    return hasMetadata && typeof (targetInstance as OnDomainEvent<unknown>).onDomainEvent === "function";
 }

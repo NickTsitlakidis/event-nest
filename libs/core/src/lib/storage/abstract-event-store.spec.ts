@@ -14,6 +14,23 @@ import { StoredEvent } from "./stored-event";
 
 const eventEmitter = createMock<DomainEventEmitter>();
 
+class NoNameEntity extends AggregateRoot {
+    constructor() {
+        super("id");
+    }
+}
+
+@AggregateRootName("test-entity")
+class TestEntity extends AggregateRoot {
+    constructor() {
+        super("id");
+    }
+}
+
+class TestEvent {
+    constructor(public someProperty: string) {}
+}
+
 class TestStore extends AbstractEventStore {
     savedAggregate: StoredAggregateRoot | undefined;
     savedEvents: Array<StoredEvent> = [];
@@ -57,23 +74,6 @@ class TestStore extends AbstractEventStore {
             })
         );
     }
-}
-
-@AggregateRootName("test-entity")
-class TestEntity extends AggregateRoot {
-    constructor() {
-        super("id");
-    }
-}
-
-class NoNameEntity extends AggregateRoot {
-    constructor() {
-        super("id");
-    }
-}
-
-class TestEvent {
-    constructor(public someProperty: string) {}
 }
 
 describe("addPublisher tests", () => {

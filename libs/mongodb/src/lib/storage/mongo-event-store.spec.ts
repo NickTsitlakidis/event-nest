@@ -31,18 +31,18 @@ afterEach(async () => {
     await mongoClient.close(true);
 });
 
-@DomainEvent("test-event-1")
-class TestEvent1 {}
-
-@DomainEvent("test-event-2")
-class TestEvent2 {}
-
 @AggregateRootName("test-aggregate")
 class DecoratedAggregateRoot extends AggregateRoot {
     constructor(id: string) {
         super(id);
     }
 }
+
+@DomainEvent("test-event-1")
+class TestEvent1 {}
+
+@DomainEvent("test-event-2")
+class TestEvent2 {}
 
 class UndecoratedAggregateRoot extends AggregateRoot {
     constructor(id: string) {

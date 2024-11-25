@@ -1,5 +1,5 @@
 import { DomainEventEmitter, EVENT_STORE } from "@event-nest/core";
-import { DynamicModule, Global, Module, OnApplicationBootstrap } from "@nestjs/common";
+import { DynamicModule, Module, OnApplicationBootstrap } from "@nestjs/common";
 import { ModulesContainer } from "@nestjs/core";
 
 import { ModuleProviders } from "./module-providers";
