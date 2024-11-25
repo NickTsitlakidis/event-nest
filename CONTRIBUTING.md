@@ -10,7 +10,7 @@ The project is new so the rules will start taking shape as the project grows. Fo
 We use [Jest](https://github.com/facebook/jest) to write tests. Run our test suite with this command:
 
 ```
-npm test
+pnpm test
 ```
 
 The test script is configured to produce coverage reports. If you submit a pull request, make sure that your changes don't decrease the overall coverage.
@@ -18,10 +18,10 @@ The test script is configured to produce coverage reports. If you submit a pull 
 ## Code Style
 
 We use [Prettier](https://prettier.io/) and eslint to maintain code style and best practices.
-Please make sure your PR adheres to the guides by running:
+Please make sure your PR adheres to the project rules by running:
 
 ```
-npm run lint
+pnpm lint
 ```
 
 and fixing any issues that may arise.
