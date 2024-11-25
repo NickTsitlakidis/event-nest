@@ -1,12 +1,14 @@
 const nx = require("@nx/eslint-plugin");
 const perfectionist = require("eslint-plugin-perfectionist");
 const eslintPluginPrettierRecommended = require("eslint-plugin-prettier/recommended");
+const eslintPluginUnicorn = require("eslint-plugin-unicorn");
 
 module.exports = [
     ...nx.configs["flat/base"],
     ...nx.configs["flat/typescript"],
     ...nx.configs["flat/javascript"],
     perfectionist.configs["recommended-natural"],
+    eslintPluginUnicorn.configs["flat/recommended"],
     {
         ignores: ["**/dist"]
     },
@@ -16,7 +18,7 @@ module.exports = [
             "@nx/enforce-module-boundaries": [
                 "error",
                 {
-                    allow: ["^.*/eslint(\\.base)?\\.config\\.[cm]?js$"],
+                    allow: [String.raw`^.*/eslint(\.base)?\.config\.[cm]?js$`],
                     depConstraints: [
                         {
                             onlyDependOnLibsWithTags: ["*"],
@@ -50,7 +52,13 @@ module.exports = [
                     type: "natural"
                 }
             ],
-            "prettier/prettier": "error"
+            "prettier/prettier": "error",
+            "unicorn/no-abusive-eslint-disable": "off",
+            "unicorn/no-array-for-each": "off",
+            "unicorn/no-for-loop": "warn",
+            "unicorn/no-static-only-class": "off",
+            "unicorn/prefer-top-level-await": "warn",
+            "unicorn/prevent-abbreviations": "warn"
         }
     },
     {
@@ -58,7 +66,15 @@ module.exports = [
         rules: {
             "@typescript-eslint/no-empty-function": "off",
             "@typescript-eslint/no-explicit-any": "off",
-            "sonarjs/no-duplicate-string": "off"
+            "@typescript-eslint/no-non-null-assertion": "off",
+            "sonarjs/no-duplicate-string": "off",
+            "unicorn/prevent-abbreviations": "off"
+        }
+    },
+    {
+        files: ["**/*.config.js"],
+        rules: {
+            "unicorn/prefer-module": "off"
         }
     },
     eslintPluginPrettierRecommended

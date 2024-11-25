@@ -1,6 +1,6 @@
 import "reflect-metadata";
 const randomUUID = jest.fn();
-jest.mock("crypto", () => {
+jest.mock("node:crypto", () => {
     return {
         randomUUID
     };
@@ -26,13 +26,13 @@ class UnusedEvent {}
 @DomainEventSubscription(DomainEvent1)
 class WithDecorator implements OnDomainEvent<DomainEvent1> {
     onDomainEvent(): Promise<unknown> {
-        return Promise.resolve(undefined);
+        return Promise.resolve();
     }
 }
 
 class WithoutDecorator implements OnDomainEvent<DomainEvent1> {
     onDomainEvent(): Promise<unknown> {
-        return Promise.resolve(undefined);
+        return Promise.resolve();
     }
 }
 

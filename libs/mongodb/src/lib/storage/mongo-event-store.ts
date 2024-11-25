@@ -68,15 +68,15 @@ export class MongoEventStore extends AbstractEventStore {
         const duration = Date.now() - startedAt;
         this._logger.debug(`Finding events for aggregate ${id} took ${duration}ms`);
         if (documents.length > 0) {
-            return documents.map((doc) => {
+            return documents.map((document) => {
                 return StoredEvent.fromStorage(
-                    doc._id.toHexString(),
-                    doc["aggregateRootId"],
-                    doc["eventName"],
-                    doc["createdAt"],
-                    doc["aggregateRootVersion"],
-                    doc["aggregateRootName"],
-                    doc["payload"]
+                    document._id.toHexString(),
+                    document["aggregateRootId"],
+                    document["eventName"],
+                    document["createdAt"],
+                    document["aggregateRootVersion"],
+                    document["aggregateRootName"],
+                    document["payload"]
                 );
             });
         }
@@ -104,22 +104,22 @@ export class MongoEventStore extends AbstractEventStore {
 
         const grouped: Record<string, Array<StoredEvent>> = {};
 
-        documents.forEach((doc) => {
-            if (isNil(grouped[doc["aggregateRootId"]])) {
-                grouped[doc["aggregateRootId"]] = [];
+        for (const document of documents) {
+            if (isNil(grouped[document["aggregateRootId"]])) {
+                grouped[document["aggregateRootId"]] = [];
             }
-            grouped[doc["aggregateRootId"]].push(
+            grouped[document["aggregateRootId"]].push(
                 StoredEvent.fromStorage(
-                    doc._id.toHexString(),
-                    doc["aggregateRootId"],
-                    doc["eventName"],
-                    doc["createdAt"],
-                    doc["aggregateRootVersion"],
-                    doc["aggregateRootName"],
-                    doc["payload"]
+                    document._id.toHexString(),
+                    document["aggregateRootId"],
+                    document["eventName"],
+                    document["createdAt"],
+                    document["aggregateRootVersion"],
+                    document["aggregateRootName"],
+                    document["payload"]
                 )
             );
-        });
+        }
 
         return grouped;
     }
@@ -165,24 +165,24 @@ export class MongoEventStore extends AbstractEventStore {
                 throw new EventConcurrencyException(aggregate.id, foundAggregate.version, aggregate.version);
             }
 
-            for (let i = 0; i < events.length; i++) {
-                incrementedVersion = aggregate.version + i + 1;
-                events[i].aggregateRootVersion = incrementedVersion;
+            for (const [index, storedEvent] of events.entries()) {
+                incrementedVersion = aggregate.version + index + 1;
+                storedEvent.aggregateRootVersion = incrementedVersion;
             }
 
             aggregate.version = incrementedVersion;
             finalAggregate = aggregate;
             this._logger.debug(`Saving ${events.length} events for aggregate ${aggregate.id}`);
 
-            const mapped = events.map((ev) => {
+            const mapped = events.map((event) => {
                 return {
-                    _id: new ObjectId(ev.id),
-                    aggregateRootId: ev.aggregateRootId,
-                    aggregateRootName: ev.aggregateRootName,
-                    aggregateRootVersion: ev.aggregateRootVersion,
-                    createdAt: ev.createdAt,
-                    eventName: ev.eventName,
-                    payload: ev.payload
+                    _id: new ObjectId(event.id),
+                    aggregateRootId: event.aggregateRootId,
+                    aggregateRootName: event.aggregateRootName,
+                    aggregateRootVersion: event.aggregateRootVersion,
+                    createdAt: event.createdAt,
+                    eventName: event.eventName,
+                    payload: event.payload
                 };
             });
             await this._mongoClient.db().collection(this._eventsCollectionName).insertMany(mapped);

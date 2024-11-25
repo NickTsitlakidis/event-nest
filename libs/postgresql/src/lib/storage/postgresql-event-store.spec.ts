@@ -10,8 +10,8 @@ import {
 } from "@event-nest/core";
 import { createMock } from "@golevelup/ts-jest";
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from "@testcontainers/postgresql";
-import { randomUUID } from "crypto";
 import { knex } from "knex";
+import { randomUUID } from "node:crypto";
 
 import { AggregateRootRow } from "./aggregate-root-row";
 import { EventRow } from "./event-row";
@@ -67,7 +67,7 @@ describe("PostgreSQLEventStore", () => {
             table.jsonb("payload");
             table.timestamp("created_at");
         });
-    }, 30000);
+    }, 30_000);
 
     beforeEach(async () => {
         eventStore = new PostgreSQLEventStore(

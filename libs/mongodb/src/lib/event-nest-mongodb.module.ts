@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/prevent-abbreviations */
 import { DomainEventEmitter, EVENT_STORE } from "@event-nest/core";
 import { DynamicModule, Module, OnApplicationBootstrap } from "@nestjs/common";
 import { ModulesContainer } from "@nestjs/core";

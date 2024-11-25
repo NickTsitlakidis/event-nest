@@ -20,28 +20,28 @@ class Event3 {}
 @DomainEventSubscription(Event1)
 class OtherSubscription implements OnDomainEvent<Event1> {
     onDomainEvent(): Promise<unknown> {
-        return Promise.resolve(undefined);
+        return Promise.resolve();
     }
 }
 
 @DomainEventSubscription(Event2)
 class TestEvent2Subscription implements OnDomainEvent<Event2> {
     onDomainEvent(): Promise<unknown> {
-        return Promise.resolve(undefined);
+        return Promise.resolve();
     }
 }
 
 @DomainEventSubscription(Event1)
 class TestSubscription implements OnDomainEvent<Event1> {
     onDomainEvent(): Promise<unknown> {
-        return Promise.resolve(undefined);
+        return Promise.resolve();
     }
 }
 
 @DomainEventSubscription(Event1, Event2)
 class WithMultiple implements OnDomainEvent<Event1 | Event2> {
     onDomainEvent(): Promise<unknown> {
-        return Promise.resolve(undefined);
+        return Promise.resolve();
     }
 }
 
@@ -387,7 +387,7 @@ describe("emitMultiple tests", () => {
             version: 2
         });
         expect(handledParameters).toEqual([2, 1]);
-    }, 10000);
+    }, 10_000);
 
     test("stops on error when running sequentially", async () => {
         const subscription1 = new TestSubscription();
@@ -452,5 +452,5 @@ describe("emitMultiple tests", () => {
         });
         expect(handleSpy).toHaveBeenCalledTimes(0);
         expect(handledParameters).toEqual([]);
-    }, 10000);
+    }, 10_000);
 });

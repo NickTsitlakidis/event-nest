@@ -57,8 +57,8 @@ export class ModuleProviders {
         const optionsProvider = {
             inject: options.inject,
             provide: "EVENT_NEST_PG_OPTIONS",
-            useFactory: async (...args: unknown[]) => {
-                return await options.useFactory(...args);
+            useFactory: async (...parameters: unknown[]) => {
+                return await options.useFactory(...parameters);
             }
         };
 

@@ -1,8 +1,9 @@
 import { CoreModuleOptions } from "@event-nest/core";
 
+// eslint-disable-next-line unicorn/prevent-abbreviations
 export interface MongoDbModuleAsyncOptions {
     inject?: any[];
-    useFactory: (...args: any[]) => MongodbModuleOptions | Promise<MongodbModuleOptions>;
+    useFactory: (...parameters: any[]) => MongodbModuleOptions | Promise<MongodbModuleOptions>;
 }
 
 export interface MongodbModuleOptions extends CoreModuleOptions {

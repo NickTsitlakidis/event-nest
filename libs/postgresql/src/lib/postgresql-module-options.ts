@@ -2,7 +2,7 @@ import { CoreModuleOptions } from "@event-nest/core";
 
 export interface PostgreSQLModuleAsyncOptions {
     inject?: any[];
-    useFactory: (...args: any[]) => PostgreSQLModuleOptions | Promise<PostgreSQLModuleOptions>;
+    useFactory: (...parameters: any[]) => PostgreSQLModuleOptions | Promise<PostgreSQLModuleOptions>;
 }
 
 export interface PostgreSQLModuleOptions extends CoreModuleOptions {

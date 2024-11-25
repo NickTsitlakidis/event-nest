@@ -26,8 +26,8 @@ export abstract class AbstractEventStore implements EventStore {
                 throw new MissingAggregateRootNameException(aggregateRoot.constructor.name);
             }
 
-            if (events.length == 0) {
-                return Promise.resolve([]);
+            if (events.length === 0) {
+                return [];
             }
 
             const ids = await Promise.all(events.map(() => this.generateEntityId()));
@@ -37,7 +37,7 @@ export abstract class AbstractEventStore implements EventStore {
             const published: Array<PublishedDomainEvent<object>> = [];
             const storedEvents: Array<StoredEvent> = [];
 
-            events.forEach((event) => {
+            for (const event of events) {
                 const id = ids.pop() as string;
                 storedEvents.push(
                     StoredEvent.fromPublishedEvent(
@@ -53,18 +53,18 @@ export abstract class AbstractEventStore implements EventStore {
                     eventId: id,
                     version: aggregateRoot.version
                 });
-            });
+            }
 
             const toStore = new StoredAggregateRoot(aggregateRoot.id, aggregateRoot.version);
             const saved = await this.save(storedEvents, toStore);
-            published.forEach((event) => {
-                const found = saved.find((s) => s.id === event.eventId);
+            for (const publishedEvent of published) {
+                const found = saved.find((s) => s.id === publishedEvent.eventId);
                 if (isNil(found)) {
-                    throw new UnknownEventVersionException(event.eventId, event.aggregateRootId);
+                    throw new UnknownEventVersionException(publishedEvent.eventId, publishedEvent.aggregateRootId);
                 }
 
-                event.version = found.aggregateRootVersion;
-            });
+                publishedEvent.version = found.aggregateRootVersion;
+            }
 
             this._eventEmitter.emitMultiple(published);
             aggregateRoot.resolveVersion(saved);
