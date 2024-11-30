@@ -38,8 +38,8 @@ describe("TableInitializer", () => {
             await tableInitializer.onApplicationBootstrap();
 
             const [hasAggregatesTable, hasEventsTable] = await Promise.all([
-                knexConnection.schema.hasTable("es_aggregates"),
-                knexConnection.schema.hasTable("es_events")
+                knexConnection.schema.withSchema("event_nest_tests").hasTable("es_aggregates"),
+                knexConnection.schema.withSchema("event_nest_tests").hasTable("es_events")
             ]);
 
             expect(hasAggregatesTable).toBe(false);
@@ -56,27 +56,27 @@ describe("TableInitializer", () => {
             await tableInitializer.onApplicationBootstrap();
 
             const [hasAggregatesTable, hasEventsTable] = await Promise.all([
-                knexConnection.schema.hasTable("es_aggregates"),
-                knexConnection.schema.hasTable("es_events")
+                knexConnection.schema.withSchema("event_nest_tests").hasTable("es_aggregates"),
+                knexConnection.schema.withSchema("event_nest_tests").hasTable("es_events")
             ]);
 
             expect(hasAggregatesTable).toBe(true);
             expect(hasEventsTable).toBe(true);
 
             const columnChecks = await Promise.all([
-                knexConnection.schema.hasColumn("es_events", "id"),
-                knexConnection.schema.hasColumn("es_events", "aggregate_root_id"),
-                knexConnection.schema.hasColumn("es_events", "aggregate_root_version"),
-                knexConnection.schema.hasColumn("es_events", "aggregate_root_name"),
-                knexConnection.schema.hasColumn("es_events", "event_name"),
-                knexConnection.schema.hasColumn("es_events", "payload"),
-                knexConnection.schema.hasColumn("es_events", "created_at")
+                knexConnection.schema.withSchema("event_nest_tests").hasColumn("es_events", "id"),
+                knexConnection.schema.withSchema("event_nest_tests").hasColumn("es_events", "aggregate_root_id"),
+                knexConnection.schema.withSchema("event_nest_tests").hasColumn("es_events", "aggregate_root_version"),
+                knexConnection.schema.withSchema("event_nest_tests").hasColumn("es_events", "aggregate_root_name"),
+                knexConnection.schema.withSchema("event_nest_tests").hasColumn("es_events", "event_name"),
+                knexConnection.schema.withSchema("event_nest_tests").hasColumn("es_events", "payload"),
+                knexConnection.schema.withSchema("event_nest_tests").hasColumn("es_events", "created_at")
             ]);
 
             expect(columnChecks.every(Boolean)).toBe(true);
 
-            await knexConnection.schema.dropTable("es_events");
-            await knexConnection.schema.dropTable("es_aggregates");
+            await knexConnection.schema.withSchema("event_nest_tests").dropTable("es_events");
+            await knexConnection.schema.withSchema("event_nest_tests").dropTable("es_aggregates");
         });
 
         test("creates aggregates table when it's missing", async () => {
@@ -89,22 +89,22 @@ describe("TableInitializer", () => {
             await tableInitializer.onApplicationBootstrap();
 
             const [hasAggregatesTable, hasEventsTable] = await Promise.all([
-                knexConnection.schema.hasTable("es_aggregates"),
-                knexConnection.schema.hasTable("es_events")
+                knexConnection.schema.withSchema("event_nest_tests").hasTable("es_aggregates"),
+                knexConnection.schema.withSchema("event_nest_tests").hasTable("es_events")
             ]);
 
             expect(hasAggregatesTable).toBe(true);
             expect(hasEventsTable).toBe(true);
 
             const columnChecks = await Promise.all([
-                knexConnection.schema.hasColumn("es_aggregates", "id"),
-                knexConnection.schema.hasColumn("es_aggregates", "version")
+                knexConnection.schema.withSchema("event_nest_tests").hasColumn("es_aggregates", "id"),
+                knexConnection.schema.withSchema("event_nest_tests").hasColumn("es_aggregates", "version")
             ]);
 
             expect(columnChecks.every(Boolean)).toBe(true);
 
-            await knexConnection.schema.dropTable("es_events");
-            await knexConnection.schema.dropTable("es_aggregates");
+            await knexConnection.schema.withSchema("event_nest_tests").dropTable("es_events");
+            await knexConnection.schema.withSchema("event_nest_tests").dropTable("es_aggregates");
         });
 
         test("does not recreate tables when they already exist", async () => {
@@ -118,15 +118,15 @@ describe("TableInitializer", () => {
             await tableInitializer.onApplicationBootstrap();
 
             const [hasAggregatesTable, hasEventsTable] = await Promise.all([
-                knexConnection.schema.hasTable("es_aggregates"),
-                knexConnection.schema.hasTable("es_events")
+                knexConnection.schema.withSchema("event_nest_tests").hasTable("es_aggregates"),
+                knexConnection.schema.withSchema("event_nest_tests").hasTable("es_events")
             ]);
 
             expect(hasAggregatesTable).toBe(true);
             expect(hasEventsTable).toBe(true);
 
-            await knexConnection.schema.dropTable("es_events");
-            await knexConnection.schema.dropTable("es_aggregates");
+            await knexConnection.schema.withSchema("event_nest_tests").dropTable("es_events");
+            await knexConnection.schema.withSchema("event_nest_tests").dropTable("es_aggregates");
         });
     });
 });
