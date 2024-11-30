@@ -9,39 +9,39 @@ import { DomainEventEmitter } from "./domain-event-emitter";
 import { DomainEventSubscription } from "./domain-event-subscription";
 import { OnDomainEvent } from "./on-domain-event";
 
-class TestEvent1 {
+class Event1 {
     constructor(public readonly test: string) {}
 }
 
-class TestEvent2 {}
+class Event2 {}
 
-class TestEvent3 {}
+class Event3 {}
 
-@DomainEventSubscription(TestEvent1)
-class TestSubscription implements OnDomainEvent<TestEvent1> {
+@DomainEventSubscription(Event1)
+class OtherSubscription implements OnDomainEvent<Event1> {
     onDomainEvent(): Promise<unknown> {
-        return Promise.resolve(undefined);
+        return Promise.resolve();
     }
 }
 
-@DomainEventSubscription(TestEvent1)
-class OtherSubscription implements OnDomainEvent<TestEvent1> {
+@DomainEventSubscription(Event2)
+class TestEvent2Subscription implements OnDomainEvent<Event2> {
     onDomainEvent(): Promise<unknown> {
-        return Promise.resolve(undefined);
+        return Promise.resolve();
     }
 }
 
-@DomainEventSubscription(TestEvent2)
-class TestEvent2Subscription implements OnDomainEvent<TestEvent2> {
+@DomainEventSubscription(Event1)
+class TestSubscription implements OnDomainEvent<Event1> {
     onDomainEvent(): Promise<unknown> {
-        return Promise.resolve(undefined);
+        return Promise.resolve();
     }
 }
 
-@DomainEventSubscription(TestEvent1, TestEvent2)
-class WithMultiple implements OnDomainEvent<TestEvent1 | TestEvent2> {
+@DomainEventSubscription(Event1, Event2)
+class WithMultiple implements OnDomainEvent<Event1 | Event2> {
     onDomainEvent(): Promise<unknown> {
-        return Promise.resolve(undefined);
+        return Promise.resolve();
     }
 }
 
@@ -63,7 +63,7 @@ test("onModuleDestroy - stops calling subscriptions", () => {
         aggregateRootId: "test",
         eventId: "ev-id",
         occurredAt: creationDate,
-        payload: new TestEvent1(""),
+        payload: new Event1(""),
         version: 1
     });
     bus.onModuleDestroy();
@@ -72,7 +72,7 @@ test("onModuleDestroy - stops calling subscriptions", () => {
         aggregateRootId: "test",
         eventId: "ev-id2",
         occurredAt: creationDate,
-        payload: new TestEvent1(""),
+        payload: new Event1(""),
         version: 2
     });
 
@@ -97,7 +97,7 @@ describe("emit tests", () => {
             aggregateRootId: "test",
             eventId: "ev-id",
             occurredAt: creationDate,
-            payload: new TestEvent1("apollo"),
+            payload: new Event1("apollo"),
             version: 1
         });
 
@@ -106,7 +106,7 @@ describe("emit tests", () => {
             aggregateRootId: "test",
             eventId: "ev-id",
             occurredAt: creationDate,
-            payload: new TestEvent1("apollo"),
+            payload: new Event1("apollo"),
             version: 1
         });
     });
@@ -131,7 +131,7 @@ describe("emit tests", () => {
             aggregateRootId: "test",
             eventId: "ev-id",
             occurredAt: creationDate,
-            payload: new TestEvent1("apollo"),
+            payload: new Event1("apollo"),
             version: 1
         });
 
@@ -140,7 +140,7 @@ describe("emit tests", () => {
             aggregateRootId: "test",
             eventId: "ev-id",
             occurredAt: creationDate,
-            payload: new TestEvent1("apollo"),
+            payload: new Event1("apollo"),
             version: 1
         });
         expect(handleSpy2).toHaveBeenCalledTimes(1);
@@ -148,7 +148,7 @@ describe("emit tests", () => {
             aggregateRootId: "test",
             eventId: "ev-id",
             occurredAt: creationDate,
-            payload: new TestEvent1("apollo"),
+            payload: new Event1("apollo"),
             version: 1
         });
     });
@@ -173,7 +173,7 @@ describe("emit tests", () => {
             aggregateRootId: "test",
             eventId: "ev-id",
             occurredAt: creationDate,
-            payload: new TestEvent2(),
+            payload: new Event2(),
             version: 1
         });
 
@@ -206,14 +206,14 @@ describe("emitMultiple tests", () => {
                 aggregateRootId: "test",
                 eventId: "ev-id",
                 occurredAt: creationDate1,
-                payload: new TestEvent1("apollo"),
+                payload: new Event1("apollo"),
                 version: 1
             },
             {
                 aggregateRootId: "cc",
                 eventId: "ev-id2",
                 occurredAt: creationDate2,
-                payload: new TestEvent2(),
+                payload: new Event2(),
                 version: 2
             }
         ]);
@@ -223,7 +223,7 @@ describe("emitMultiple tests", () => {
             aggregateRootId: "test",
             eventId: "ev-id",
             occurredAt: creationDate1,
-            payload: new TestEvent1("apollo"),
+            payload: new Event1("apollo"),
             version: 1
         });
         expect(handleSpy2).toHaveBeenCalledTimes(2);
@@ -231,14 +231,14 @@ describe("emitMultiple tests", () => {
             aggregateRootId: "test",
             eventId: "ev-id",
             occurredAt: creationDate1,
-            payload: new TestEvent1("apollo"),
+            payload: new Event1("apollo"),
             version: 1
         });
         expect(handleSpy2).toHaveBeenNthCalledWith(2, {
             aggregateRootId: "cc",
             eventId: "ev-id2",
             occurredAt: creationDate2,
-            payload: new TestEvent2(),
+            payload: new Event2(),
             version: 2
         });
     });
@@ -261,14 +261,14 @@ describe("emitMultiple tests", () => {
                 aggregateRootId: "test",
                 eventId: "ev-id2",
                 occurredAt: creationDate1,
-                payload: new TestEvent2(),
+                payload: new Event2(),
                 version: 1
             },
             {
                 aggregateRootId: "test",
                 eventId: "ev-id",
                 occurredAt: creationDate2,
-                payload: new TestEvent3(),
+                payload: new Event3(),
                 version: 2
             }
         ]);
@@ -295,14 +295,14 @@ describe("emitMultiple tests", () => {
                 aggregateRootId: "test2",
                 eventId: "ev-id2",
                 occurredAt: creationDate2,
-                payload: new TestEvent2(),
+                payload: new Event2(),
                 version: 2
             },
             {
                 aggregateRootId: "test1",
                 eventId: "ev-id",
                 occurredAt: creationDate1,
-                payload: new TestEvent1("ev1"),
+                payload: new Event1("ev1"),
                 version: 1
             }
         ]);
@@ -312,7 +312,7 @@ describe("emitMultiple tests", () => {
             aggregateRootId: "test1",
             eventId: "ev-id",
             occurredAt: creationDate1,
-            payload: new TestEvent1("ev1"),
+            payload: new Event1("ev1"),
             version: 1
         });
     });
@@ -358,14 +358,14 @@ describe("emitMultiple tests", () => {
                 aggregateRootId: "test2",
                 eventId: "ev-id2",
                 occurredAt: creationDate2,
-                payload: new TestEvent2(),
+                payload: new Event2(),
                 version: 2
             },
             {
                 aggregateRootId: "test1",
                 eventId: "ev-id",
                 occurredAt: creationDate1,
-                payload: new TestEvent1("ev1"),
+                payload: new Event1("ev1"),
                 version: 1
             }
         ]);
@@ -375,7 +375,7 @@ describe("emitMultiple tests", () => {
             aggregateRootId: "test1",
             eventId: "ev-id",
             occurredAt: creationDate1,
-            payload: new TestEvent1("ev1"),
+            payload: new Event1("ev1"),
             version: 1
         });
         expect(handleSpy2).toHaveBeenCalledTimes(1);
@@ -383,11 +383,11 @@ describe("emitMultiple tests", () => {
             aggregateRootId: "test2",
             eventId: "ev-id2",
             occurredAt: creationDate2,
-            payload: new TestEvent2(),
+            payload: new Event2(),
             version: 2
         });
         expect(handledParameters).toEqual([2, 1]);
-    }, 10000);
+    }, 10_000);
 
     test("stops on error when running sequentially", async () => {
         const subscription1 = new TestSubscription();
@@ -409,14 +409,14 @@ describe("emitMultiple tests", () => {
                 )
             );
         });
+        const thrower = timer(1000).pipe(
+            mergeMap(() => {
+                return throwError(() => new Error("test"));
+            })
+        );
+
         const handleSpy2 = jest.spyOn(subscription2, "onDomainEvent").mockImplementation(() => {
-            return firstValueFrom(
-                timer(1000).pipe(
-                    mergeMap(() => {
-                        return throwError(() => new Error("test"));
-                    })
-                )
-            );
+            return firstValueFrom(thrower);
         });
 
         const bus = new DomainEventEmitter(false);
@@ -430,14 +430,14 @@ describe("emitMultiple tests", () => {
                 aggregateRootId: "test2",
                 eventId: "ev-id2",
                 occurredAt: creationDate2,
-                payload: new TestEvent2(),
+                payload: new Event2(),
                 version: 2
             },
             {
                 aggregateRootId: "test1",
                 eventId: "ev-id",
                 occurredAt: creationDate1,
-                payload: new TestEvent1("ev1"),
+                payload: new Event1("ev1"),
                 version: 1
             }
         ]);
@@ -447,10 +447,10 @@ describe("emitMultiple tests", () => {
             aggregateRootId: "test2",
             eventId: "ev-id2",
             occurredAt: creationDate2,
-            payload: new TestEvent2(),
+            payload: new Event2(),
             version: 2
         });
         expect(handleSpy).toHaveBeenCalledTimes(0);
         expect(handledParameters).toEqual([]);
-    }, 10000);
+    }, 10_000);
 });

@@ -9,27 +9,6 @@ import { TableInitializer } from "./table-initializer";
 
 const KNEX_CONNECTION = Symbol("EVENT_NEST_KNEX_CONNECTION");
 
-function buildKnexConnection(options: PostgreSQLModuleOptions): knex.Knex {
-    if (isNil(options.ssl)) {
-        return knex({
-            client: "pg",
-            connection: {
-                connectionString: options.connectionUri
-            }
-        });
-    }
-
-    return knex({
-        client: "pg",
-        connection: {
-            connectionString: options.connectionUri,
-            ssl: {
-                ca: options.ssl.certificate,
-                rejectUnauthorized: options.ssl.rejectUnauthorized
-            }
-        }
-    });
-}
 export class ModuleProviders {
     static create(options: PostgreSQLModuleOptions): Provider[] {
         return [
@@ -78,8 +57,8 @@ export class ModuleProviders {
         const optionsProvider = {
             inject: options.inject,
             provide: "EVENT_NEST_PG_OPTIONS",
-            useFactory: async (...args: unknown[]) => {
-                return await options.useFactory(...args);
+            useFactory: async (...parameters: unknown[]) => {
+                return await options.useFactory(...parameters);
             }
         };
 
@@ -127,4 +106,25 @@ export class ModuleProviders {
 
         return [optionsProvider, knexProvider, emitterProvider, eventStoreProvider, tableInitializerProvider];
     }
+}
+function buildKnexConnection(options: PostgreSQLModuleOptions): knex.Knex {
+    if (isNil(options.ssl)) {
+        return knex({
+            client: "pg",
+            connection: {
+                connectionString: options.connectionUri
+            }
+        });
+    }
+
+    return knex({
+        client: "pg",
+        connection: {
+            connectionString: options.connectionUri,
+            ssl: {
+                ca: options.ssl.certificate,
+                rejectUnauthorized: options.ssl.rejectUnauthorized
+            }
+        }
+    });
 }

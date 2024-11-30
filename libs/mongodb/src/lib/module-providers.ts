@@ -2,6 +2,7 @@ import { DomainEventEmitter, EVENT_STORE } from "@event-nest/core";
 import { Provider } from "@nestjs/common";
 import { MongoClient } from "mongodb";
 
+// eslint-disable-next-line unicorn/prevent-abbreviations
 import { MongoDbModuleAsyncOptions, MongodbModuleOptions } from "./mongodb-module-options";
 import { MongoEventStore } from "./storage/mongo-event-store";
 
@@ -33,8 +34,8 @@ export class ModuleProviders {
         const optionsProvider = {
             inject: options.inject,
             provide: "EVENT_NEST_OPTIONS",
-            useFactory: async (...args: unknown[]) => {
-                return await options.useFactory(...args);
+            useFactory: async (...parameters: unknown[]) => {
+                return await options.useFactory(...parameters);
             }
         };
 

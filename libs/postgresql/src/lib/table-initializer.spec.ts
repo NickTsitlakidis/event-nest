@@ -20,7 +20,7 @@ describe("TableInitializer", () => {
             connection: connectionUri
         });
         await knexConnection.schema.createSchema(schema);
-    }, 30000);
+    }, 30_000);
 
     afterAll(async () => {
         await knexConnection.destroy();
@@ -73,7 +73,7 @@ describe("TableInitializer", () => {
                 knexConnection.schema.hasColumn("es_events", "created_at")
             ]);
 
-            expect(columnChecks.every((check) => check)).toBe(true);
+            expect(columnChecks.every(Boolean)).toBe(true);
 
             await knexConnection.schema.dropTable("es_events");
             await knexConnection.schema.dropTable("es_aggregates");
@@ -101,7 +101,7 @@ describe("TableInitializer", () => {
                 knexConnection.schema.hasColumn("es_aggregates", "version")
             ]);
 
-            expect(columnChecks.every((check) => check)).toBe(true);
+            expect(columnChecks.every(Boolean)).toBe(true);
 
             await knexConnection.schema.dropTable("es_events");
             await knexConnection.schema.dropTable("es_aggregates");

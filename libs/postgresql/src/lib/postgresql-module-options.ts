@@ -1,8 +1,8 @@
 import { CoreModuleOptions } from "@event-nest/core";
 
-export interface SslOptions {
-    certificate?: string;
-    rejectUnauthorized: boolean;
+export interface PostgreSQLModuleAsyncOptions {
+    inject?: any[];
+    useFactory: (...parameters: any[]) => PostgreSQLModuleOptions | Promise<PostgreSQLModuleOptions>;
 }
 
 export interface PostgreSQLModuleOptions extends CoreModuleOptions {
@@ -36,7 +36,7 @@ export interface PostgreSQLModuleOptions extends CoreModuleOptions {
     ssl?: SslOptions;
 }
 
-export interface PostgreSQLModuleAsyncOptions {
-    inject?: any[];
-    useFactory: (...args: any[]) => PostgreSQLModuleOptions | Promise<PostgreSQLModuleOptions>;
+export interface SslOptions {
+    certificate?: string;
+    rejectUnauthorized: boolean;
 }

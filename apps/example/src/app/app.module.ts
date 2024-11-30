@@ -2,8 +2,8 @@ import { EventNestMongoDbModule } from "@event-nest/mongodb";
 import { Module } from "@nestjs/common";
 
 import { AppController } from "./app.controller";
-import { UserService } from "./user/user.service";
 import { UserEventSubscription } from "./user/user-event-subscription";
+import { UserService } from "./user/user.service";
 
 @Module({
     controllers: [AppController],

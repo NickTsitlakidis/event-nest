@@ -4,15 +4,15 @@ import {
     AggregateRootClass,
     DomainEventEmitter,
     EventConcurrencyException,
+    getAggregateRootName,
+    isNil,
     MissingAggregateRootNameException,
     StoredAggregateRoot,
-    StoredEvent,
-    getAggregateRootName,
-    isNil
+    StoredEvent
 } from "@event-nest/core";
 import { Logger } from "@nestjs/common";
-import { randomUUID } from "crypto";
 import { knex } from "knex";
+import { randomUUID } from "node:crypto";
 
 import { SchemaConfiguration } from "../schema-configuration";
 import { AggregateRootRow } from "./aggregate-root-row";
@@ -130,7 +130,7 @@ export class PostgreSQLEventStore extends AbstractEventStore {
             });
 
         const grouped: Record<string, Array<StoredEvent>> = {};
-        rows.forEach((row) => {
+        for (const row of rows) {
             if (isNil(grouped[row.aggregate_root_id])) {
                 grouped[row.aggregate_root_id] = [];
             }
@@ -145,7 +145,7 @@ export class PostgreSQLEventStore extends AbstractEventStore {
                     row.payload
                 )
             );
-        });
+        }
 
         return grouped;
     }
@@ -165,15 +165,17 @@ export class PostgreSQLEventStore extends AbstractEventStore {
 
         try {
             await this._knexConnection.transaction(async (trx) => {
-                const aggregateInDb = await trx<AggregateRootRow>(this._schemaConfiguration.schemaAwareAggregatesTable)
+                const aggregateInDatabase = await trx<AggregateRootRow>(
+                    this._schemaConfiguration.schemaAwareAggregatesTable
+                )
                     .select("*")
                     .forUpdate()
                     .where("id", aggregate.id)
                     .first();
 
-                let foundAggregate = isNil(aggregateInDb)
+                let foundAggregate = isNil(aggregateInDatabase)
                     ? undefined
-                    : new StoredAggregateRoot(aggregateInDb.id, aggregateInDb.version);
+                    : new StoredAggregateRoot(aggregateInDatabase.id, aggregateInDatabase.version);
 
                 if (isNil(foundAggregate)) {
                     aggregate.version = 0;
@@ -192,24 +194,24 @@ export class PostgreSQLEventStore extends AbstractEventStore {
                     throw new EventConcurrencyException(aggregate.id, foundAggregate.version, aggregate.version);
                 }
 
-                for (let i = 0; i < events.length; i++) {
-                    incrementedVersion = aggregate.version + i + 1;
-                    events[i].aggregateRootVersion = incrementedVersion;
+                for (const [index, storedEvent] of events.entries()) {
+                    incrementedVersion = aggregate.version + index + 1;
+                    storedEvent.aggregateRootVersion = incrementedVersion;
                 }
 
                 aggregate.version = incrementedVersion;
                 finalAggregate = aggregate;
                 this._logger.debug(`Saving ${events.length} events for aggregate ${aggregate.id}`);
 
-                const mapped: Array<EventRow> = events.map((ev) => {
+                const mapped: Array<EventRow> = events.map((storedEvent) => {
                     return {
-                        aggregate_root_id: ev.aggregateRootId,
-                        aggregate_root_name: ev.aggregateRootName,
-                        aggregate_root_version: ev.aggregateRootVersion,
-                        created_at: ev.createdAt,
-                        event_name: ev.eventName,
-                        id: ev.id,
-                        payload: JSON.stringify(ev.payload)
+                        aggregate_root_id: storedEvent.aggregateRootId,
+                        aggregate_root_name: storedEvent.aggregateRootName,
+                        aggregate_root_version: storedEvent.aggregateRootVersion,
+                        created_at: storedEvent.createdAt,
+                        event_name: storedEvent.eventName,
+                        id: storedEvent.id,
+                        payload: JSON.stringify(storedEvent.payload)
                     };
                 });
 

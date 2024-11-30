@@ -31,7 +31,7 @@ export abstract class AggregateRoot {
      * Returns a clone array of all the currently appended events of the entity.
      */
     get appendedEvents(): Array<AggregateRootEvent<object>> {
-        return this._appendedEvents.slice(0);
+        return [...this._appendedEvents];
     }
 
     get id(): string {
@@ -76,7 +76,7 @@ export abstract class AggregateRoot {
      * Call this once all the events you want, have been appended.
      */
     async commit(): Promise<AggregateRoot> {
-        const toPublish = this._appendedEvents.slice(0);
+        const toPublish = [...this._appendedEvents];
         if (toPublish.length > 0) {
             await this.publish(toPublish);
             this._appendedEvents = [];
@@ -110,19 +110,19 @@ export abstract class AggregateRoot {
             const [unregistered, missingProcessor, known] = this.splitEvents(this.sortEvents(events));
 
             if (unregistered.length > 0 || missingProcessor.length > 0) {
-                const e = new UnknownEventException(unregistered, missingProcessor, this.id);
-                this.logger.error(e.message);
-                throw e;
+                const throwable = new UnknownEventException(unregistered, missingProcessor, this.id);
+                this.logger.error(throwable.message);
+                throw throwable;
             }
 
-            known.forEach((event) => {
+            for (const knownEvent of known) {
                 try {
-                    (this as any)[event.processorKey](event.payload);
+                    (this as any)[knownEvent.processorKey](knownEvent.payload);
                 } catch (error) {
                     this.logger.error(`Unable to process domain event due to error in processor function: ${error}`);
                     throw error;
                 }
-            });
+            }
             this.resolveVersion(events);
         }
         const duration = Date.now() - startedAt;
@@ -130,12 +130,15 @@ export abstract class AggregateRoot {
     }
 
     resolveVersion(events: Array<StoredEvent>) {
-        const sorted: Array<StoredEvent> = events.sort((e1, e2) => e1.aggregateRootVersion - e2.aggregateRootVersion);
-        this._version = sorted.slice(-1)[0].aggregateRootVersion;
+        const sorted: Array<StoredEvent> = events.sort(
+            (event1, event2) => event1.aggregateRootVersion - event2.aggregateRootVersion
+        );
+        const lastElement = sorted.at(-1);
+        this._version = isNil(lastElement) ? 0 : lastElement.aggregateRootVersion;
     }
 
     protected sortEvents(events: Array<StoredEvent>): Array<StoredEvent> {
-        return events.sort((e1, e2) => e1.aggregateRootVersion - e2.aggregateRootVersion);
+        return events.sort((event1, event2) => event1.aggregateRootVersion - event2.aggregateRootVersion);
     }
 
     private splitEvents(events: Array<StoredEvent>): [Array<string>, Array<string>, Array<KnownEvent>] {
@@ -143,22 +146,22 @@ export abstract class AggregateRoot {
         const unregistered: Array<string> = [];
         const missingProcessor: Array<string> = [];
 
-        events.forEach((ev) => {
-            const eventClass = getEventClass(ev.eventName);
+        for (const storedEvent of events) {
+            const eventClass = getEventClass(storedEvent.eventName);
             if (isNil(eventClass)) {
-                unregistered.push(ev.eventName);
+                unregistered.push(storedEvent.eventName);
             } else {
                 const processorKey = getDecoratedPropertyKey(this, eventClass);
                 if (isNil(processorKey)) {
-                    missingProcessor.push(ev.eventName);
+                    missingProcessor.push(storedEvent.eventName);
                 } else {
                     known.push({
-                        payload: ev.getPayloadAs(eventClass),
+                        payload: storedEvent.getPayloadAs(eventClass),
                         processorKey
                     });
                 }
             }
-        });
+        }
 
         return [unregistered, missingProcessor, known];
     }

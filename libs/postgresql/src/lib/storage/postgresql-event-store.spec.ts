@@ -10,8 +10,8 @@ import {
 } from "@event-nest/core";
 import { createMock } from "@golevelup/ts-jest";
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from "@testcontainers/postgresql";
-import { randomUUID } from "crypto";
 import { knex } from "knex";
+import { randomUUID } from "node:crypto";
 
 import { AggregateRootRow } from "./aggregate-root-row";
 import { EventRow } from "./event-row";
@@ -23,18 +23,18 @@ let connectionUri: string;
 let knexConnection: knex.Knex;
 const schema = "event_nest_tests";
 
-@DomainEvent("sql-event-1")
-class SqlEvent1 {}
-
-@DomainEvent("sql-event-2")
-class SqlEvent2 {}
-
 @AggregateRootName("test-aggregate")
 class DecoratedAggregateRoot extends AggregateRoot {
     constructor(id: string) {
         super(id);
     }
 }
+
+@DomainEvent("sql-event-1")
+class SqlEvent1 {}
+
+@DomainEvent("sql-event-2")
+class SqlEvent2 {}
 
 class UndecoratedAggregateRoot extends AggregateRoot {
     constructor(id: string) {
@@ -67,7 +67,7 @@ describe("PostgreSQLEventStore", () => {
             table.jsonb("payload");
             table.timestamp("created_at");
         });
-    }, 30000);
+    }, 30_000);
 
     beforeEach(async () => {
         eventStore = new PostgreSQLEventStore(
@@ -474,6 +474,6 @@ describe("PostgreSQLEventStore", () => {
 
     test("generateEntityId - returns string with UUID format", async () => {
         const id = await eventStore.generateEntityId();
-        expect(/^[a-z,0-9,-]{36,36}$/.test(id)).toBe(true);
+        expect(/^[a-z,0-9-]{36}$/.test(id)).toBe(true);
     });
 });

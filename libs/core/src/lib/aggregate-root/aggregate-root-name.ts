@@ -17,7 +17,7 @@ export const AggregateRootName = (name: string): ClassDecorator => {
     };
 };
 
-// eslint-disable-next-line @typescript-eslint/ban-types
+// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 export function getAggregateRootName(targetClass: Function): string | undefined {
     return Reflect.getMetadata(AGGREGATE_ROOT_NAME_KEY, targetClass)?.aggregateRootName;
 }
