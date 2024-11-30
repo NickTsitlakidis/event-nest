@@ -1,3 +1,14 @@
+## 3.3.1 (2024-11-30)
+
+### 🩹 Fixes
+
+- Setting correct min node version in library package files ([726cef6](https://github.com/NickTsitlakidis/event-nest/commit/726cef6))
+- **postgresql:** Table initialization is now aware of schema name ([a6da091](https://github.com/NickTsitlakidis/event-nest/commit/a6da091))
+
+### ❤️ Thank You
+
+- Nick Tsitlakidis
+
 ## 3.3.0 (2024-11-24)
 
 
