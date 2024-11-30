@@ -5,10 +5,10 @@ import { StoredEvent } from "./stored-event";
 // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 export type AggregateRootClass<T> = Function & { prototype: T };
 
-export /**
+/**
  * A unique symbol that can be used to inject the event store into other classes.
  */
-const EVENT_STORE = Symbol("EVENT_NEST_EVENT_STORE");
+export const EVENT_STORE = Symbol("EVENT_NEST_EVENT_STORE");
 
 /**
  * Defines the main EventStore interface that can be used to retrieve and save events. Each implementation of this interface

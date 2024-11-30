@@ -1,3 +1,13 @@
+## 3.3.2 (2024-11-30)
+
+### 🩹 Fixes
+
+- **core:** Fixing the class parameter in event store to allow private and protected constructors. ([f157b38](https://github.com/NickTsitlakidis/event-nest/commit/f157b38))
+
+### ❤️ Thank You
+
+- Nick Tsitlakidis
+
 ## 3.3.1 (2024-11-30)
 
 ### 🩹 Fixes
