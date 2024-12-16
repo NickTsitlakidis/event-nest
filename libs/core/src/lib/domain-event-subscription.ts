@@ -1,13 +1,40 @@
 import { randomUUID } from "node:crypto";
+import { isObject } from "radash";
 import { Class } from "type-fest";
 
 import { DOMAIN_EVENT_KEY, DOMAIN_EVENT_SUBSCRIPTION_KEY } from "./metadata-keys";
 import { OnDomainEvent } from "./on-domain-event";
 import { isNil } from "./utils/type-utils";
 
-export const DomainEventSubscription = (...eventClasses: Class<unknown>[]): ClassDecorator => {
+type SubscriptionConfiguration = {
+    /**
+     * The event classes that the subscription listens to.
+     */
+    eventClasses: Class<unknown>[];
+    /**
+     * Setting isAsync to false will make the rest of the commit process to wait for the subscription to finish.
+     * Default is true.
+     */
+    isAsync?: boolean;
+};
+
+export function DomainEventSubscription(...eventClasses: Class<unknown>[]): ClassDecorator;
+export function DomainEventSubscription(config: SubscriptionConfiguration): ClassDecorator;
+export function DomainEventSubscription(
+    configOrEventClass: Class<unknown> | SubscriptionConfiguration,
+    ...eventClasses: Class<unknown>[]
+): ClassDecorator {
+    const actualEventClasses = isObject(configOrEventClass)
+        ? (configOrEventClass as SubscriptionConfiguration).eventClasses
+        : [configOrEventClass, ...eventClasses];
+
+    let isAsync = true;
+    if (isObject(configOrEventClass)) {
+        isAsync = (configOrEventClass as SubscriptionConfiguration).isAsync ?? true;
+    }
+
     return (target: object) => {
-        for (const event of eventClasses) {
+        for (const event of actualEventClasses) {
             if (!Reflect.hasOwnMetadata(DOMAIN_EVENT_KEY, event)) {
                 Reflect.defineMetadata(
                     DOMAIN_EVENT_KEY,
@@ -17,9 +44,9 @@ export const DomainEventSubscription = (...eventClasses: Class<unknown>[]): Clas
             }
         }
 
-        Reflect.defineMetadata(DOMAIN_EVENT_SUBSCRIPTION_KEY, { events: eventClasses }, target);
+        Reflect.defineMetadata(DOMAIN_EVENT_SUBSCRIPTION_KEY, { events: actualEventClasses, isAsync }, target);
     };
-};
+}
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 export function getEventId(eventConstructor: Function): string | undefined {
@@ -29,6 +56,11 @@ export function getEventId(eventConstructor: Function): string | undefined {
 export function getEventsFromDomainEventSubscription(subscriptionInstance: OnDomainEvent<unknown>): any[] {
     const metadata = Reflect.getMetadata(DOMAIN_EVENT_SUBSCRIPTION_KEY, subscriptionInstance.constructor);
     return isNil(metadata) ? [] : metadata.events;
+}
+
+export function getSubscriptionAsyncType(subscriptionInstance: OnDomainEvent<unknown>): boolean {
+    const metadata = Reflect.getMetadata(DOMAIN_EVENT_SUBSCRIPTION_KEY, subscriptionInstance.constructor);
+    return isNil(metadata) ? true : metadata.isAsync;
 }
 
 export function isDomainEventSubscription(targetInstance: object): boolean {

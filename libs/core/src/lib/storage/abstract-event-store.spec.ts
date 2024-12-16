@@ -5,6 +5,7 @@ import { AggregateRootName } from "../aggregate-root/aggregate-root-name";
 import { DomainEventEmitter } from "../domain-event-emitter";
 import { IdGenerationException } from "../exceptions/id-generation-exception";
 import { MissingAggregateRootNameException } from "../exceptions/missing-aggregate-root-name-exception";
+import { SubscriptionException } from "../exceptions/subscription-exception";
 import { UnknownEventVersionException } from "../exceptions/unknown-event-version-exception";
 import { PublishedDomainEvent } from "../published-domain-event";
 import { AbstractEventStore } from "./abstract-event-store";
@@ -76,7 +77,7 @@ class TestStore extends AbstractEventStore {
     }
 }
 
-describe("addPublisher tests", () => {
+describe("addPublisher", () => {
     test("adds publisher method to the aggregate root", () => {
         const store = new TestStore();
         const entity = store.addPublisher(new TestEntity());
@@ -172,5 +173,32 @@ describe("addPublisher tests", () => {
                 { aggregateRootId: "id", occurredAt: new Date(), payload: new TestEvent("test") }
             ])
         ).rejects.toThrow(UnknownEventVersionException);
+    });
+
+    test("publisher throws when emitter throws", async () => {
+        const creationDate = new Date();
+        const store = new TestStore();
+        const entity = store.addPublisher(new TestEntity());
+        const toPublish = [{ aggregateRootId: "id", occurredAt: creationDate, payload: new TestEvent("test") }];
+        const expectedEmissions: Array<PublishedDomainEvent<object>> = [
+            {
+                aggregateRootId: "id",
+                eventId: "generated-id",
+                occurredAt: creationDate,
+                payload: new TestEvent("test"),
+                version: 100
+            }
+        ];
+        const exception = new SubscriptionException(new Error("oh no"), "TestEvent", "generated-id");
+        eventEmitter.emitMultiple.mockRejectedValue(exception);
+        await expect(entity.publish(toPublish)).rejects.toThrow(exception);
+        expect(entity.version).toBe(100);
+        expect(store.savedEvents).toEqual([
+            StoredEvent.fromPublishedEvent("generated-id", "id", "test-entity", new TestEvent("test"), creationDate)
+        ]);
+        expect(store.savedAggregate?.id).toBe("id");
+        expect(entity.version).toEqual(100);
+        expect(eventEmitter.emitMultiple).toHaveBeenCalledWith(expectedEmissions);
+        expect(eventEmitter.emitMultiple).toHaveBeenCalledTimes(1);
     });
 });
