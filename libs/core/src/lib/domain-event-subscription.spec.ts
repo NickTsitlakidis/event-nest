@@ -9,6 +9,7 @@ import {
     DomainEventSubscription,
     getEventId,
     getEventsFromDomainEventSubscription,
+    getSubscriptionAsyncType,
     isDomainEventSubscription
 } from "./domain-event-subscription";
 import { DOMAIN_EVENT_KEY, DOMAIN_EVENT_SUBSCRIPTION_KEY } from "./metadata-keys";
@@ -23,6 +24,27 @@ class NoInterfaceSubscription {}
 
 class UnusedEvent {}
 
+@DomainEventSubscription({ eventClasses: [DomainEvent1], isAsync: false })
+class WithAsyncConfigurationFalse {
+    onDomainEvent(): Promise<unknown> {
+        return Promise.resolve();
+    }
+}
+
+@DomainEventSubscription({ eventClasses: [DomainEvent1] })
+class WithAsyncConfigurationMissing {
+    onDomainEvent(): Promise<unknown> {
+        return Promise.resolve();
+    }
+}
+
+@DomainEventSubscription({ eventClasses: [DomainEvent1], isAsync: true })
+class WithAsyncConfigurationTrue {
+    onDomainEvent(): Promise<unknown> {
+        return Promise.resolve();
+    }
+}
+
 @DomainEventSubscription(DomainEvent1)
 class WithDecorator implements OnDomainEvent<DomainEvent1> {
     onDomainEvent(): Promise<unknown> {
@@ -36,11 +58,54 @@ class WithoutDecorator implements OnDomainEvent<DomainEvent1> {
     }
 }
 
-describe("DomainEventSubscription tests", () => {
-    test("adds metadata to handler and event", () => {
+describe("DomainEventSubscription", () => {
+    test("adds metadata to handler and event when using only rest parameters", () => {
         const metadata = Reflect.getMetadata(DOMAIN_EVENT_SUBSCRIPTION_KEY, new WithDecorator().constructor);
         expect(metadata).toBeDefined();
         expect(metadata.events).toEqual([DomainEvent1]);
+        expect(metadata.isAsync).toBe(true);
+
+        const eventId = Reflect.getMetadata(DOMAIN_EVENT_KEY, DomainEvent1);
+        expect(eventId).toBeDefined();
+        expect(eventId.eventSubscriptionId).toBe("DomainEvent1-the-id");
+    });
+
+    test("adds metadata to handler and event when using configuration without async", () => {
+        const metadata = Reflect.getMetadata(
+            DOMAIN_EVENT_SUBSCRIPTION_KEY,
+            new WithAsyncConfigurationMissing().constructor
+        );
+        expect(metadata).toBeDefined();
+        expect(metadata.events).toEqual([DomainEvent1]);
+        expect(metadata.isAsync).toBe(true);
+
+        const eventId = Reflect.getMetadata(DOMAIN_EVENT_KEY, DomainEvent1);
+        expect(eventId).toBeDefined();
+        expect(eventId.eventSubscriptionId).toBe("DomainEvent1-the-id");
+    });
+
+    test("adds metadata to handler and event when using configuration with async false", () => {
+        const metadata = Reflect.getMetadata(
+            DOMAIN_EVENT_SUBSCRIPTION_KEY,
+            new WithAsyncConfigurationFalse().constructor
+        );
+        expect(metadata).toBeDefined();
+        expect(metadata.events).toEqual([DomainEvent1]);
+        expect(metadata.isAsync).toBe(false);
+
+        const eventId = Reflect.getMetadata(DOMAIN_EVENT_KEY, DomainEvent1);
+        expect(eventId).toBeDefined();
+        expect(eventId.eventSubscriptionId).toBe("DomainEvent1-the-id");
+    });
+
+    test("adds metadata to handler and event when using configuration with async true", () => {
+        const metadata = Reflect.getMetadata(
+            DOMAIN_EVENT_SUBSCRIPTION_KEY,
+            new WithAsyncConfigurationTrue().constructor
+        );
+        expect(metadata).toBeDefined();
+        expect(metadata.events).toEqual([DomainEvent1]);
+        expect(metadata.isAsync).toBe(true);
 
         const eventId = Reflect.getMetadata(DOMAIN_EVENT_KEY, DomainEvent1);
         expect(eventId).toBeDefined();
@@ -62,7 +127,7 @@ describe("DomainEventSubscription tests", () => {
     });
 });
 
-describe("isDomainEventSubscription tests", () => {
+describe("isDomainEventSubscription", () => {
     test("returns false if not decorated", () => {
         expect(isDomainEventSubscription(new WithoutDecorator())).toBe(false);
     });
@@ -76,7 +141,7 @@ describe("isDomainEventSubscription tests", () => {
     });
 });
 
-describe("getEventId tests", () => {
+describe("getEventId", () => {
     test("returns undefined if no metadata", () => {
         expect(getEventId(new UnusedEvent().constructor)).toBeUndefined();
     });
@@ -86,12 +151,30 @@ describe("getEventId tests", () => {
     });
 });
 
-describe("getEventsFromDomainEventSubscription tests", () => {
+describe("getEventsFromDomainEventSubscription", () => {
     test("returns events from metadata", () => {
         expect(getEventsFromDomainEventSubscription(new WithDecorator())).toEqual([DomainEvent1]);
     });
 
     test("returns empty array if no metadata", () => {
         expect(getEventsFromDomainEventSubscription(new WithoutDecorator())).toEqual([]);
+    });
+});
+
+describe("getSubscriptionAsyncType", () => {
+    test("returns true if no metadata", () => {
+        expect(getSubscriptionAsyncType(new WithoutDecorator())).toBe(true);
+    });
+
+    test("returns true if metadata is missing", () => {
+        expect(getSubscriptionAsyncType(new WithAsyncConfigurationMissing())).toBe(true);
+    });
+
+    test("returns false if metadata is false", () => {
+        expect(getSubscriptionAsyncType(new WithAsyncConfigurationFalse())).toBe(false);
+    });
+
+    test("returns true if metadata is true", () => {
+        expect(getSubscriptionAsyncType(new WithAsyncConfigurationTrue())).toBe(true);
     });
 });

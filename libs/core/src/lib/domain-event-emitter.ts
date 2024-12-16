@@ -5,6 +5,7 @@ import { concatMap, from, lastValueFrom, toArray } from "rxjs";
 import {
     getEventId,
     getEventsFromDomainEventSubscription,
+    getSubscriptionAsyncType,
     isDomainEventSubscription
 } from "./domain-event-subscription";
 import { OnDomainEvent } from "./on-domain-event";
@@ -12,11 +13,13 @@ import { PublishedDomainEvent } from "./published-domain-event";
 import { isNil } from "./utils/type-utils";
 
 export class DomainEventEmitter implements OnModuleDestroy {
-    private readonly _handlers: Map<string, Array<OnDomainEvent<object>>>;
+    private readonly _asyncHandlers: Map<string, Array<OnDomainEvent<object>>>;
     private readonly _logger: Logger;
+    private readonly _syncHandlers: Map<string, Array<OnDomainEvent<object>>>;
 
     constructor(private readonly _concurrentSubscriptions = false) {
-        this._handlers = new Map<string, Array<OnDomainEvent<object>>>();
+        this._asyncHandlers = new Map<string, Array<OnDomainEvent<object>>>();
+        this._syncHandlers = new Map<string, Array<OnDomainEvent<object>>>();
         this._logger = new Logger(DomainEventEmitter.name);
     }
 
@@ -33,43 +36,63 @@ export class DomainEventEmitter implements OnModuleDestroy {
 
                 if (isDomainEventSubscription(provider.instance as object)) {
                     const events = getEventsFromDomainEventSubscription(provider.instance as OnDomainEvent<unknown>);
-                    events.forEach((event) => {
-                        const eventId = getEventId(event) as string;
-                        if (!this._handlers.has(eventId)) {
-                            this._handlers.set(eventId, []);
-                        }
+                    const isAsync = getSubscriptionAsyncType(provider.instance as OnDomainEvent<unknown>);
+                    if (isAsync) {
+                        events.forEach((event) => {
+                            const eventId = getEventId(event) as string;
+                            if (!this._asyncHandlers.has(eventId)) {
+                                this._asyncHandlers.set(eventId, []);
+                            }
 
-                        this._logger.debug(`Binding ${provider.instance?.constructor.name} to event ${eventId}`);
-                        this._handlers.get(eventId)?.push(provider.instance as OnDomainEvent<object>);
-                    });
+                            this._logger.debug(`Binding ${provider.instance?.constructor.name} to event ${eventId}`);
+                            this._asyncHandlers.get(eventId)?.push(provider.instance as OnDomainEvent<object>);
+                        });
+                    } else {
+                        events.forEach((event) => {
+                            const eventId = getEventId(event) as string;
+                            if (!this._syncHandlers.has(eventId)) {
+                                this._syncHandlers.set(eventId, []);
+                            }
+
+                            this._logger.debug(`Binding ${provider.instance?.constructor.name} to event ${eventId}`);
+                            this._syncHandlers.get(eventId)?.push(provider.instance as OnDomainEvent<object>);
+                        });
+                    }
                 }
             });
         });
     }
 
-    emit(withAggregate: PublishedDomainEvent<object>): Promise<unknown> {
-        if (this._handlers.size === 0) {
+    emit(publishedEvent: PublishedDomainEvent<object>): Promise<unknown> {
+        if (this._asyncHandlers.size === 0 || this._syncHandlers.size === 0) {
             this._logger.warn(
-                `Event ${withAggregate.payload.constructor.name} can't be passed to subscriptions. Make sure you use the @DomainEventSubscription decorator`
+                `Event ${publishedEvent.payload.constructor.name} can't be passed to subscriptions. Make sure you use the @DomainEventSubscription decorator`
             );
             return Promise.resolve();
         }
-        const eventId = getEventId(withAggregate.payload.constructor);
-        if (isNil(eventId) || !this._handlers.has(eventId)) {
+        const eventId = getEventId(publishedEvent.payload.constructor);
+        if (isNil(eventId) || !this._asyncHandlers.has(eventId) || !this._syncHandlers.has(eventId)) {
             this._logger.warn(
-                `Event ${withAggregate.payload.constructor.name} can't be passed to subscriptions. Make sure you use the @DomainEventSubscription decorator`
+                `Event ${publishedEvent.payload.constructor.name} can't be passed to subscriptions. Make sure you use the @DomainEventSubscription decorator`
             );
             return Promise.resolve();
         }
 
-        const handlers = this._handlers.get(eventId) as Array<OnDomainEvent<object>>;
-        const withErrorHandling = handlers.map((handler) => {
+        const toWait: Array<OnDomainEvent<object>> = this._syncHandlers.has(eventId)
+            ? (this._syncHandlers.get(eventId) as Array<OnDomainEvent<object>>)
+            : [];
+
+        const notToWait: Array<OnDomainEvent<object>> = this._asyncHandlers.has(eventId)
+            ? (this._asyncHandlers.get(eventId) as Array<OnDomainEvent<object>>)
+            : [];
+
+        const promisesToWait = toWait.map((handler) => {
             return async () => {
                 try {
-                    return await handler.onDomainEvent(withAggregate);
+                    return await handler.onDomainEvent(publishedEvent);
                 } catch (error) {
                     this._logger.error(
-                        `Error while emitting event ${withAggregate.payload.constructor.name} : ${
+                        `Error while emitting event ${publishedEvent.payload.constructor.name} : ${
                             (error as any).message
                         }`
                     );
@@ -77,16 +100,32 @@ export class DomainEventEmitter implements OnModuleDestroy {
                 }
             };
         });
-        return Promise.all(withErrorHandling.map((f) => f()));
+        const promisesNotToWait = notToWait.map((handler) => {
+            return async () => {
+                try {
+                    return await handler.onDomainEvent(publishedEvent);
+                } catch (error) {
+                    this._logger.error(
+                        `Error while emitting event ${publishedEvent.payload.constructor.name} : ${
+                            (error as any).message
+                        }`
+                    );
+                    throw error;
+                }
+            };
+        });
+        Promise.all(promisesNotToWait.map((f) => f()));
+
+        return Promise.all(promisesToWait.map((f) => f()));
     }
 
-    emitMultiple(withAggregate: PublishedDomainEvent<object>[]): Promise<unknown> {
+    emitMultiple(publishedEvents: PublishedDomainEvent<object>[]): Promise<unknown> {
         if (this._concurrentSubscriptions) {
-            return Promise.all(withAggregate.map((aggregate) => this.emit(aggregate)));
+            return Promise.all(publishedEvents.map((publishedEvent) => this.emit(publishedEvent)));
         }
 
         return lastValueFrom(
-            from(withAggregate).pipe(
+            from(publishedEvents).pipe(
                 concatMap((event) => from(this.emit(event))),
                 toArray()
             )
@@ -96,6 +135,7 @@ export class DomainEventEmitter implements OnModuleDestroy {
     }
 
     onModuleDestroy() {
-        this._handlers.clear();
+        this._asyncHandlers.clear();
+        this._syncHandlers.clear();
     }
 }
