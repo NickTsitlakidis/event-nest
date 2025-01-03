@@ -66,8 +66,8 @@ export abstract class AbstractEventStore implements EventStore {
                 publishedEvent.version = found.aggregateRootVersion;
             }
 
-            this._eventEmitter.emitMultiple(published);
             aggregateRoot.resolveVersion(saved);
+            await this._eventEmitter.emitMultiple(published);
             return saved;
         };
         return aggregateRoot;
