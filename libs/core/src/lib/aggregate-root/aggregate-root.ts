@@ -54,6 +54,7 @@ export abstract class AggregateRoot {
      * Adds an event to the currently existing events of the entity. This will not publish the event. Use the {@link commit}
      * method once all the events you want are appended.
      * @param event The event to be appended
+     * @throws UnregisteredEventException if the event is not registered
      */
     append(event: object) {
         if (!isRegistered(event)) {
@@ -103,6 +104,7 @@ export abstract class AggregateRoot {
      * method will trigger all the matching {@link ApplyEvent} functions of the entity to populate the object based on
      * application logic.
      * @param events The events that will be sent to {@link ApplyEvent} functions
+     * @throws UnknownEventException if an event is not known
      */
     reconstitute(events: Array<StoredEvent>) {
         const startedAt = Date.now();

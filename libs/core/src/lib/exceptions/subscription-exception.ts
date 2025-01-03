@@ -1,3 +1,7 @@
+/**
+ * Exception thrown when an error occurs while running subscriptions for an event.
+ * The caught error, the event class name and the event id are stored in the exception.
+ */
 export class SubscriptionException extends Error {
     private readonly _caughtError: Error;
     private readonly _eventClassName: string;
