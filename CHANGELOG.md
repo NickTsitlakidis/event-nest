@@ -1,3 +1,13 @@
+## 3.4.0 (2025-01-16)
+
+### 🚀 Features
+
+- **core:** Allow configuration of synchronous/asynchronous subscriptions ([#43](https://github.com/NickTsitlakidis/event-nest/pull/43))
+
+### ❤️ Thank You
+
+- Nick Tsitlakidis
+
 ## 3.3.2 (2024-11-30)
 
 ### 🩹 Fixes
