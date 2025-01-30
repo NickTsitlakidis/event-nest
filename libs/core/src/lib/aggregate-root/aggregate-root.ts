@@ -1,6 +1,7 @@
 import { Logger } from "@nestjs/common";
 
 import { getEventClass, isRegistered } from "../domain-event-registrations";
+import { SubscriptionException } from "../exceptions/subscription-exception";
 import { UnknownEventException } from "../exceptions/unknown-event-exception";
 import { UnregisteredEventException } from "../exceptions/unregistered-event-exception";
 import { StoredEvent } from "../storage/stored-event";
@@ -78,12 +79,20 @@ export abstract class AggregateRoot {
      */
     async commit(): Promise<AggregateRoot> {
         const toPublish = [...this._appendedEvents];
-        if (toPublish.length > 0) {
+        if (toPublish.length === 0) {
+            return this;
+        }
+
+        try {
             await this.publish(toPublish);
             this._appendedEvents = [];
             return this;
+        } catch (error) {
+            if (error instanceof SubscriptionException) {
+                this._appendedEvents = [];
+            }
+            throw error;
         }
-        return this;
     }
 
     /**

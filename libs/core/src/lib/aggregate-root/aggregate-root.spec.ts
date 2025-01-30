@@ -1,6 +1,7 @@
 import { Logger } from "@nestjs/common";
 
 import { DomainEvent } from "../domain-event";
+import { SubscriptionException } from "../exceptions/subscription-exception";
 import { UnknownEventException } from "../exceptions/unknown-event-exception";
 import { UnregisteredEventException } from "../exceptions/unregistered-event-exception";
 import { StoredEvent } from "../storage/stored-event";
@@ -74,207 +75,233 @@ class SubEntity2 extends AggregateRoot {
     }
 }
 
-describe("constructor tests", () => {
-    test("initializes values", () => {
-        const entity = new TestRoot("entity-id");
-        expect(entity.appendedEvents).toEqual([]);
-        expect(entity.id).toBe("entity-id");
-        expect(entity.version).toBe(0);
-    });
-});
-
-describe("reconstitute tests", () => {
-    test("calls mapped apply methods after sorting", () => {
-        const ev1 = StoredEvent.fromStorage("ev1", "id1", "test-event-2", new Date(), 10, "ag-name", {});
-        const ev2 = StoredEvent.fromStorage("ev2", "id1", "test-event-1", new Date(), 2, "ag-name", {});
-
-        const entity = new TestRoot("id1");
-
-        let last = 0;
-        const processor1Spy = jest.spyOn(entity, "applyTestEvent2").mockImplementation(() => {
-            last = 1;
+describe("AggregateRoot", () => {
+    describe("constructor", () => {
+        test("initializes values", () => {
+            const entity = new TestRoot("entity-id");
+            expect(entity.appendedEvents).toEqual([]);
+            expect(entity.id).toBe("entity-id");
+            expect(entity.version).toBe(0);
         });
-        const processor2Spy = jest.spyOn(entity, "applyTestEvent1").mockImplementation(() => {
-            last = 2;
+    });
+
+    describe("reconstitute", () => {
+        test("calls mapped apply methods after sorting", () => {
+            const ev1 = StoredEvent.fromStorage("ev1", "id1", "test-event-2", new Date(), 10, "ag-name", {});
+            const ev2 = StoredEvent.fromStorage("ev2", "id1", "test-event-1", new Date(), 2, "ag-name", {});
+
+            const entity = new TestRoot("id1");
+
+            let last = 0;
+            const processor1Spy = jest.spyOn(entity, "applyTestEvent2").mockImplementation(() => {
+                last = 1;
+            });
+            const processor2Spy = jest.spyOn(entity, "applyTestEvent1").mockImplementation(() => {
+                last = 2;
+            });
+
+            entity.reconstitute([ev1, ev2]);
+
+            expect(processor1Spy).toHaveBeenCalledTimes(1);
+            expect(processor1Spy).toHaveBeenCalledWith(ev1.getPayloadAs(TestEvent2));
+
+            expect(processor2Spy).toHaveBeenCalledTimes(1);
+            expect(processor2Spy).toHaveBeenCalledWith(ev2.getPayloadAs(TestEvent1));
+
+            expect(last).toBe(1);
         });
 
-        entity.reconstitute([ev1, ev2]);
+        test("throws when an event applier throws", () => {
+            const ev1 = StoredEvent.fromStorage("ev1", "id1", "throwing-event", new Date(), 10, "ag-name", {});
+            const entity = new TestRoot("id1");
+            expect(() => entity.reconstitute([ev1])).toThrow();
+        });
 
-        expect(processor1Spy).toHaveBeenCalledTimes(1);
-        expect(processor1Spy).toHaveBeenCalledWith(ev1.getPayloadAs(TestEvent2));
+        test("throws when an event has no matching handler", () => {
+            const ev1 = StoredEvent.fromStorage("ev1", "id1", "test-event-1", new Date(), 10, "ag-name", {});
+            const ev3 = StoredEvent.fromStorage("ev3", "id1", "test-event-3", new Date(), 10, "ag-name", {});
 
-        expect(processor2Spy).toHaveBeenCalledTimes(1);
-        expect(processor2Spy).toHaveBeenCalledWith(ev2.getPayloadAs(TestEvent1));
+            const entity = new TestRoot("id1");
 
-        expect(last).toBe(1);
+            const processor1Spy = jest.spyOn(entity, "applyTestEvent1").mockImplementation(() => {});
+            const processor2Spy = jest.spyOn(entity, "applyTestEvent2").mockImplementation(() => {});
+
+            expect(() => entity.reconstitute([ev1, ev3])).toThrow(UnknownEventException);
+
+            expect(processor1Spy).not.toHaveBeenCalled();
+            expect(processor2Spy).not.toHaveBeenCalled();
+        });
+
+        test("throws when an event is not registered", () => {
+            const ev1 = StoredEvent.fromStorage("ev1", "id1", "test-event-1", new Date(), 10, "ag-name", {});
+            const ev3 = StoredEvent.fromStorage("ev3", "id1", "other", new Date(), 12, "ag-name", {});
+
+            const entity = new TestRoot("id1");
+
+            const processor1Spy = jest.spyOn(entity, "applyTestEvent1").mockImplementation(() => {});
+            const processor2Spy = jest.spyOn(entity, "applyTestEvent2").mockImplementation(() => {});
+
+            expect(() => entity.reconstitute([ev1, ev3])).toThrow(UnknownEventException);
+
+            expect(processor1Spy).not.toHaveBeenCalled();
+            expect(processor2Spy).not.toHaveBeenCalled();
+        });
+
+        test("works with non-fat-arrow apply methods", () => {
+            const ev1 = StoredEvent.fromStorage(
+                "ev1",
+                "id1",
+                "test-event-for-this-binding",
+                new Date(),
+                10,
+                "ag-name",
+                {}
+            );
+
+            const entity = new TestRoot("id1");
+
+            entity.reconstitute([ev1]);
+
+            expect(entity.someProperty).toBe("test");
+        });
     });
 
-    test("throws when an event applier throws", () => {
-        const ev1 = StoredEvent.fromStorage("ev1", "id1", "throwing-event", new Date(), 10, "ag-name", {});
-        const entity = new TestRoot("id1");
-        expect(() => entity.reconstitute([ev1])).toThrow();
+    describe("append", () => {
+        test("throws when event is not registered", () => {
+            const entity = new TestRoot("entity-id");
+            expect(() => entity.append(new UnregisteredEvent())).toThrow(
+                new UnregisteredEventException(UnregisteredEvent.name)
+            );
+        });
+
+        test("adds event to array", () => {
+            const entity = new TestRoot("entity-id");
+            const event = new TestEvent2();
+            entity.append(event);
+
+            expect(entity.appendedEvents.length).toBe(1);
+            expect(
+                entity.appendedEvents.findIndex(
+                    (appended) => appended.aggregateRootId === "entity-id" && appended.payload === event
+                )
+            ).toBe(0);
+        });
+
+        test("adds multiple events to array", () => {
+            const entity = new TestRoot("entity-id");
+            const event1 = new TestEvent2();
+            const event2 = new TestEvent2();
+            entity.append(event1);
+            entity.append(event2);
+
+            expect(entity.appendedEvents.length).toBe(2);
+            expect(
+                entity.appendedEvents.findIndex(
+                    (appended) => appended.aggregateRootId === "entity-id" && appended.payload === event1
+                )
+            ).toBe(0);
+
+            expect(
+                entity.appendedEvents.findIndex(
+                    (appended) => appended.aggregateRootId === "entity-id" && appended.payload === event2
+                )
+            ).toBe(1);
+        });
     });
 
-    test("throws when an event has no matching handler", () => {
-        const ev1 = StoredEvent.fromStorage("ev1", "id1", "test-event-1", new Date(), 10, "ag-name", {});
-        const ev3 = StoredEvent.fromStorage("ev3", "id1", "test-event-3", new Date(), 10, "ag-name", {});
+    describe("commit", () => {
+        test("returns for no appended events", async () => {
+            const entity = new TestRoot("entity-id");
 
-        const entity = new TestRoot("id1");
+            const result = await entity.commit();
+            expect(result.appendedEvents.length).toBe(0);
+            expect((result as TestRoot).published).toEqual([]);
+        });
 
-        const processor1Spy = jest.spyOn(entity, "applyTestEvent1").mockImplementation(() => {});
-        const processor2Spy = jest.spyOn(entity, "applyTestEvent2").mockImplementation(() => {});
+        test("does not clear appended events if commit fails with non-subscription exception", async () => {
+            const entity = new TestRoot("entity-id");
+            const event1 = new TestEvent2();
+            const event2 = new TestEvent2();
+            entity.append(event1);
+            entity.append(event2);
 
-        expect(() => entity.reconstitute([ev1, ev3])).toThrow(UnknownEventException);
+            entity.publish = () => Promise.reject("error");
 
-        expect(processor1Spy).not.toHaveBeenCalled();
-        expect(processor2Spy).not.toHaveBeenCalled();
+            await expect(entity.commit()).rejects.toBeDefined();
+
+            expect(entity.appendedEvents.length).toBe(2);
+            expect((entity as TestRoot).published).toEqual([]);
+        });
+
+        test("clears appended events if commit fails with subscription exception", async () => {
+            const entity = new TestRoot("entity-id");
+            const event1 = new TestEvent2();
+            const event2 = new TestEvent2();
+            entity.append(event1);
+            entity.append(event2);
+
+            entity.publish = () =>
+                Promise.reject(new SubscriptionException(new Error("something happened"), TestEvent2.name, "id"));
+
+            await expect(entity.commit()).rejects.toBeDefined();
+
+            expect(entity.appendedEvents.length).toBe(0);
+            expect((entity as TestRoot).published).toEqual([]);
+        });
+
+        test("publishes and clears appended events", async () => {
+            const entity = new TestRoot("entity-id");
+            const event1 = new TestEvent2();
+            const event2 = new TestEvent2();
+            entity.append(event1);
+            entity.append(event2);
+
+            const result = await entity.commit();
+            expect(result.appendedEvents.length).toBe(0);
+            expect((result as TestRoot).published).toEqual([
+                {
+                    aggregateRootId: "entity-id",
+                    occurredAt: new Date("2020-01-01"),
+                    payload: event1
+                },
+                {
+                    aggregateRootId: "entity-id",
+                    occurredAt: new Date("2020-01-01"),
+                    payload: event2
+                }
+            ]);
+        });
     });
 
-    test("throws when an event is not registered", () => {
-        const ev1 = StoredEvent.fromStorage("ev1", "id1", "test-event-1", new Date(), 10, "ag-name", {});
-        const ev3 = StoredEvent.fromStorage("ev3", "id1", "other", new Date(), 12, "ag-name", {});
-
-        const entity = new TestRoot("id1");
-
-        const processor1Spy = jest.spyOn(entity, "applyTestEvent1").mockImplementation(() => {});
-        const processor2Spy = jest.spyOn(entity, "applyTestEvent2").mockImplementation(() => {});
-
-        expect(() => entity.reconstitute([ev1, ev3])).toThrow(UnknownEventException);
-
-        expect(processor1Spy).not.toHaveBeenCalled();
-        expect(processor2Spy).not.toHaveBeenCalled();
+    test("publish - throws when publisher is missing", (endTest) => {
+        new SubEntity2("id").publish([]).catch((error) => {
+            expect(error).toBe("There is no event publisher assigned");
+            endTest();
+        });
     });
 
-    test("works with non-fat-arrow apply methods", () => {
-        const ev1 = StoredEvent.fromStorage("ev1", "id1", "test-event-for-this-binding", new Date(), 10, "ag-name", {});
+    test("sortEvents - sorts multiple events by version", () => {
+        const ev1 = StoredEvent.fromPublishedEvent("ev1", "id1", "ag-name", new TestEvent1(), new Date());
+        ev1.aggregateRootVersion = 5;
+        const ev2 = StoredEvent.fromPublishedEvent("ev2", "id1", "ag-name", new TestEvent1(), new Date());
+        ev2.aggregateRootVersion = 1;
+        const ev3 = StoredEvent.fromPublishedEvent("ev3", "id1", "ag-name", new TestEvent1(), new Date());
+        ev3.aggregateRootVersion = 41;
 
-        const entity = new TestRoot("id1");
-
-        entity.reconstitute([ev1]);
-
-        expect(entity.someProperty).toBe("test");
-    });
-});
-
-describe("append tests", () => {
-    test("throws when event is not registered", () => {
-        const entity = new TestRoot("entity-id");
-        expect(() => entity.append(new UnregisteredEvent())).toThrow(
-            new UnregisteredEventException(UnregisteredEvent.name)
-        );
+        const sorted = new TestRoot("id").sortEvents([ev1, ev2, ev3]);
+        expect(sorted).toEqual([ev2, ev1, ev3]);
     });
 
-    test("adds event to array", () => {
-        const entity = new TestRoot("entity-id");
-        const event = new TestEvent2();
-        entity.append(event);
+    test("resolveVersion - finds greatest version for multiple events", () => {
+        const ev1 = StoredEvent.fromPublishedEvent("ev1", "id1", "ag-name", new TestEvent1(), new Date());
+        ev1.aggregateRootVersion = 10;
+        const ev2 = StoredEvent.fromPublishedEvent("ev2", "id1", "ag-name", new TestEvent1(), new Date());
+        ev2.aggregateRootVersion = 5;
+        const ev3 = StoredEvent.fromPublishedEvent("ev3", "id1", "ag-name", new TestEvent1(), new Date());
+        ev3.aggregateRootVersion = 30;
 
-        expect(entity.appendedEvents.length).toBe(1);
-        expect(
-            entity.appendedEvents.findIndex(
-                (appended) => appended.aggregateRootId === "entity-id" && appended.payload === event
-            )
-        ).toBe(0);
+        const entity = new TestRoot("id");
+        entity.resolveVersion([ev1, ev2, ev3]);
+        expect(entity.version).toBe(30);
     });
-
-    test("adds multiple events to array", () => {
-        const entity = new TestRoot("entity-id");
-        const event1 = new TestEvent2();
-        const event2 = new TestEvent2();
-        entity.append(event1);
-        entity.append(event2);
-
-        expect(entity.appendedEvents.length).toBe(2);
-        expect(
-            entity.appendedEvents.findIndex(
-                (appended) => appended.aggregateRootId === "entity-id" && appended.payload === event1
-            )
-        ).toBe(0);
-
-        expect(
-            entity.appendedEvents.findIndex(
-                (appended) => appended.aggregateRootId === "entity-id" && appended.payload === event2
-            )
-        ).toBe(1);
-    });
-});
-
-describe("commit tests", () => {
-    test("returns for no appended events", async () => {
-        const entity = new TestRoot("entity-id");
-
-        const result = await entity.commit();
-        expect(result.appendedEvents.length).toBe(0);
-        expect((result as TestRoot).published).toEqual([]);
-    });
-
-    test("does not clear appended events if commit fails", async () => {
-        const entity = new TestRoot("entity-id");
-        const event1 = new TestEvent2();
-        const event2 = new TestEvent2();
-        entity.append(event1);
-        entity.append(event2);
-
-        entity.publish = () => Promise.reject("error");
-
-        await expect(entity.commit()).rejects.toBeDefined();
-
-        expect(entity.appendedEvents.length).toBe(2);
-        expect((entity as TestRoot).published).toEqual([]);
-    });
-
-    test("publishes and clears appended events", async () => {
-        const entity = new TestRoot("entity-id");
-        const event1 = new TestEvent2();
-        const event2 = new TestEvent2();
-        entity.append(event1);
-        entity.append(event2);
-
-        const result = await entity.commit();
-        expect(result.appendedEvents.length).toBe(0);
-        expect((result as TestRoot).published).toEqual([
-            {
-                aggregateRootId: "entity-id",
-                occurredAt: new Date("2020-01-01"),
-                payload: event1
-            },
-            {
-                aggregateRootId: "entity-id",
-                occurredAt: new Date("2020-01-01"),
-                payload: event2
-            }
-        ]);
-    });
-});
-
-test("publish - throws when publisher is missing", (endTest) => {
-    new SubEntity2("id").publish([]).catch((error) => {
-        expect(error).toBe("There is no event publisher assigned");
-        endTest();
-    });
-});
-
-test("sortEvents - sorts multiple events by version", () => {
-    const ev1 = StoredEvent.fromPublishedEvent("ev1", "id1", "ag-name", new TestEvent1(), new Date());
-    ev1.aggregateRootVersion = 5;
-    const ev2 = StoredEvent.fromPublishedEvent("ev2", "id1", "ag-name", new TestEvent1(), new Date());
-    ev2.aggregateRootVersion = 1;
-    const ev3 = StoredEvent.fromPublishedEvent("ev3", "id1", "ag-name", new TestEvent1(), new Date());
-    ev3.aggregateRootVersion = 41;
-
-    const sorted = new TestRoot("id").sortEvents([ev1, ev2, ev3]);
-    expect(sorted).toEqual([ev2, ev1, ev3]);
-});
-
-test("resolveVersion - finds greatest version for multiple events", () => {
-    const ev1 = StoredEvent.fromPublishedEvent("ev1", "id1", "ag-name", new TestEvent1(), new Date());
-    ev1.aggregateRootVersion = 10;
-    const ev2 = StoredEvent.fromPublishedEvent("ev2", "id1", "ag-name", new TestEvent1(), new Date());
-    ev2.aggregateRootVersion = 5;
-    const ev3 = StoredEvent.fromPublishedEvent("ev3", "id1", "ag-name", new TestEvent1(), new Date());
-    ev3.aggregateRootVersion = 30;
-
-    const entity = new TestRoot("id");
-    entity.resolveVersion([ev1, ev2, ev3]);
-    expect(entity.version).toBe(30);
 });
