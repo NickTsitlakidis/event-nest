@@ -1,3 +1,12 @@
+## 3.4.1 (2025-01-30)
+
+### 🩹 Fixes
+
+- **core:** Handle subscription exceptions in commit method and clear published events ([f3f64392](https://github.com/NickTsitlakidis/event-nest/commit/f3f64392))
+- **core:** Setting radash as a dependency instead of peer dependency ([c9f6c90f](https://github.com/NickTsitlakidis/event-nest/commit/c9f6c90f))
+
+### ❤️ Thank You
+
 ## 3.4.0 (2025-01-16)
 
 ### 🚀 Features
