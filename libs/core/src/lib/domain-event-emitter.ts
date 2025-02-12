@@ -1,5 +1,6 @@
 import { Logger, OnModuleDestroy } from "@nestjs/common";
 import { Module } from "@nestjs/core/injector/module";
+import { isNil } from "es-toolkit";
 import { concatMap, from, lastValueFrom, toArray } from "rxjs";
 
 import {
@@ -11,7 +12,6 @@ import {
 import { SubscriptionException } from "./exceptions/subscription-exception";
 import { OnDomainEvent } from "./on-domain-event";
 import { PublishedDomainEvent } from "./published-domain-event";
-import { isNil } from "./utils/type-utils";
 
 export class DomainEventEmitter implements OnModuleDestroy {
     private readonly _asyncHandlers: Map<string, Array<OnDomainEvent<object>>>;

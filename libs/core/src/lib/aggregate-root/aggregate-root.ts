@@ -1,11 +1,11 @@
 import { Logger } from "@nestjs/common";
+import { isNil } from "es-toolkit";
 
 import { getEventClass, isRegistered } from "../domain-event-registrations";
 import { SubscriptionException } from "../exceptions/subscription-exception";
 import { UnknownEventException } from "../exceptions/unknown-event-exception";
 import { UnregisteredEventException } from "../exceptions/unregistered-event-exception";
 import { StoredEvent } from "../storage/stored-event";
-import { isNil } from "../utils/type-utils";
 import { AggregateRootEvent } from "./aggregate-root-event";
 import { getDecoratedPropertyKey } from "./reflection";
 

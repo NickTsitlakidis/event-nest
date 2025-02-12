@@ -5,12 +5,12 @@ import {
     DomainEventEmitter,
     EventConcurrencyException,
     getAggregateRootName,
-    isNil,
     MissingAggregateRootNameException,
     StoredAggregateRoot,
     StoredEvent
 } from "@event-nest/core";
 import { Logger } from "@nestjs/common";
+import { isNil } from "es-toolkit";
 import { knex } from "knex";
 import { randomUUID } from "node:crypto";
 

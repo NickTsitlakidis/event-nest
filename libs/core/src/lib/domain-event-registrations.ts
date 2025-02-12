@@ -1,7 +1,7 @@
+import { isNil } from "es-toolkit";
 import { Class } from "type-fest";
 
 import { EventNameConflictException } from "./exceptions/event-name-conflict-exception";
-import { isNil } from "./utils/type-utils";
 
 type Registration = {
     eventClass: unknown;

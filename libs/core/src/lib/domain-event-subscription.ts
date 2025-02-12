@@ -1,10 +1,9 @@
+import { isNil, isPlainObject } from "es-toolkit";
 import { randomUUID } from "node:crypto";
-import { isObject } from "radash";
 import { Class } from "type-fest";
 
 import { DOMAIN_EVENT_KEY, DOMAIN_EVENT_SUBSCRIPTION_KEY } from "./metadata-keys";
 import { OnDomainEvent } from "./on-domain-event";
-import { isNil } from "./utils/type-utils";
 
 type SubscriptionConfiguration = {
     /**
@@ -24,12 +23,12 @@ export function DomainEventSubscription(
     configOrEventClass: Class<unknown> | SubscriptionConfiguration,
     ...eventClasses: Class<unknown>[]
 ): ClassDecorator {
-    const actualEventClasses = isObject(configOrEventClass)
+    const actualEventClasses = isPlainObject(configOrEventClass)
         ? (configOrEventClass as SubscriptionConfiguration).eventClasses
         : [configOrEventClass, ...eventClasses];
 
     let isAsync = true;
-    if (isObject(configOrEventClass)) {
+    if (isPlainObject(configOrEventClass)) {
         isAsync = (configOrEventClass as SubscriptionConfiguration).isAsync ?? true;
     }
 

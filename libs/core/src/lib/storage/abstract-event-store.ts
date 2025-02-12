@@ -1,3 +1,5 @@
+import { isNil } from "es-toolkit";
+
 import { AggregateRoot } from "../aggregate-root/aggregate-root";
 import { AggregateRootEvent } from "../aggregate-root/aggregate-root-event";
 import { getAggregateRootName } from "../aggregate-root/aggregate-root-name";
@@ -6,7 +8,7 @@ import { IdGenerationException } from "../exceptions/id-generation-exception";
 import { MissingAggregateRootNameException } from "../exceptions/missing-aggregate-root-name-exception";
 import { UnknownEventVersionException } from "../exceptions/unknown-event-version-exception";
 import { PublishedDomainEvent } from "../published-domain-event";
-import { hasAllValues, isNil } from "../utils/type-utils";
+import { hasAllValues } from "../utils/type-utils";
 import { AggregateRootClass, EventStore } from "./event-store";
 import { StoredAggregateRoot } from "./stored-aggregate-root";
 import { StoredEvent } from "./stored-event";

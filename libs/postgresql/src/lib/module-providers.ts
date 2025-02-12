@@ -1,5 +1,6 @@
-import { DomainEventEmitter, EVENT_STORE, isNil } from "@event-nest/core";
+import { DomainEventEmitter, EVENT_STORE } from "@event-nest/core";
 import { Provider } from "@nestjs/common";
+import { isNil } from "es-toolkit";
 import { knex } from "knex";
 
 import { PostgreSQLModuleAsyncOptions, PostgreSQLModuleOptions } from "./postgresql-module-options";

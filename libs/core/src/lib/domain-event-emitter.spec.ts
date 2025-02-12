@@ -3,7 +3,7 @@ import { InjectionToken } from "@nestjs/common";
 import { Injectable } from "@nestjs/common/interfaces";
 import { InstanceWrapper } from "@nestjs/core/injector/instance-wrapper";
 import { Module } from "@nestjs/core/injector/module";
-import { sleep } from "radash";
+import { delay } from "es-toolkit";
 import { firstValueFrom, map, mergeMap, throwError, timer } from "rxjs";
 
 import { DomainEventEmitter } from "./domain-event-emitter";
@@ -198,7 +198,7 @@ describe("DomainEventEmitter", () => {
             ]);
 
             expect(handledParameters).toEqual([2]);
-            await sleep(500);
+            await delay(500);
             expect(asyncSpy).toHaveBeenCalledTimes(1);
             expect(syncSpy).toHaveBeenCalledTimes(1);
             expect(handledParameters).toEqual([2, 1]);
@@ -333,7 +333,7 @@ describe("DomainEventEmitter", () => {
                 ])
             ).resolves.toBeUndefined();
 
-            await sleep(2000);
+            await delay(2000);
 
             expect(asyncSpy).toHaveBeenCalledTimes(1);
             expect(syncSpy).toHaveBeenCalledTimes(1);
@@ -375,7 +375,7 @@ describe("DomainEventEmitter", () => {
                 }
             ]);
 
-            await sleep(200);
+            await delay(200);
             expect(handleSpy).toHaveBeenCalledTimes(1);
             expect(handleSpy).toHaveBeenCalledWith({
                 aggregateRootId: "test",
@@ -532,7 +532,7 @@ describe("DomainEventEmitter", () => {
                 }
             ]);
 
-            await sleep(2000);
+            await delay(2000);
             expect(handleSpy).toHaveBeenCalledTimes(1);
             expect(handleSpy).toHaveBeenCalledWith({
                 aggregateRootId: "test1",
