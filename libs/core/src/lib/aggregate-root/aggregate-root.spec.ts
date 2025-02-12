@@ -120,13 +120,14 @@ describe("AggregateRoot", () => {
         test("throws when an event has no matching handler", () => {
             const ev1 = StoredEvent.fromStorage("ev1", "id1", "test-event-1", new Date(), 10, "ag-name", {});
             const ev3 = StoredEvent.fromStorage("ev3", "id1", "test-event-3", new Date(), 10, "ag-name", {});
+            const ev4 = StoredEvent.fromStorage("ev4", "id1", "test-event-3", new Date(), 10, "ag-name", {});
 
             const entity = new TestRoot("id1");
 
             const processor1Spy = jest.spyOn(entity, "applyTestEvent1").mockImplementation(() => {});
             const processor2Spy = jest.spyOn(entity, "applyTestEvent2").mockImplementation(() => {});
 
-            expect(() => entity.reconstitute([ev1, ev3])).toThrow(UnknownEventException);
+            expect(() => entity.reconstitute([ev1, ev3, ev4])).toThrow(UnknownEventException);
 
             expect(processor1Spy).not.toHaveBeenCalled();
             expect(processor2Spy).not.toHaveBeenCalled();

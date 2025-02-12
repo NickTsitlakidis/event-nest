@@ -1,5 +1,5 @@
 import { Logger } from "@nestjs/common";
-import { isNil } from "es-toolkit";
+import { isNil, uniq } from "es-toolkit";
 
 import { getEventClass, isRegistered } from "../domain-event-registrations";
 import { SubscriptionException } from "../exceptions/subscription-exception";
@@ -121,7 +121,7 @@ export abstract class AggregateRoot {
             const [unregistered, missingProcessor, known] = this.splitEvents(this.sortEvents(events));
 
             if (unregistered.length > 0 || missingProcessor.length > 0) {
-                const throwable = new UnknownEventException(unregistered, missingProcessor, this.id);
+                const throwable = new UnknownEventException(uniq(unregistered), uniq(missingProcessor), this.id);
                 this.logger.error(throwable.message);
                 throw throwable;
             }
