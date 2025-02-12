@@ -180,9 +180,9 @@ describe("AggregateRoot", () => {
             const event = new TestEvent2();
             entity.append(event);
 
-            expect(entity.appendedEvents.length).toBe(1);
+            expect(entity.uncommittedEvents.length).toBe(1);
             expect(
-                entity.appendedEvents.findIndex(
+                entity.uncommittedEvents.findIndex(
                     (appended) => appended.aggregateRootId === "entity-id" && appended.payload === event
                 )
             ).toBe(0);
@@ -195,15 +195,15 @@ describe("AggregateRoot", () => {
             entity.append(event1);
             entity.append(event2);
 
-            expect(entity.appendedEvents.length).toBe(2);
+            expect(entity.uncommittedEvents.length).toBe(2);
             expect(
-                entity.appendedEvents.findIndex(
+                entity.uncommittedEvents.findIndex(
                     (appended) => appended.aggregateRootId === "entity-id" && appended.payload === event1
                 )
             ).toBe(0);
 
             expect(
-                entity.appendedEvents.findIndex(
+                entity.uncommittedEvents.findIndex(
                     (appended) => appended.aggregateRootId === "entity-id" && appended.payload === event2
                 )
             ).toBe(1);
@@ -215,7 +215,7 @@ describe("AggregateRoot", () => {
             const entity = new TestRoot("entity-id");
 
             const result = await entity.commit();
-            expect(result.appendedEvents.length).toBe(0);
+            expect(result.uncommittedEvents.length).toBe(0);
             expect((result as TestRoot).published).toEqual([]);
         });
 
@@ -230,7 +230,7 @@ describe("AggregateRoot", () => {
 
             await expect(entity.commit()).rejects.toBeDefined();
 
-            expect(entity.appendedEvents.length).toBe(2);
+            expect(entity.uncommittedEvents.length).toBe(2);
             expect((entity as TestRoot).published).toEqual([]);
         });
 
@@ -246,7 +246,7 @@ describe("AggregateRoot", () => {
 
             await expect(entity.commit()).rejects.toBeDefined();
 
-            expect(entity.appendedEvents.length).toBe(0);
+            expect(entity.uncommittedEvents.length).toBe(0);
             expect((entity as TestRoot).published).toEqual([]);
         });
 
@@ -258,7 +258,7 @@ describe("AggregateRoot", () => {
             entity.append(event2);
 
             const result = await entity.commit();
-            expect(result.appendedEvents.length).toBe(0);
+            expect(result.uncommittedEvents.length).toBe(0);
             expect((result as TestRoot).published).toEqual([
                 {
                     aggregateRootId: "entity-id",

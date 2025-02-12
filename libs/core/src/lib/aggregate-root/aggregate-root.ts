@@ -15,24 +15,24 @@ type KnownEvent = {
 };
 
 export abstract class AggregateRoot {
-    private _appendedEvents: Array<AggregateRootEvent<object>>;
     private readonly _logger: Logger;
+    private _uncommittedEvents: Array<AggregateRootEvent<object>>;
     private _version: number;
 
     protected constructor(
         private readonly _id: string,
         logger?: Logger
     ) {
-        this._appendedEvents = [];
+        this._uncommittedEvents = [];
         this._version = 0;
         this._logger = isNil(logger) ? new Logger(AggregateRoot.name) : logger;
     }
 
     /**
-     * Returns a clone array of all the currently appended events of the entity.
+     * @deprecated Use {@link uncommittedEvents} instead
      */
     get appendedEvents(): Array<AggregateRootEvent<object>> {
-        return [...this._appendedEvents];
+        return [...this._uncommittedEvents];
     }
 
     get id(): string {
@@ -41,6 +41,13 @@ export abstract class AggregateRoot {
 
     get logger(): Logger {
         return this._logger;
+    }
+
+    /**
+     * Returns a clone array of all the currently uncommitted events of the entity.
+     */
+    get uncommittedEvents(): Array<AggregateRootEvent<object>> {
+        return [...this._uncommittedEvents];
     }
 
     /**
@@ -63,7 +70,7 @@ export abstract class AggregateRoot {
             throw new UnregisteredEventException(event.constructor.name);
         }
 
-        this._appendedEvents.push({
+        this._uncommittedEvents.push({
             aggregateRootId: this.id,
             occurredAt: new Date(Date.now()),
             payload: event
@@ -72,24 +79,24 @@ export abstract class AggregateRoot {
 
     /**
      * All the events that have been previously appended will be committed once this method runs. After publishing,
-     * the appended events will be deleted so that the next commit publishes newer events.
+     * the uncommitted events will be deleted so that the next commit publishes newer events.
      * During publishing, the events will be saved and after the successful save, all the application event
      * handlers will be called to take care of async updates.
      * Call this once all the events you want, have been appended.
      */
     async commit(): Promise<AggregateRoot> {
-        const toPublish = [...this._appendedEvents];
+        const toPublish = [...this._uncommittedEvents];
         if (toPublish.length === 0) {
             return this;
         }
 
         try {
             await this.publish(toPublish);
-            this._appendedEvents = [];
+            this._uncommittedEvents = [];
             return this;
         } catch (error) {
             if (error instanceof SubscriptionException) {
-                this._appendedEvents = [];
+                this._uncommittedEvents = [];
             }
             throw error;
         }
