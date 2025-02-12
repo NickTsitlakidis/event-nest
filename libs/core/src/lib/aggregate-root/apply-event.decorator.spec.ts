@@ -1,3 +1,4 @@
+import { MissingEventClassException } from "../exceptions/missing-event-class-exception";
 import { AggregateRoot } from "./aggregate-root";
 import { ApplyEvent } from "./apply-event.decorator";
 import { getDecoratedPropertyKey } from "./reflection";
@@ -23,11 +24,19 @@ class UndecoratedEntity extends AggregateRoot {
     }
 }
 
-test("ApplyEvent - adds metadata", () => {
-    const metadata = Reflect.getMetadata("event-nest-process-event-meta-processTestEvent", new TestEntity());
-    expect(metadata).toBeDefined();
-    expect(metadata.eventClass).toBe(Event1);
-    expect(metadata.key).toBe("processTestEvent");
+describe("ApplyEvent", () => {
+    test("adds metadata", () => {
+        const metadata = Reflect.getMetadata("event-nest-process-event-meta-processTestEvent", new TestEntity());
+        expect(metadata).toBeDefined();
+        expect(metadata.eventClass).toBe(Event1);
+        expect(metadata.key).toBe("processTestEvent");
+    });
+
+    test("throws exception if event class is undefined", () => {
+        expect(() => {
+            ApplyEvent(undefined as any)(new TestEntity(), "processTestEvent");
+        }).toThrow(MissingEventClassException);
+    });
 });
 
 describe("getDecoratedPropertyKey tests", () => {

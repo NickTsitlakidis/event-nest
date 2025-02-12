@@ -1,6 +1,8 @@
 import "reflect-metadata";
+import { isNil } from "es-toolkit";
 import { Class } from "type-fest";
 
+import { MissingEventClassException } from "../exceptions/missing-event-class-exception";
 import { APPLY_EVENT_DECORATOR_KEY } from "../metadata-keys";
 
 /**
@@ -9,9 +11,13 @@ import { APPLY_EVENT_DECORATOR_KEY } from "../metadata-keys";
  * are called to process the events.
  *
  * @param eventClass The class of the event to be applied.
+ * @throws {MissingEventClassException} When the event class is undefined or null.
  * @constructor
  */
 export function ApplyEvent(eventClass: Class<unknown>): PropertyDecorator {
+    if (isNil(eventClass)) {
+        throw new MissingEventClassException();
+    }
     return (propertyParent, propertyKey) => {
         Reflect.defineMetadata(
             APPLY_EVENT_DECORATOR_KEY + "-" + propertyKey.toString(),
