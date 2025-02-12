@@ -1,3 +1,13 @@
+## 3.4.2 (2025-02-12)
+
+### 🩹 Fixes
+
+- **core:** Using unique event names for the UnknownEventException in aggregate root ([49bdadee](https://github.com/NickTsitlakidis/event-nest/commit/49bdadee))
+- **core:** Adding nil check in ApplyEvent decorator and throwing exception ([77192b83](https://github.com/NickTsitlakidis/event-nest/commit/77192b83))
+- **core:** Deprecation of the appendedEvents getter in favor of a more descriptive name : uncommittedEvents ([cada84cf](https://github.com/NickTsitlakidis/event-nest/commit/cada84cf))
+
+### ❤️ Thank You
+
 ## 3.4.1 (2025-01-30)
 
 ### 🩹 Fixes

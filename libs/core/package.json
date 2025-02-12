@@ -1,6 +1,6 @@
 {
     "name": "@event-nest/core",
-    "version": "3.4.1",
+    "version": "3.4.2",
     "license": "MIT",
     "author": "Nick Tsitlakidis",
     "description": "Event sourcing module for NestJS. It provides a set of decorators and classes to build an application based on event sourcing.",
