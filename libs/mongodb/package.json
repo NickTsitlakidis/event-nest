@@ -9,7 +9,7 @@
         "url": "https://github.com/NickTsitlakidis/event-nest.git"
     },
     "engines": {
-        "node": ">= 18"
+        "node": ">= 20"
     },
     "type": "commonjs",
     "keywords": [
@@ -22,10 +22,10 @@
         "postgresql"
     ],
     "peerDependencies": {
-        "@nestjs/common": "^9.0.0 || ^10.0.0",
-        "@nestjs/core": "^9.0.0 || ^10.0.0",
+        "@nestjs/common": "^^10.0.0 || ^11.0.0",
+        "@nestjs/core": "^10.0.0 || ^11.0.0",
         "reflect-metadata": "^0.1.12 || ^0.2.0",
         "rxjs": "^7.2.0",
-        "mongodb": "^5.0.0 || ^6.0.0"
+        "mongodb": "^6.0.0"
     }
 }
