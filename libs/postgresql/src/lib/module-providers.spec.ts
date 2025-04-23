@@ -83,9 +83,9 @@ describe("PostgreSQLModuleProviders", () => {
             const eventStore: PostgreSQLEventStore = module.get(EVENT_STORE);
             expect(eventStore).toBeDefined();
             expect(eventStore).toBeInstanceOf(PostgreSQLEventStore);
-            expect(eventStore.eventsTableName).toBe(options.eventsTableName);
-            expect(eventStore.aggregatesTableName).toBe(options.aggregatesTableName);
-            expect(eventStore.schemaName).toBe(options.schemaName);
+            expect(eventStore.schemaConfiguration.eventsTable).toBe(options.eventsTableName);
+            expect(eventStore.schemaConfiguration.aggregatesTable).toBe(options.aggregatesTableName);
+            expect(eventStore.schemaConfiguration.schema).toBe(options.schemaName);
         });
 
         test("creates DomainEventEmitter provider with concurrent option", async () => {
@@ -370,9 +370,9 @@ describe("PostgreSQLModuleProviders", () => {
             const eventStore: PostgreSQLEventStore = module.get(EVENT_STORE);
             expect(eventStore).toBeDefined();
             expect(eventStore).toBeInstanceOf(PostgreSQLEventStore);
-            expect(eventStore.eventsTableName).toBe("async-events");
-            expect(eventStore.aggregatesTableName).toBe("async-aggregates");
-            expect(eventStore.schemaName).toBe("the-async-schema");
+            expect(eventStore.schemaConfiguration.eventsTable).toBe("async-events");
+            expect(eventStore.schemaConfiguration.aggregatesTable).toBe("async-aggregates");
+            expect(eventStore.schemaConfiguration.schema).toBe("the-async-schema");
         });
 
         test("creates PostgreSQLEventStore provider when options is object", async () => {
@@ -392,9 +392,9 @@ describe("PostgreSQLModuleProviders", () => {
             const eventStore: PostgreSQLEventStore = module.get(EVENT_STORE);
             expect(eventStore).toBeDefined();
             expect(eventStore).toBeInstanceOf(PostgreSQLEventStore);
-            expect(eventStore.eventsTableName).toBe("async-events");
-            expect(eventStore.aggregatesTableName).toBe("async-aggregates");
-            expect(eventStore.schemaName).toBe("the-async-schema");
+            expect(eventStore.schemaConfiguration.eventsTable).toBe("async-events");
+            expect(eventStore.schemaConfiguration.aggregatesTable).toBe("async-aggregates");
+            expect(eventStore.schemaConfiguration.schema).toBe("the-async-schema");
         });
 
         test("creates DomainEventEmitter provider with concurrent option when options is Promise", async () => {

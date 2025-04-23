@@ -79,7 +79,7 @@ describe("AggregateRoot", () => {
     describe("constructor", () => {
         test("initializes values", () => {
             const entity = new TestRoot("entity-id");
-            expect(entity.appendedEvents).toEqual([]);
+            expect(entity.uncommittedEvents).toEqual([]);
             expect(entity.id).toBe("entity-id");
             expect(entity.version).toBe(0);
         });
