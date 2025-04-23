@@ -156,6 +156,58 @@ describe("PostgreSQLModuleProviders", () => {
                 }
             });
         });
+
+        test("configures connection pool when pool options are provided", async () => {
+            const options: PostgreSQLModuleOptions = {
+                aggregatesTableName: "aggregates",
+                connectionPool: {
+                    idleTimeoutMillis: 30_000,
+                    max: 10,
+                    min: 2
+                },
+                connectionUri: "postgres://test:test@docker:32770/db",
+                eventsTableName: "events",
+                schemaName: "the-schema"
+            };
+            await Test.createTestingModule({ providers: ModuleProviders.create(options) }).compile();
+            expect(mockedKnex).toHaveBeenCalledWith({
+                client: "pg",
+                connection: {
+                    connectionString: options.connectionUri
+                },
+                pool: options.connectionPool
+            });
+        });
+
+        test("configures both ssl and connection pool when both options are provided", async () => {
+            const options: PostgreSQLModuleOptions = {
+                aggregatesTableName: "aggregates",
+                connectionPool: {
+                    idleTimeoutMillis: 30_000,
+                    max: 10,
+                    min: 2
+                },
+                connectionUri: "postgres://test:test@docker:32770/db",
+                eventsTableName: "events",
+                schemaName: "the-schema",
+                ssl: {
+                    certificate: "ca-cert",
+                    rejectUnauthorized: true
+                }
+            };
+            await Test.createTestingModule({ providers: ModuleProviders.create(options) }).compile();
+            expect(mockedKnex).toHaveBeenCalledWith({
+                client: "pg",
+                connection: {
+                    connectionString: options.connectionUri,
+                    ssl: {
+                        ca: "ca-cert",
+                        rejectUnauthorized: true
+                    }
+                },
+                pool: options.connectionPool
+            });
+        });
     });
 
     describe("createAsync", () => {
@@ -475,6 +527,78 @@ describe("PostgreSQLModuleProviders", () => {
                         ca: "ca-cert",
                         rejectUnauthorized: true
                     }
+                }
+            });
+        });
+
+        test("configures connection pool when pool options are provided", async () => {
+            const options: PostgreSQLModuleAsyncOptions = {
+                useFactory: () => {
+                    return {
+                        aggregatesTableName: "async-aggregates",
+                        connectionPool: {
+                            idleTimeoutMillis: 30_000,
+                            max: 10,
+                            min: 2
+                        },
+                        connectionUri: "postgres://test:test@docker:32770/db",
+                        eventsTableName: "async-events",
+                        schemaName: "the-async-schema"
+                    };
+                }
+            };
+            await Test.createTestingModule({
+                providers: ModuleProviders.createAsync(options)
+            }).compile();
+            expect(mockedKnex).toHaveBeenCalledWith({
+                client: "pg",
+                connection: {
+                    connectionString: "postgres://test:test@docker:32770/db"
+                },
+                pool: {
+                    idleTimeoutMillis: 30_000,
+                    max: 10,
+                    min: 2
+                }
+            });
+        });
+
+        test("configures both ssl and connection pool when both options are provided", async () => {
+            const options: PostgreSQLModuleAsyncOptions = {
+                useFactory: () => {
+                    return {
+                        aggregatesTableName: "async-aggregates",
+                        connectionPool: {
+                            idleTimeoutMillis: 30_000,
+                            max: 10,
+                            min: 2
+                        },
+                        connectionUri: "postgres://test:test@docker:32770/db",
+                        eventsTableName: "async-events",
+                        schemaName: "the-async-schema",
+                        ssl: {
+                            certificate: "ca-cert",
+                            rejectUnauthorized: true
+                        }
+                    };
+                }
+            };
+            await Test.createTestingModule({
+                providers: ModuleProviders.createAsync(options)
+            }).compile();
+            expect(mockedKnex).toHaveBeenCalledWith({
+                client: "pg",
+                connection: {
+                    connectionString: "postgres://test:test@docker:32770/db",
+                    ssl: {
+                        ca: "ca-cert",
+                        rejectUnauthorized: true
+                    }
+                },
+                pool: {
+                    idleTimeoutMillis: 30_000,
+                    max: 10,
+                    min: 2
                 }
             });
         });

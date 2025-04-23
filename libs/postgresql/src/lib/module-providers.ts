@@ -114,7 +114,8 @@ function buildKnexConnection(options: PostgreSQLModuleOptions): knex.Knex {
             client: "pg",
             connection: {
                 connectionString: options.connectionUri
-            }
+            },
+            pool: options.connectionPool
         });
     }
 
@@ -126,6 +127,7 @@ function buildKnexConnection(options: PostgreSQLModuleOptions): knex.Knex {
                 ca: options.ssl.certificate,
                 rejectUnauthorized: options.ssl.rejectUnauthorized
             }
-        }
+        },
+        pool: options.connectionPool
     });
 }
