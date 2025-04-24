@@ -21,7 +21,7 @@ export class ModuleProviders {
                 useFactory: (eventEmitter: DomainEventEmitter) => {
                     return new MongoEventStore(
                         eventEmitter,
-                        new MongoClient(options.connectionUri),
+                        new MongoClient(options.connectionUri, options.mongoClientConfiguration),
                         options.aggregatesCollection,
                         options.eventsCollection
                     );
@@ -51,7 +51,7 @@ export class ModuleProviders {
             inject: ["EVENT_NEST_OPTIONS", DomainEventEmitter],
             provide: EVENT_STORE,
             useFactory: (options: MongodbModuleOptions, eventBus: DomainEventEmitter) => {
-                const mongoClient = new MongoClient(options.connectionUri);
+                const mongoClient = new MongoClient(options.connectionUri, options.mongoClientConfiguration);
                 return new MongoEventStore(
                     eventBus,
                     mongoClient,

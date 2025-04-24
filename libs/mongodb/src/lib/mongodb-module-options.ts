@@ -1,4 +1,5 @@
 import { CoreModuleOptions } from "@event-nest/core";
+import { MongoClientOptions } from "mongodb";
 
 // eslint-disable-next-line unicorn/prevent-abbreviations
 export interface MongoDbModuleAsyncOptions {
@@ -19,4 +20,11 @@ export interface MongodbModuleOptions extends CoreModuleOptions {
      * The name of the collection which will be used to store the event objects
      */
     eventsCollection: string;
+
+    /**
+     * Configuration options for the MongoDB client.
+     * The options follow the MongoDB Node.js driver options, and they will
+     * be passed to the MongoClient constructor.
+     */
+    mongoClientConfiguration?: MongoClientOptions;
 }
