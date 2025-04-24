@@ -35,14 +35,14 @@ export class PostgreSQLEventStore extends AbstractEventStore {
     }
 
     /**
-     * @deprecated Use {@link schemaConfiguration} instead
+     * @deprecated Use {@link schemaConfiguration} instead. It will be removed in version 5.x
      */
     get aggregatesTableName(): string {
         return this.schemaConfiguration.aggregatesTable;
     }
 
     /**
-     * @deprecated Use {@link schemaConfiguration} instead
+     * @deprecated Use {@link schemaConfiguration} instead. It will be removed in version 5.x
      */
     get eventsTableName(): string {
         return this.schemaConfiguration.eventsTable;
@@ -53,7 +53,7 @@ export class PostgreSQLEventStore extends AbstractEventStore {
     }
 
     /**
-     * @deprecated Use {@link schemaConfiguration} instead
+     * @deprecated Use {@link schemaConfiguration} instead. It will be removed in version 5.x
      */
     get schemaName(): string {
         return this.schemaConfiguration.schema;

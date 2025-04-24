@@ -29,7 +29,7 @@ export abstract class AggregateRoot {
     }
 
     /**
-     * @deprecated Use {@link uncommittedEvents} instead
+     * @deprecated Use {@link uncommittedEvents} instead. It will be removed in version 5.x
      */
     get appendedEvents(): Array<AggregateRootEvent<object>> {
         return [...this._uncommittedEvents];
