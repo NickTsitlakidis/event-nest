@@ -84,7 +84,7 @@ export abstract class AggregateRoot {
      * handlers will be called to take care of async updates.
      * Call this once all the events you want, have been appended.
      */
-    async commit(): Promise<AggregateRoot> {
+    async commit(): Promise<this> {
         const toPublish = [...this._uncommittedEvents];
         if (toPublish.length === 0) {
             return this;
