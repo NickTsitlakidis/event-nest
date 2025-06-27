@@ -1,0 +1,35 @@
+{
+    "name": "mysql",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "libs/mysql/src",
+    "projectType": "library",
+    "targets": {
+        "build": {
+            "executor": "@nx/js:tsc",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "outputPath": "dist/libs/mysql",
+                "tsConfig": "libs/mysql/tsconfig.lib.json",
+                "packageJson": "libs/mysql/package.json",
+                "main": "libs/mysql/src/index.ts",
+                "assets": ["libs/mysql/*.md"],
+                "updateBuildableProjectDepsInPackageJson": true
+            }
+        },
+        "publish": {
+            "command": "node tools/scripts/publish.mjs mysql {args.ver} {args.tag}",
+            "dependsOn": ["build"]
+        },
+        "test": {
+            "executor": "@nx/jest:jest",
+            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+            "options": {
+                "jestConfig": "libs/mysql/jest.config.ts",
+                "coverageReporters": ["lcov", "html"],
+                "collectCoverageFrom": ["src/**/*.ts", "!src/**/index.ts"],
+                "codeCoverage": true
+            }
+        }
+    },
+    "tags": ["publishable"]
+}
