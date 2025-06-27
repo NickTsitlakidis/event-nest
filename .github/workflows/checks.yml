@@ -49,6 +49,8 @@ jobs:
                 run: pnpm nx run core:lint && pnpm nx run core:test
             -   name: Check mongodb
                 run: pnpm nx run mongodb:lint && pnpm nx run mongodb:test
+            -   name: Check mysql
+                run: pnpm nx run mysql:lint && pnpm nx run mysql:test
             -   name: Check postgresql
                 run: pnpm nx run postgresql:lint && pnpm nx run postgresql:test
             -   name: Upload test coverage
