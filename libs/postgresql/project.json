@@ -3,6 +3,7 @@
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "sourceRoot": "libs/postgresql/src",
     "projectType": "library",
+    "tags": ["publishable"],
     "targets": {
         "build": {
             "executor": "@nx/js:tsc",
@@ -30,6 +31,5 @@
                 "codeCoverage": true
             }
         }
-    },
-    "tags": ["publishable"]
+    }
 }
