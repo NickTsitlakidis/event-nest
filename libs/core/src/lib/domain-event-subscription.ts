@@ -1,4 +1,4 @@
-import { isNil, isPlainObject } from "es-toolkit";
+import { isNil, isPlainObject, uniq } from "es-toolkit";
 import { randomUUID } from "node:crypto";
 import { Class } from "type-fest";
 
@@ -32,8 +32,9 @@ export function DomainEventSubscription(
         isAsync = (configOrEventClass as SubscriptionConfiguration).isAsync ?? true;
     }
 
+    const uniqueEventClasses = uniq(actualEventClasses);
     return (target: object) => {
-        for (const event of actualEventClasses) {
+        for (const event of uniqueEventClasses) {
             if (!Reflect.hasOwnMetadata(DOMAIN_EVENT_KEY, event)) {
                 Reflect.defineMetadata(
                     DOMAIN_EVENT_KEY,
@@ -43,7 +44,7 @@ export function DomainEventSubscription(
             }
         }
 
-        Reflect.defineMetadata(DOMAIN_EVENT_SUBSCRIPTION_KEY, { events: actualEventClasses, isAsync }, target);
+        Reflect.defineMetadata(DOMAIN_EVENT_SUBSCRIPTION_KEY, { events: uniqueEventClasses, isAsync }, target);
     };
 }
 
