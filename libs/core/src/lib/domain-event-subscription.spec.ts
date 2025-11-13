@@ -54,6 +54,13 @@ class WithDecorator implements OnDomainEvent<DomainEvent1> {
     }
 }
 
+@DomainEventSubscription(DomainEvent1, DomainEvent2, DomainEvent1)
+class WithDuplicateEvents implements OnDomainEvent<DomainEvent1 | DomainEvent2> {
+    onDomainEvent(): Promise<unknown> {
+        return Promise.resolve();
+    }
+}
+
 @DomainEventSubscription(DomainEvent1, DomainEvent2)
 class WithMultipleEvents implements OnDomainEvent<DomainEvent1 | DomainEvent2> {
     onDomainEvent(): Promise<unknown> {
@@ -73,6 +80,20 @@ describe("DomainEventSubscription", () => {
         expect(metadata).toBeDefined();
         expect(metadata.events).toEqual([DomainEvent1, DomainEvent2]);
         expect(metadata.isAsync).toBe(true);
+
+        const eventId = Reflect.getMetadata(DOMAIN_EVENT_KEY, DomainEvent1);
+        expect(eventId).toBeDefined();
+        expect(eventId.eventSubscriptionId).toBe("DomainEvent1-the-id");
+
+        const eventId2 = Reflect.getMetadata(DOMAIN_EVENT_KEY, DomainEvent2);
+        expect(eventId2).toBeDefined();
+        expect(eventId2.eventSubscriptionId).toBe("DomainEvent2-the-id");
+    });
+
+    test("adds unique event classes and skips duplicates", () => {
+        const metadata = Reflect.getMetadata(DOMAIN_EVENT_SUBSCRIPTION_KEY, new WithDuplicateEvents().constructor);
+        expect(metadata).toBeDefined();
+        expect(metadata.events).toStrictEqual([DomainEvent1, DomainEvent2]);
 
         const eventId = Reflect.getMetadata(DOMAIN_EVENT_KEY, DomainEvent1);
         expect(eventId).toBeDefined();
