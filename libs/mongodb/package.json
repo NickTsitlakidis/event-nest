@@ -1,6 +1,6 @@
 {
     "name": "@event-nest/mongodb",
-    "version": "4.0.0",
+    "version": "4.0.1",
     "license": "MIT",
     "description": "Event sourcing module for NestJS using MongoDB. It uses MongoDB collections and transactions to store events and object information",
     "author": "Nick Tsitlakidis",
@@ -26,6 +26,6 @@
         "@nestjs/core": "^10.0.0 || ^11.0.0",
         "reflect-metadata": "^0.1.12 || ^0.2.0",
         "rxjs": "^7.2.0",
-        "mongodb": "^6.0.0"
+        "mongodb": "^6.15.0"
     }
 }

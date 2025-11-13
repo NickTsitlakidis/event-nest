@@ -1,3 +1,10 @@
+## 4.0.1 (2025-11-13)
+
+### 🩹 Fixes
+
+- **core:** Domain event subscription decorator is now skipping duplicate event classes. ([#45](https://github.com/NickTsitlakidis/event-nest/pull/45))
+
+
 # 4.0.0 (2025-04-24)
 
 ### 🚀 Features
