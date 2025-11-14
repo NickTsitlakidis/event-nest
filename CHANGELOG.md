@@ -1,3 +1,13 @@
+## 4.0.2 (2025-11-14)
+
+### 🩹 Fixes
+
+- **core,mongodb,postgresql:** Fixing peer dependency version for @nestjs/common ([9b6746d](https://github.com/NickTsitlakidis/event-nest/commit/9b6746d))
+
+### ❤️ Thank You
+
+- Nick Tsitlakidis
+
 ## 4.0.1 (2025-11-13)
 
 ### 🩹 Fixes
