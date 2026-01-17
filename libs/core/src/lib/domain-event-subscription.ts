@@ -1,9 +1,9 @@
 import { isNil, isPlainObject, uniq } from "es-toolkit";
 import { randomUUID } from "node:crypto";
-import { Class } from "type-fest";
 
 import { DOMAIN_EVENT_KEY, DOMAIN_EVENT_SUBSCRIPTION_KEY } from "./metadata-keys";
 import { OnDomainEvent } from "./on-domain-event";
+import { Class } from "./utils/type-utils";
 
 type SubscriptionConfiguration = {
     /**

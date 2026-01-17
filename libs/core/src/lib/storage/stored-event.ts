@@ -1,8 +1,8 @@
 import { instanceToPlain, plainToClass } from "class-transformer";
 import { isNil } from "es-toolkit";
-import { Class } from "type-fest";
 
 import { getEventName } from "../domain-event-registrations";
+import { Class } from "../utils/type-utils";
 
 /**
  * Represents an event that will be persisted according to the storage solution that is used.

@@ -1,6 +1,6 @@
 import "reflect-metadata";
-import { Class } from "type-fest";
 
+import { Class } from "../utils/type-utils";
 import { AggregateRoot } from "./aggregate-root";
 
 export function getDecoratedPropertyKey(entity: AggregateRoot, eventClass: Class<unknown>): string | undefined {
