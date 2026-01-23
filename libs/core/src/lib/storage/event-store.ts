@@ -5,6 +5,13 @@ import { StoredEvent } from "./stored-event";
 // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 export type AggregateRootClass<T> = Function & { prototype: T };
 
+export type AggregateRootSnapshot<T extends AggregateRoot = AggregateRoot> =
+    T extends AggregateRoot<infer Snapshot> ? Snapshot : unknown;
+
+export type SnapshotAwareAggregateClass<T extends AggregateRoot = AggregateRoot> = AggregateRootClass<T> & {
+    snapshotRevision: number;
+};
+
 /**
  * A unique symbol that can be used to inject the event store into other classes.
  */
@@ -55,6 +62,26 @@ export interface EventStore {
         aggregateRootClass: AggregateRootClass<T>,
         ids: string[]
     ): Promise<Record<string, Array<StoredEvent>>>;
+
+    /**
+     * Finds a snapshot and all events that occurred after that snapshot for the specified aggregate root.
+     * This method retrieves the most recent stored snapshot (obtained from the aggregate's `.toSnapshot()` method)
+     * and returns it along with all events that were stored after the snapshot was written to the database.
+     *
+     * @param aggregateRootClass The snapshot-aware aggregate root class that has a static `snapshotRevision` property and implements SnapshotAware interface
+     * @param id The unique id of the aggregate root object
+     * @returns An object containing the snapshot and an array of events that occurred after the snapshot
+     * @throws {MissingAggregateRootNameException} If no `@AggregateRootName` decorator is attached to the aggregateRootClass
+     * @throws {NoSnapshotFoundException} If no snapshot is found for the aggregate root with the specified id
+     * @throws {SnapshotRevisionMismatchException} If the static `snapshotRevision` property on the aggregate class does not match the snapshot revision in the stored snapshot record
+     */
+    findWithSnapshot<T extends AggregateRoot>(
+        aggregateRootClass: SnapshotAwareAggregateClass<T>,
+        id: string
+    ): Promise<{
+        events: Array<StoredEvent>;
+        snapshot: AggregateRootSnapshot<T>;
+    }>;
 
     /**
      * Each storage solution has its own way of dealing with unique ids. This method's implementation should reflect

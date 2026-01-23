@@ -5,7 +5,8 @@ export class SchemaConfiguration {
     constructor(
         private readonly _schema: string,
         private readonly _aggregatesTable: string,
-        private readonly _eventsTable: string
+        private readonly _eventsTable: string,
+        private readonly _snapshotTable?: string
     ) {}
 
     get aggregatesTable(): string {
@@ -32,5 +33,17 @@ export class SchemaConfiguration {
      */
     get schemaAwareEventsTable(): string {
         return this._schema + "." + this._eventsTable;
+    }
+
+    /**
+     * The schema-aware snapshots table name (schema.snapshotTable)
+     */
+    get schemaAwareSnapshotTable(): string | undefined {
+        if (!this._snapshotTable) return undefined;
+        return this._schema + "." + this._snapshotTable;
+    }
+
+    get snapshotTable(): string | undefined {
+        return this._snapshotTable;
     }
 }

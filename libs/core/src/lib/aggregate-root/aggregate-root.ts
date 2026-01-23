@@ -8,13 +8,19 @@ import { UnregisteredEventException } from "../exceptions/unregistered-event-exc
 import { StoredEvent } from "../storage/stored-event";
 import { AggregateRootEvent } from "./aggregate-root-event";
 import { getDecoratedPropertyKey } from "./reflection";
+import { SnapshotAware } from "./snapshot-aware";
 
 type KnownEvent = {
     payload: unknown;
     processorKey: string;
 };
 
-export abstract class AggregateRoot {
+/**
+ *
+ * @template Snapshot The type of the snapshot data structure. Can be provided to enforce strong typing
+ *                    when using snapshot optimization.
+ */
+export abstract class AggregateRoot<Snapshot = unknown> implements Partial<SnapshotAware<Snapshot>> {
     private readonly _logger: Logger;
     private _uncommittedEvents: Array<AggregateRootEvent<object>>;
     private _version: number;
@@ -76,6 +82,8 @@ export abstract class AggregateRoot {
             payload: event
         });
     }
+
+    applySnapshot?(snapshot: Snapshot): void;
 
     /**
      * All the events that have been previously appended will be committed once this method runs. After publishing,
@@ -158,6 +166,8 @@ export abstract class AggregateRoot {
     protected sortEvents(events: Array<StoredEvent>): Array<StoredEvent> {
         return events.sort((event1, event2) => event1.aggregateRootVersion - event2.aggregateRootVersion);
     }
+
+    toSnapshot?(): Promise<Snapshot> | Snapshot;
 
     private splitEvents(events: Array<StoredEvent>): [Array<string>, Array<string>, Array<KnownEvent>] {
         const known: Array<KnownEvent> = [];

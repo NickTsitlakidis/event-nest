@@ -9,7 +9,8 @@ import { SubscriptionException } from "../exceptions/subscription-exception";
 import { UnknownEventVersionException } from "../exceptions/unknown-event-version-exception";
 import { PublishedDomainEvent } from "../published-domain-event";
 import { AbstractEventStore } from "./abstract-event-store";
-import { AggregateRootClass } from "./event-store";
+import { AggregateRootClass, AggregateRootSnapshot, SnapshotAwareAggregateClass } from "./event-store";
+import { AbstractSnapshotStore } from "./snapshot/abstract-snapshot-store";
 import { StoredAggregateRoot } from "./stored-aggregate-root";
 import { StoredEvent } from "./stored-event";
 
@@ -32,11 +33,13 @@ class TestEvent {
     constructor(public someProperty: string) {}
 }
 
+const snapshotStore = createMock<AbstractSnapshotStore>();
+
 class TestStore extends AbstractEventStore {
     savedAggregate: StoredAggregateRoot | undefined;
     savedEvents: Array<StoredEvent> = [];
     constructor() {
-        super(eventEmitter);
+        super(eventEmitter, snapshotStore);
     }
 
     findAggregateRootVersion(): Promise<number> {
@@ -52,6 +55,16 @@ class TestStore extends AbstractEventStore {
         ids: string[]
     ): Promise<Record<string, Array<StoredEvent>>> {
         return {};
+    }
+
+    override findWithSnapshot<T extends AggregateRoot>(
+        aggregateRootClass: SnapshotAwareAggregateClass<T>,
+        id: string
+    ): Promise<{ events: Array<StoredEvent>; snapshot: AggregateRootSnapshot<T> }> {
+        return Promise.resolve({
+            events: [] as StoredEvent[],
+            snapshot: {} as any
+        });
     }
 
     generateEntityId(): Promise<string> {
@@ -116,6 +129,17 @@ describe("addPublisher", () => {
         expect(entity.version).toEqual(100);
         expect(eventEmitter.emitMultiple).toHaveBeenCalledWith(expectedEmissions);
         expect(eventEmitter.emitMultiple).toHaveBeenCalledTimes(1);
+    });
+
+    test("publisher calls snapshotStore.maybeCreate with aggregate", async () => {
+        const creationDate = new Date();
+        const store = new TestStore();
+        const entity = store.addPublisher(new TestEntity());
+        const toPublish = [{ aggregateRootId: "id", occurredAt: creationDate, payload: new TestEvent("test") }];
+        await entity.publish(toPublish);
+
+        expect(snapshotStore.maybeCreate).toHaveBeenCalledTimes(1);
+        expect(snapshotStore.maybeCreate).toHaveBeenCalledWith(entity);
     });
 
     test("publisher throws when id generation throws", async () => {

@@ -9,7 +9,8 @@ import { MissingAggregateRootNameException } from "../exceptions/missing-aggrega
 import { UnknownEventVersionException } from "../exceptions/unknown-event-version-exception";
 import { PublishedDomainEvent } from "../published-domain-event";
 import { hasAllValues } from "../utils/type-utils";
-import { AggregateRootClass, EventStore } from "./event-store";
+import { AggregateRootClass, AggregateRootSnapshot, EventStore, SnapshotAwareAggregateClass } from "./event-store";
+import { AbstractSnapshotStore } from "./snapshot/abstract-snapshot-store";
 import { StoredAggregateRoot } from "./stored-aggregate-root";
 import { StoredEvent } from "./stored-event";
 
@@ -19,7 +20,10 @@ import { StoredEvent } from "./stored-event";
  * of the {@link EventStore:addPublisher} method and this is why this class exists.
  */
 export abstract class AbstractEventStore implements EventStore {
-    protected constructor(private _eventEmitter: DomainEventEmitter) {}
+    protected constructor(
+        private _eventEmitter: DomainEventEmitter,
+        protected _snapshotStore: AbstractSnapshotStore
+    ) {}
 
     addPublisher<T extends AggregateRoot>(aggregateRoot: T): T {
         aggregateRoot.publish = async (events: Array<AggregateRootEvent<object>>) => {
@@ -59,6 +63,8 @@ export abstract class AbstractEventStore implements EventStore {
 
             const toStore = new StoredAggregateRoot(aggregateRoot.id, aggregateRoot.version);
             const saved = await this.save(storedEvents, toStore);
+            await this._snapshotStore.maybeCreate(aggregateRoot);
+
             for (const publishedEvent of published) {
                 const found = saved.find((s) => s.id === publishedEvent.eventId);
                 if (isNil(found)) {
@@ -86,6 +92,14 @@ export abstract class AbstractEventStore implements EventStore {
         aggregateRootClass: AggregateRootClass<T>,
         ids: string[]
     ): Promise<Record<string, Array<StoredEvent>>>;
+
+    abstract findWithSnapshot<T extends AggregateRoot>(
+        aggregateRootClass: SnapshotAwareAggregateClass<T>,
+        id: string
+    ): Promise<{
+        events: Array<StoredEvent>;
+        snapshot: AggregateRootSnapshot<T>;
+    }>;
 
     abstract generateEntityId(): Promise<string>;
 

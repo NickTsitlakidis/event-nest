@@ -1,6 +1,5 @@
 import { Test } from "@nestjs/testing";
-// eslint-disable-next-line
-import * as knex from "knex";
+
 const mockedKnex = jest.fn().mockImplementation(() => {
     return {};
 });
@@ -10,11 +9,18 @@ jest.mock("knex", () => {
     };
 });
 
-import { DomainEventEmitter, EVENT_STORE } from "@event-nest/core";
+import {
+    DomainEventEmitter,
+    EVENT_STORE,
+    ForCountSnapshotStrategy,
+    NoSnapshotStrategy,
+    SnapshotStrategy
+} from "@event-nest/core";
 
 import { ModuleProviders } from "./module-providers";
 import { PostgreSQLModuleAsyncOptions, PostgreSQLModuleOptions } from "./postgresql-module-options";
 import { PostgreSQLEventStore } from "./storage/postgresql-event-store";
+import { PostgreSQLSnapshotStore } from "./storage/postgresql-snapshot-store";
 import { TableInitializer } from "./table-initializer";
 
 describe("PostgreSQLModuleProviders", () => {
@@ -115,6 +121,48 @@ describe("PostgreSQLModuleProviders", () => {
             expect(emitter).toBeDefined();
             expect(emitter).toBeInstanceOf(DomainEventEmitter);
             expect(emitter.concurrentSubscriptions).toBe(false);
+        });
+
+        test("creates SnapshotStrategy provider with NoSnapshotStrategy by default", async () => {
+            const options: PostgreSQLModuleOptions = {
+                aggregatesTableName: "aggregates",
+                connectionUri: "postgres://test:test@docker:32770/db",
+                eventsTableName: "events",
+                schemaName: "the-schema"
+            };
+            const module = await Test.createTestingModule({ providers: ModuleProviders.create(options) }).compile();
+            const strategy: SnapshotStrategy = module.get(SnapshotStrategy);
+            expect(strategy).toBeDefined();
+            expect(strategy).toBeInstanceOf(NoSnapshotStrategy);
+        });
+
+        test("creates SnapshotStrategy provider when custom snapshotStrategy is provided", async () => {
+            const customStrategy = new ForCountSnapshotStrategy({ count: 10 });
+            const options: PostgreSQLModuleOptions = {
+                aggregatesTableName: "aggregates",
+                connectionUri: "postgres://test:test@docker:32770/db",
+                eventsTableName: "events",
+                schemaName: "the-schema",
+                snapshotStrategy: customStrategy
+            };
+            const module = await Test.createTestingModule({ providers: ModuleProviders.create(options) }).compile();
+            const strategy: SnapshotStrategy = module.get(SnapshotStrategy);
+            expect(strategy).toBeDefined();
+            expect(strategy).toBe(customStrategy);
+        });
+
+        test("creates PostgreSQLSnapshotStore provider", async () => {
+            const options: PostgreSQLModuleOptions = {
+                aggregatesTableName: "aggregates",
+                connectionUri: "postgres://test:test@docker:32770/db",
+                eventsTableName: "events",
+                schemaName: "the-schema",
+                snapshotTableName: "snapshots"
+            };
+            const module = await Test.createTestingModule({ providers: ModuleProviders.create(options) }).compile();
+            const snapshotStore: PostgreSQLSnapshotStore = module.get(PostgreSQLSnapshotStore);
+            expect(snapshotStore).toBeDefined();
+            expect(snapshotStore).toBeInstanceOf(PostgreSQLSnapshotStore);
         });
 
         test("skips ssl configuration when it is not provided", async () => {
@@ -477,6 +525,66 @@ describe("PostgreSQLModuleProviders", () => {
             expect(emitter).toBeDefined();
             expect(emitter).toBeInstanceOf(DomainEventEmitter);
             expect(emitter.concurrentSubscriptions).toBe(false);
+        });
+
+        test("creates SnapshotStrategy provider with NoSnapshotStrategy by default", async () => {
+            const options: PostgreSQLModuleAsyncOptions = {
+                useFactory: () => {
+                    return {
+                        aggregatesTableName: "async-aggregates",
+                        connectionUri: "postgres://test:test@docker:32770/db",
+                        eventsTableName: "async-events",
+                        schemaName: "the-async-schema"
+                    };
+                }
+            };
+            const module = await Test.createTestingModule({
+                providers: ModuleProviders.createAsync(options)
+            }).compile();
+            const strategy: SnapshotStrategy = module.get(SnapshotStrategy);
+            expect(strategy).toBeDefined();
+            expect(strategy).toBeInstanceOf(NoSnapshotStrategy);
+        });
+
+        test("creates SnapshotStrategy provider when custom snapshotStrategy is provided", async () => {
+            const customStrategy = new ForCountSnapshotStrategy({ count: 10 });
+            const options: PostgreSQLModuleAsyncOptions = {
+                useFactory: () => {
+                    return {
+                        aggregatesTableName: "async-aggregates",
+                        connectionUri: "postgres://test:test@docker:32770/db",
+                        eventsTableName: "async-events",
+                        schemaName: "the-async-schema",
+                        snapshotStrategy: customStrategy
+                    };
+                }
+            };
+            const module = await Test.createTestingModule({
+                providers: ModuleProviders.createAsync(options)
+            }).compile();
+            const strategy: SnapshotStrategy = module.get(SnapshotStrategy);
+            expect(strategy).toBeDefined();
+            expect(strategy).toBe(customStrategy);
+        });
+
+        test("creates PostgreSQLSnapshotStore provider", async () => {
+            const options: PostgreSQLModuleAsyncOptions = {
+                useFactory: () => {
+                    return {
+                        aggregatesTableName: "async-aggregates",
+                        connectionUri: "postgres://test:test@docker:32770/db",
+                        eventsTableName: "async-events",
+                        schemaName: "the-async-schema",
+                        snapshotTableName: "snapshots"
+                    };
+                }
+            };
+            const module = await Test.createTestingModule({
+                providers: ModuleProviders.createAsync(options)
+            }).compile();
+            const snapshotStore: PostgreSQLSnapshotStore = module.get(PostgreSQLSnapshotStore);
+            expect(snapshotStore).toBeDefined();
+            expect(snapshotStore).toBeInstanceOf(PostgreSQLSnapshotStore);
         });
 
         test("skips ssl configuration when it is not provided", async () => {
