@@ -4,6 +4,8 @@ import { UserCreatedEvent, UserUpdatedEvent } from "./user-events";
 
 @AggregateRootName("User")
 export class User extends AggregateRoot {
+    static snapshotRevision = 1;
+
     private _email: string;
     private _name: string;
 
@@ -28,9 +30,20 @@ export class User extends AggregateRoot {
     get email(): string {
         return this._email;
     }
-
     public get name(): string {
         return this._name;
+    }
+
+    applySnapshot(snapshot: { email: string; name: string }) {
+        this._email = snapshot.email;
+        this._name = snapshot.name;
+    }
+
+    toSnapshot() {
+        return {
+            email: this._email,
+            name: this._name
+        };
     }
 
     public update(newName: string) {
