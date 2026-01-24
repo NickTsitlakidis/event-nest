@@ -5,28 +5,58 @@ import {
     DomainEventEmitter,
     EventConcurrencyException,
     MissingAggregateRootNameException,
+    NoSnapshotFoundException,
+    SnapshotRevisionMismatchException,
     StoredAggregateRoot,
-    StoredEvent
+    StoredEvent,
+    StoredSnapshot
 } from "@event-nest/core";
 import { createMock } from "@golevelup/ts-jest";
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from "@testcontainers/postgresql";
 import { knex } from "knex";
 import { randomUUID } from "node:crypto";
 
+import { SchemaConfiguration } from "../schema-configuration";
 import { AggregateRootRow } from "./aggregate-root-row";
 import { EventRow } from "./event-row";
 import { PostgreSQLEventStore } from "./postgresql-event-store";
+import { PostgreSQLSnapshotStore } from "./postgresql-snapshot-store";
 
 let eventStore: PostgreSQLEventStore;
 let container: StartedPostgreSqlContainer;
 let connectionUri: string;
 let knexConnection: knex.Knex;
 const schema = "event_nest_tests";
+const snapshotStore = createMock<PostgreSQLSnapshotStore>();
+
+interface TestSnapshot {
+    someData: string;
+}
 
 @AggregateRootName("test-aggregate")
 class DecoratedAggregateRoot extends AggregateRoot {
     constructor(id: string) {
         super(id);
+    }
+}
+
+@AggregateRootName("snapshot-aggregate")
+class SnapshotAwareAggregateRoot extends AggregateRoot<TestSnapshot> {
+    static snapshotRevision = 1;
+    someData = "";
+
+    constructor(id: string) {
+        super(id);
+    }
+
+    override applySnapshot(snapshot: TestSnapshot): void {
+        this.someData = snapshot.someData;
+    }
+
+    override toSnapshot(): TestSnapshot {
+        return {
+            someData: this.someData
+        };
     }
 }
 
@@ -67,14 +97,24 @@ describe("PostgreSQLEventStore", () => {
             table.jsonb("payload");
             table.timestamp("created_at");
         });
+        await knexConnection.schema.withSchema(schema).createTable("es-snapshots", (table) => {
+            table.uuid("id").primary();
+            table.uuid("aggregate_root_id").notNullable();
+            table.integer("aggregate_root_version").notNullable();
+            table.jsonb("payload").notNullable();
+            table.integer("revision").notNullable();
+            table
+                .foreign("aggregate_root_id")
+                .references("id")
+                .inTable(schema + ".es-aggregates");
+        });
     }, 30_000);
 
     beforeEach(async () => {
         eventStore = new PostgreSQLEventStore(
             createMock<DomainEventEmitter>(),
-            schema,
-            "es-aggregates",
-            "es-events",
+            snapshotStore,
+            new SchemaConfiguration(schema, "es-aggregates", "es-events", "es-snapshots"),
             knexConnection
         );
     });
@@ -85,6 +125,7 @@ describe("PostgreSQLEventStore", () => {
     });
 
     afterEach(async () => {
+        await knexConnection(schema + ".es-snapshots").delete();
         await knexConnection(schema + ".es-events").delete();
         await knexConnection(schema + ".es-aggregates").delete();
     });
@@ -475,5 +516,222 @@ describe("PostgreSQLEventStore", () => {
     test("generateEntityId - returns string with UUID format", async () => {
         const id = await eventStore.generateEntityId();
         expect(/^[a-z,0-9-]{36}$/.test(id)).toBe(true);
+    });
+
+    describe("findWithSnapshot tests", () => {
+        test("throws NoSnapshotFoundException when no snapshot exists", async () => {
+            const aggregateRootId = randomUUID();
+            await knexConnection(schema + ".es-aggregates").insert({
+                id: aggregateRootId,
+                version: 10
+            });
+
+            const latestSnapshot = undefined;
+            snapshotStore.findLatestSnapshotByAggregateId.mockResolvedValue(latestSnapshot);
+
+            await expect(eventStore.findWithSnapshot(SnapshotAwareAggregateRoot, aggregateRootId)).rejects.toThrow(
+                NoSnapshotFoundException
+            );
+        });
+
+        test("throws SnapshotRevisionMismatchException when snapshot revision doesn't match", async () => {
+            const aggregateRootId = randomUUID();
+            const snapshotId = randomUUID();
+
+            await knexConnection(schema + ".es-aggregates").insert({
+                id: aggregateRootId,
+                version: 10
+            });
+
+            const snapshot = StoredSnapshot.create(
+                snapshotId,
+                5,
+                SnapshotAwareAggregateRoot.snapshotRevision - 1,
+                { someData: "test" },
+                aggregateRootId
+            );
+
+            snapshotStore.findLatestSnapshotByAggregateId.mockResolvedValue(snapshot);
+
+            await expect(eventStore.findWithSnapshot(SnapshotAwareAggregateRoot, aggregateRootId)).rejects.toThrow(
+                SnapshotRevisionMismatchException
+            );
+        });
+
+        test("throws MissingAggregateRootNameException when aggregate is not decorated", async () => {
+            const aggregateRootId = randomUUID();
+
+            await expect(eventStore.findWithSnapshot(UndecoratedAggregateRoot as any, aggregateRootId)).rejects.toThrow(
+                MissingAggregateRootNameException
+            );
+        });
+
+        test("returns snapshot and empty events array when no events exist after snapshot", async () => {
+            const aggregateRootId = randomUUID();
+            const snapshotId = randomUUID();
+
+            await knexConnection(schema + ".es-aggregates").insert({
+                id: aggregateRootId,
+                version: 10
+            });
+
+            const snapshotPayload: TestSnapshot = { someData: "test-data" };
+            const snapshot = StoredSnapshot.create(
+                snapshotId,
+                10,
+                SnapshotAwareAggregateRoot.snapshotRevision,
+                snapshotPayload,
+                aggregateRootId
+            );
+
+            snapshotStore.findLatestSnapshotByAggregateId.mockResolvedValue(snapshot);
+
+            const result = await eventStore.findWithSnapshot(SnapshotAwareAggregateRoot, aggregateRootId);
+
+            expect(result.snapshot).toEqual(snapshotPayload);
+            expect(result.events).toEqual([]);
+        });
+
+        test("returns snapshot and events that occurred after the snapshot version", async () => {
+            const aggregateRootId = randomUUID();
+            const snapshotId = randomUUID();
+            const ev0Id = randomUUID();
+            const ev1Id = randomUUID();
+            const ev2Id = randomUUID();
+            const ev3Id = randomUUID();
+
+            const ev0Date = new Date();
+            const ev1Date = new Date();
+            const ev2Date = new Date();
+            const ev3Date = new Date();
+
+            await knexConnection(schema + ".es-aggregates").insert({
+                id: aggregateRootId,
+                version: 15
+            });
+
+            await knexConnection<EventRow>(schema + ".es-events").insert({
+                aggregate_root_id: aggregateRootId,
+                aggregate_root_name: "snapshot-aggregate",
+                aggregate_root_version: 3,
+                created_at: ev0Date,
+                event_name: "sql-event-0",
+                id: ev0Id,
+                payload: JSON.stringify({ data: "event0" })
+            });
+            await knexConnection<EventRow>(schema + ".es-events").insert({
+                aggregate_root_id: aggregateRootId,
+                aggregate_root_name: "snapshot-aggregate",
+                aggregate_root_version: 5,
+                created_at: ev1Date,
+                event_name: "sql-event-1",
+                id: ev1Id,
+                payload: JSON.stringify({ data: "event1" })
+            });
+            await knexConnection<EventRow>(schema + ".es-events").insert({
+                aggregate_root_id: aggregateRootId,
+                aggregate_root_name: "snapshot-aggregate",
+                aggregate_root_version: 11,
+                created_at: ev2Date,
+                event_name: "sql-event-2",
+                id: ev2Id,
+                payload: JSON.stringify({ data: "event2" })
+            });
+            await knexConnection<EventRow>(schema + ".es-events").insert({
+                aggregate_root_id: aggregateRootId,
+                aggregate_root_name: "snapshot-aggregate",
+                aggregate_root_version: 15,
+                created_at: ev3Date,
+                event_name: "sql-event-1",
+                id: ev3Id,
+                payload: JSON.stringify({ data: "event3" })
+            });
+
+            const snapshotPayload: TestSnapshot = { someData: "snapshot-data" };
+            const snapshot = StoredSnapshot.create(
+                snapshotId,
+                10,
+                SnapshotAwareAggregateRoot.snapshotRevision,
+                snapshotPayload,
+                aggregateRootId
+            );
+
+            snapshotStore.findLatestSnapshotByAggregateId.mockResolvedValue(snapshot);
+
+            const result = await eventStore.findWithSnapshot(SnapshotAwareAggregateRoot, aggregateRootId);
+
+            // snapshot was created on 10th version -> should return events with 11 & 15 versions
+            expect(result.snapshot).toEqual(snapshotPayload);
+            expect(result.events.length).toBe(2);
+
+            expect(result.events[0].id).toBe(ev2Id);
+            expect(result.events[0].aggregateRootVersion).toBe(11);
+            expect(result.events[0].eventName).toBe("sql-event-2");
+            expect(result.events[0].aggregateRootId).toBe(aggregateRootId);
+            expect(result.events[0].aggregateRootName).toBe("snapshot-aggregate");
+            expect(result.events[0].payload).toEqual({ data: "event2" });
+            expect(result.events[0].createdAt).toEqual(ev2Date);
+
+            expect(result.events[1].id).toBe(ev3Id);
+            expect(result.events[1].aggregateRootVersion).toBe(15);
+            expect(result.events[1].eventName).toBe("sql-event-1");
+            expect(result.events[1].aggregateRootId).toBe(aggregateRootId);
+            expect(result.events[1].aggregateRootName).toBe("snapshot-aggregate");
+            expect(result.events[1].payload).toEqual({ data: "event3" });
+            expect(result.events[1].createdAt).toEqual(ev3Date);
+        });
+
+        test("returns snapshot and all events when snapshot version is at the beginning", async () => {
+            const aggregateRootId = randomUUID();
+            const snapshotId = randomUUID();
+            const ev1Id = randomUUID();
+            const ev2Id = randomUUID();
+
+            const ev1Date = new Date();
+            const ev2Date = new Date();
+
+            await knexConnection(schema + ".es-aggregates").insert({
+                id: aggregateRootId,
+                version: 10
+            });
+
+            await knexConnection<EventRow>(schema + ".es-events").insert({
+                aggregate_root_id: aggregateRootId,
+                aggregate_root_name: "snapshot-aggregate",
+                aggregate_root_version: 5,
+                created_at: ev1Date,
+                event_name: "sql-event-1",
+                id: ev1Id,
+                payload: JSON.stringify({ data: "event1" })
+            });
+
+            await knexConnection<EventRow>(schema + ".es-events").insert({
+                aggregate_root_id: aggregateRootId,
+                aggregate_root_name: "snapshot-aggregate",
+                aggregate_root_version: 10,
+                created_at: ev2Date,
+                event_name: "sql-event-2",
+                id: ev2Id,
+                payload: JSON.stringify({ data: "event2" })
+            });
+
+            const snapshotPayload: TestSnapshot = { someData: "initial-snapshot" };
+            const snapshot = StoredSnapshot.create(
+                snapshotId,
+                0,
+                SnapshotAwareAggregateRoot.snapshotRevision,
+                snapshotPayload,
+                aggregateRootId
+            );
+
+            snapshotStore.findLatestSnapshotByAggregateId.mockResolvedValue(snapshot);
+
+            const result = await eventStore.findWithSnapshot(SnapshotAwareAggregateRoot, aggregateRootId);
+
+            expect(result.snapshot).toEqual(snapshotPayload);
+            expect(result.events.length).toBe(2);
+            expect(result.events[0].aggregateRootVersion).toBe(5);
+            expect(result.events[1].aggregateRootVersion).toBe(10);
+        });
     });
 });

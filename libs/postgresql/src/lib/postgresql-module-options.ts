@@ -58,6 +58,12 @@ export interface PostgreSQLModuleOptions extends CoreModuleOptions {
     schemaName: string;
 
     /**
+     * The name of the table which will be used to store the aggregate snapshots.
+     * You can omit this option if you do not want to use snapshots optimization.
+     */
+    snapshotTableName?: string;
+
+    /**
      * Options to define if you want to use SSL or not. By default, the setting is disabled. To enable it you need to
      * provide a string representation of your certificate and set the rejectUnauthorized flag to true.
      */

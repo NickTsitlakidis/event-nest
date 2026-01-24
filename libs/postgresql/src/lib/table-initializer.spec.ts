@@ -30,38 +30,42 @@ describe("TableInitializer", () => {
     describe("onApplicationBootstrap", () => {
         test("skips table initialization when ensureTablesExist is false", async () => {
             const tableInitializer = new TableInitializer(
-                new SchemaConfiguration(schema, "es_aggregates", "es_events"),
+                new SchemaConfiguration(schema, "es_aggregates", "es_events", "es_snapshots"),
                 false,
                 knexConnection
             );
 
             await tableInitializer.onApplicationBootstrap();
 
-            const [hasAggregatesTable, hasEventsTable] = await Promise.all([
+            const [hasAggregatesTable, hasEventsTable, hasSnapshotsTable] = await Promise.all([
                 knexConnection.schema.withSchema("event_nest_tests").hasTable("es_aggregates"),
-                knexConnection.schema.withSchema("event_nest_tests").hasTable("es_events")
+                knexConnection.schema.withSchema("event_nest_tests").hasTable("es_events"),
+                knexConnection.schema.withSchema("event_nest_tests").hasTable("es_snapshots")
             ]);
 
             expect(hasAggregatesTable).toBe(false);
             expect(hasEventsTable).toBe(false);
+            expect(hasSnapshotsTable).toBe(false);
         });
 
         test("creates events table when it's missing", async () => {
             const tableInitializer = new TableInitializer(
-                new SchemaConfiguration(schema, "es_aggregates", "es_events"),
+                new SchemaConfiguration(schema, "es_aggregates", "es_events", "es_snapshots"),
                 true,
                 knexConnection
             );
 
             await tableInitializer.onApplicationBootstrap();
 
-            const [hasAggregatesTable, hasEventsTable] = await Promise.all([
+            const [hasAggregatesTable, hasEventsTable, hasSnapshotsTable] = await Promise.all([
                 knexConnection.schema.withSchema("event_nest_tests").hasTable("es_aggregates"),
-                knexConnection.schema.withSchema("event_nest_tests").hasTable("es_events")
+                knexConnection.schema.withSchema("event_nest_tests").hasTable("es_events"),
+                knexConnection.schema.withSchema("event_nest_tests").hasTable("es_snapshots")
             ]);
 
             expect(hasAggregatesTable).toBe(true);
             expect(hasEventsTable).toBe(true);
+            expect(hasSnapshotsTable).toBe(true);
 
             const columnChecks = await Promise.all([
                 knexConnection.schema.withSchema("event_nest_tests").hasColumn("es_events", "id"),
@@ -75,26 +79,29 @@ describe("TableInitializer", () => {
 
             expect(columnChecks.every(Boolean)).toBe(true);
 
+            await knexConnection.schema.withSchema("event_nest_tests").dropTable("es_snapshots");
             await knexConnection.schema.withSchema("event_nest_tests").dropTable("es_events");
             await knexConnection.schema.withSchema("event_nest_tests").dropTable("es_aggregates");
         });
 
         test("creates aggregates table when it's missing", async () => {
             const tableInitializer = new TableInitializer(
-                new SchemaConfiguration(schema, "es_aggregates", "es_events"),
+                new SchemaConfiguration(schema, "es_aggregates", "es_events", "es_snapshots"),
                 true,
                 knexConnection
             );
 
             await tableInitializer.onApplicationBootstrap();
 
-            const [hasAggregatesTable, hasEventsTable] = await Promise.all([
+            const [hasAggregatesTable, hasEventsTable, hasSnapshotsTable] = await Promise.all([
                 knexConnection.schema.withSchema("event_nest_tests").hasTable("es_aggregates"),
-                knexConnection.schema.withSchema("event_nest_tests").hasTable("es_events")
+                knexConnection.schema.withSchema("event_nest_tests").hasTable("es_events"),
+                knexConnection.schema.withSchema("event_nest_tests").hasTable("es_snapshots")
             ]);
 
             expect(hasAggregatesTable).toBe(true);
             expect(hasEventsTable).toBe(true);
+            expect(hasSnapshotsTable).toBe(true);
 
             const columnChecks = await Promise.all([
                 knexConnection.schema.withSchema("event_nest_tests").hasColumn("es_aggregates", "id"),
@@ -103,11 +110,48 @@ describe("TableInitializer", () => {
 
             expect(columnChecks.every(Boolean)).toBe(true);
 
+            await knexConnection.schema.withSchema("event_nest_tests").dropTable("es_snapshots");
             await knexConnection.schema.withSchema("event_nest_tests").dropTable("es_events");
             await knexConnection.schema.withSchema("event_nest_tests").dropTable("es_aggregates");
         });
 
-        test("does not recreate tables when they already exist", async () => {
+        test("creates snapshots table when it's missing", async () => {
+            const tableInitializer = new TableInitializer(
+                new SchemaConfiguration(schema, "es_aggregates", "es_events", "es_snapshots"),
+                true,
+                knexConnection
+            );
+
+            await tableInitializer.onApplicationBootstrap();
+
+            const [hasAggregatesTable, hasEventsTable, hasSnapshotsTable] = await Promise.all([
+                knexConnection.schema.withSchema("event_nest_tests").hasTable("es_aggregates"),
+                knexConnection.schema.withSchema("event_nest_tests").hasTable("es_events"),
+                knexConnection.schema.withSchema("event_nest_tests").hasTable("es_snapshots")
+            ]);
+
+            expect(hasAggregatesTable).toBe(true);
+            expect(hasEventsTable).toBe(true);
+            expect(hasSnapshotsTable).toBe(true);
+
+            const columnChecks = await Promise.all([
+                knexConnection.schema.withSchema("event_nest_tests").hasColumn("es_snapshots", "aggregate_root_id"),
+                knexConnection.schema
+                    .withSchema("event_nest_tests")
+                    .hasColumn("es_snapshots", "aggregate_root_version"),
+                knexConnection.schema.withSchema("event_nest_tests").hasColumn("es_snapshots", "id"),
+                knexConnection.schema.withSchema("event_nest_tests").hasColumn("es_snapshots", "payload"),
+                knexConnection.schema.withSchema("event_nest_tests").hasColumn("es_snapshots", "revision")
+            ]);
+
+            expect(columnChecks.every(Boolean)).toBe(true);
+
+            await knexConnection.schema.withSchema("event_nest_tests").dropTable("es_snapshots");
+            await knexConnection.schema.withSchema("event_nest_tests").dropTable("es_events");
+            await knexConnection.schema.withSchema("event_nest_tests").dropTable("es_aggregates");
+        });
+
+        test("should allow for optional snapshots table creation", async () => {
             const tableInitializer = new TableInitializer(
                 new SchemaConfiguration(schema, "es_aggregates", "es_events"),
                 true,
@@ -115,16 +159,42 @@ describe("TableInitializer", () => {
             );
 
             await tableInitializer.onApplicationBootstrap();
-            await tableInitializer.onApplicationBootstrap();
 
-            const [hasAggregatesTable, hasEventsTable] = await Promise.all([
+            const [hasAggregatesTable, hasEventsTable, hasSnapshotsTable] = await Promise.all([
                 knexConnection.schema.withSchema("event_nest_tests").hasTable("es_aggregates"),
-                knexConnection.schema.withSchema("event_nest_tests").hasTable("es_events")
+                knexConnection.schema.withSchema("event_nest_tests").hasTable("es_events"),
+                knexConnection.schema.withSchema("event_nest_tests").hasTable("es_snapshots")
             ]);
 
             expect(hasAggregatesTable).toBe(true);
             expect(hasEventsTable).toBe(true);
+            expect(hasSnapshotsTable).toBe(false);
 
+            await knexConnection.schema.withSchema("event_nest_tests").dropTable("es_events");
+            await knexConnection.schema.withSchema("event_nest_tests").dropTable("es_aggregates");
+        });
+
+        test("does not recreate tables when they already exist", async () => {
+            const tableInitializer = new TableInitializer(
+                new SchemaConfiguration(schema, "es_aggregates", "es_events", "es_snapshots"),
+                true,
+                knexConnection
+            );
+
+            await tableInitializer.onApplicationBootstrap();
+            await tableInitializer.onApplicationBootstrap();
+
+            const [hasAggregatesTable, hasEventsTable, hasSnapshotsTable] = await Promise.all([
+                knexConnection.schema.withSchema("event_nest_tests").hasTable("es_aggregates"),
+                knexConnection.schema.withSchema("event_nest_tests").hasTable("es_events"),
+                knexConnection.schema.withSchema("event_nest_tests").hasTable("es_snapshots")
+            ]);
+
+            expect(hasAggregatesTable).toBe(true);
+            expect(hasEventsTable).toBe(true);
+            expect(hasSnapshotsTable).toBe(true);
+
+            await knexConnection.schema.withSchema("event_nest_tests").dropTable("es_snapshots");
             await knexConnection.schema.withSchema("event_nest_tests").dropTable("es_events");
             await knexConnection.schema.withSchema("event_nest_tests").dropTable("es_aggregates");
         });

@@ -1,12 +1,14 @@
-import { DomainEventEmitter, EVENT_STORE } from "@event-nest/core";
+import { DomainEventEmitter, EVENT_STORE, NoSnapshotStrategy, SnapshotStrategy } from "@event-nest/core";
 import { createMock } from "@golevelup/ts-jest";
 import { Provider } from "@nestjs/common";
 import { ModulesContainer } from "@nestjs/core";
 import { Test } from "@nestjs/testing";
+import { MongoClient } from "mongodb";
 
 import { EventNestMongoDbModule } from "./event-nest-mongodb.module";
 import { ModuleProviders } from "./module-providers";
 import { MongoEventStore } from "./storage/mongo-event-store";
+import { MongoSnapshotStore } from "./storage/mongo-snapshot-store";
 
 describe("global factories", () => {
     test("forRoot returns configured global module", () => {
@@ -50,12 +52,24 @@ describe("global factories", () => {
 
         const mockedProviders: Provider[] = [
             {
-                provide: EVENT_STORE,
-                useValue: createMock<MongoEventStore>()
-            },
-            {
                 provide: DomainEventEmitter,
                 useValue: emitter
+            },
+            {
+                provide: SnapshotStrategy,
+                useValue: new NoSnapshotStrategy()
+            },
+            {
+                provide: "EVENT_NEST_MONGO_CLIENT",
+                useValue: createMock<MongoClient>()
+            },
+            {
+                provide: MongoSnapshotStore,
+                useValue: createMock<MongoSnapshotStore>()
+            },
+            {
+                provide: EVENT_STORE,
+                useValue: createMock<MongoEventStore>()
             }
         ];
         jest.spyOn(ModuleProviders, "createAsync").mockReturnValue(mockedProviders);
@@ -80,12 +94,24 @@ describe("scoped factories", () => {
 
         const mockedProviders: Provider[] = [
             {
-                provide: EVENT_STORE,
-                useValue: createMock<MongoEventStore>()
-            },
-            {
                 provide: DomainEventEmitter,
                 useValue: emitter
+            },
+            {
+                provide: SnapshotStrategy,
+                useValue: new NoSnapshotStrategy()
+            },
+            {
+                provide: "EVENT_NEST_MONGO_CLIENT",
+                useValue: createMock<MongoClient>()
+            },
+            {
+                provide: MongoSnapshotStore,
+                useValue: createMock<MongoSnapshotStore>()
+            },
+            {
+                provide: EVENT_STORE,
+                useValue: createMock<MongoEventStore>()
             }
         ];
         jest.spyOn(ModuleProviders, "create").mockReturnValue(mockedProviders);
@@ -110,12 +136,24 @@ describe("scoped factories", () => {
 
         const mockedProviders: Provider[] = [
             {
-                provide: EVENT_STORE,
-                useValue: createMock<MongoEventStore>()
-            },
-            {
                 provide: DomainEventEmitter,
                 useValue: emitter
+            },
+            {
+                provide: SnapshotStrategy,
+                useValue: new NoSnapshotStrategy()
+            },
+            {
+                provide: "EVENT_NEST_MONGO_CLIENT",
+                useValue: createMock<MongoClient>()
+            },
+            {
+                provide: MongoSnapshotStore,
+                useValue: createMock<MongoSnapshotStore>()
+            },
+            {
+                provide: EVENT_STORE,
+                useValue: createMock<MongoEventStore>()
             }
         ];
         jest.spyOn(ModuleProviders, "createAsync").mockReturnValue(mockedProviders);
@@ -134,12 +172,24 @@ describe("onApplicationBootstrap", () => {
 
         const mockedProviders: Provider[] = [
             {
-                provide: EVENT_STORE,
-                useValue: createMock<MongoEventStore>()
-            },
-            {
                 provide: DomainEventEmitter,
                 useValue: emitter
+            },
+            {
+                provide: SnapshotStrategy,
+                useValue: new NoSnapshotStrategy()
+            },
+            {
+                provide: "EVENT_NEST_MONGO_CLIENT",
+                useValue: createMock<MongoClient>()
+            },
+            {
+                provide: MongoSnapshotStore,
+                useValue: createMock<MongoSnapshotStore>()
+            },
+            {
+                provide: EVENT_STORE,
+                useValue: createMock<MongoEventStore>()
             }
         ];
         jest.spyOn(ModuleProviders, "create").mockReturnValue(mockedProviders);

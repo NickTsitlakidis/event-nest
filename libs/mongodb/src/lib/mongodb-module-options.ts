@@ -27,4 +27,10 @@ export interface MongodbModuleOptions extends CoreModuleOptions {
      * be passed to the MongoClient constructor.
      */
     mongoClientConfiguration?: MongoClientOptions;
+
+    /**
+     * The name of the collection which will be used to store the aggregate snapshots
+     * You can omit this option if you do not want to use snapshots optimization.
+     */
+    snapshotCollection?: string;
 }

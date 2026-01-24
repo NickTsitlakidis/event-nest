@@ -1,3 +1,5 @@
+import { SnapshotStrategy } from "./snapshot-strategy/snapshot-strategy";
+
 export interface CoreModuleOptions {
     /**
      * Each domain event that is saved in the store will then be passed to any classes you have registered with the
@@ -8,4 +10,9 @@ export interface CoreModuleOptions {
      *
      */
     concurrentSubscriptions?: boolean;
+    /**
+     * The snapshot strategy to use for determining when snapshots should be created for aggregate roots.
+     * See {@link SnapshotStrategy} for more information.
+     */
+    snapshotStrategy?: SnapshotStrategy;
 }
