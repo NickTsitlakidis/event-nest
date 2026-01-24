@@ -24,7 +24,7 @@ export class PostgreSQLSnapshotStore extends AbstractSnapshotStore {
 
     async findLatestSnapshotByAggregateId(id: string): Promise<StoredSnapshot | undefined> {
         if (isNil(this._schemaConfiguration.schemaAwareSnapshotTable)) {
-            this._logger.debug(
+            this._logger.error(
                 "Can't query the snapshot table beacuse is not configured. Provide snapshotTableName in module options"
             );
             return undefined;
@@ -59,7 +59,7 @@ export class PostgreSQLSnapshotStore extends AbstractSnapshotStore {
 
     async save(snapshot: StoredSnapshot): Promise<StoredSnapshot | undefined> {
         if (isNil(this._schemaConfiguration.schemaAwareSnapshotTable)) {
-            this._logger.debug(
+            this._logger.error(
                 "Can't save snapshot. Database table is not configured. Provide snapshotTableName in module options"
             );
 
