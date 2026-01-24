@@ -35,7 +35,7 @@ export abstract class AbstractSnapshotStore implements SnapshotStore {
         const errors: string[] = [];
 
         if (!isInstanceSnapshotAware) {
-            errors.push("Missing applySnapshot() or toSnapshot() methods");
+            errors.push("Missing toSnapshot() method");
         }
 
         if (!isClassSnapshotAware) {

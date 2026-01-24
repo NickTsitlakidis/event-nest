@@ -12,10 +12,10 @@ import { AggregateRoot } from "./aggregate-root";
  */
 export interface SnapshotAware<Snapshot = unknown> {
     /**
-     * Should apply a snapshot to restore the aggregate root's state from a previously saved snapshot.
+     * Optional. Applies a snapshot to restore the aggregate root's state from a previously saved snapshot.
      * @param snapshot The snapshot data to apply
      */
-    applySnapshot(snapshot: Snapshot): void;
+    applySnapshot?(snapshot: Snapshot): void;
     /**
      * Should return a snapshot of the current state of the aggregate root.
      * @returns The snapshot data representing the current state of the aggregate root.
@@ -25,15 +25,14 @@ export interface SnapshotAware<Snapshot = unknown> {
 
 /**
  * Type guard that checks if an aggregate root instance implements the SnapshotAware interface.
- * If so, it should have both applySnapshot and toSnapshots methods defined.
+ * If so, it should have a toSnapshot method defined. applySnapshot is optional.
  *
  * @param aggregate The aggregate root instance to check
  * @returns true if the aggregate root instance implements SnapshotAware, false otherwise
  */
 export const isAggregateInstanceSnapshotAware = (
     aggregate: AggregateRoot
-): aggregate is AggregateRoot & SnapshotAware =>
-    isFunction(aggregate.applySnapshot) && isFunction(aggregate.toSnapshot);
+): aggregate is AggregateRoot & SnapshotAware => isFunction(aggregate.toSnapshot);
 
 /**
  * Type guard that checks if an aggregate root class supports snapshots by verifying
