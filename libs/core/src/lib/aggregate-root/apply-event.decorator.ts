@@ -1,9 +1,9 @@
 import "reflect-metadata";
 import { isNil } from "es-toolkit";
-import { Class } from "type-fest";
 
 import { MissingEventClassException } from "../exceptions/missing-event-class-exception";
 import { APPLY_EVENT_DECORATOR_KEY } from "../metadata-keys";
+import { Class } from "../utils/type-utils";
 
 /**
  * A decorator to mark that a method is used to apply a specific event to an aggregate root.
