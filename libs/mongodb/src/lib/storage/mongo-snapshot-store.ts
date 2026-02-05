@@ -12,20 +12,13 @@ export class MongoSnapshotStore extends AbstractSnapshotStore {
     constructor(
         snapshotStrategy: SnapshotStrategy,
         private readonly _mongoClient: MongoClient,
-        private readonly _snapshotsCollectionName?: string
+        private readonly _snapshotsCollectionName: string
     ) {
         super(snapshotStrategy);
         this._logger = new Logger(MongoSnapshotStore.name);
     }
 
     async findLatestSnapshotByAggregateId(id: string): Promise<StoredSnapshot | undefined> {
-        if (isNil(this._snapshotsCollectionName)) {
-            this._logger.debug(
-                "Can't query the snapshot collection because it is not configured. Provide snapshotCollection in module options"
-            );
-            return undefined;
-        }
-
         const startedAt = Date.now();
         const document = await this._mongoClient
             .db()
@@ -53,14 +46,6 @@ export class MongoSnapshotStore extends AbstractSnapshotStore {
     }
 
     async save(snapshot: StoredSnapshot): Promise<StoredSnapshot | undefined> {
-        if (isNil(this._snapshotsCollectionName)) {
-            this._logger.debug(
-                "Can't save snapshot. Database collection is not configured. Provide snapshotCollection in module options"
-            );
-
-            return undefined;
-        }
-
         const snapshotDocument: SnapshotDocument = {
             _id: new ObjectId(snapshot.id),
             aggregateRootId: snapshot.aggregateRootId,

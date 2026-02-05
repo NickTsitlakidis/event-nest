@@ -23,13 +23,6 @@ afterEach(async () => {
 });
 
 describe("findLatestSnapshotByAggregateId tests", () => {
-    test("returns undefined when collection name is not configured", async () => {
-        const storeWithoutCollection = new MongoSnapshotStore(snapshotStrategy, mongoClient);
-        const result = await storeWithoutCollection.findLatestSnapshotByAggregateId(new ObjectId().toHexString());
-
-        expect(result).toBeUndefined();
-    });
-
     test("returns undefined when no snapshot is found", async () => {
         const aggregateId = new ObjectId().toHexString();
         const result = await snapshotStore.findLatestSnapshotByAggregateId(aggregateId);
@@ -142,25 +135,6 @@ describe("findLatestSnapshotByAggregateId tests", () => {
 });
 
 describe("save tests", () => {
-    test("returns undefined when collection name is not configured", async () => {
-        const storeWithoutCollection = new MongoSnapshotStore(snapshotStrategy, mongoClient);
-
-        const snapshot = StoredSnapshot.create(
-            new ObjectId().toHexString(),
-            5,
-            1,
-            { data: "test" },
-            new ObjectId().toHexString()
-        );
-
-        const result = await storeWithoutCollection.save(snapshot);
-
-        expect(result).toBeUndefined();
-
-        const count = await snapshotsCollection.countDocuments();
-        expect(count).toBe(0);
-    });
-
     test("saves snapshot successfully", async () => {
         const snapshotId = new ObjectId().toHexString();
         const aggregateId = new ObjectId().toHexString();

@@ -1,4 +1,5 @@
 import { AggregateRoot } from "../aggregate-root/aggregate-root";
+import { SnapshotAware } from "../aggregate-root/snapshot-aware";
 import { StoredAggregateRoot } from "./stored-aggregate-root";
 import { StoredEvent } from "./stored-event";
 
@@ -6,11 +7,17 @@ import { StoredEvent } from "./stored-event";
 export type AggregateRootClass<T> = Function & { prototype: T };
 
 export type AggregateRootSnapshot<T extends AggregateRoot = AggregateRoot> =
-    T extends AggregateRoot<infer Snapshot> ? Snapshot : unknown;
+    T extends SnapshotAware<infer Snapshot> ? Snapshot : unknown;
 
-export type SnapshotAwareAggregateClass<T extends AggregateRoot = AggregateRoot> = AggregateRootClass<T> & {
-    snapshotRevision: number;
-};
+/**
+ * Branded type to confirm that AggregateRoot instance correctly implements the SnapshotAware and AggregateRootClass has snapshotRevision attached.
+ * Should be created with caution @see {assertAggregateRootSnapshotAware}
+ */
+export type SnapshotAwareAggregateRoot<T extends AggregateRoot = AggregateRoot> = SnapshotAware<unknown> &
+    T & {
+        readonly __snapshotAwareAggregateRootSymbol: unique symbol;
+        constructor: AggregateRootClass<SnapshotAwareAggregateRoot<T>>;
+    };
 
 /**
  * A unique symbol that can be used to inject the event store into other classes.
@@ -68,19 +75,22 @@ export interface EventStore {
      * This method retrieves the most recent stored snapshot (obtained from the aggregate's `.toSnapshot()` method)
      * and returns it along with all events that were stored after the snapshot was written to the database.
      *
-     * @param aggregateRootClass The snapshot-aware aggregate root class that has a static `snapshotRevision` property and implements SnapshotAware interface
+     * @param aggregateRootClass The snapshot-aware aggregate root class.
      * @param id The unique id of the aggregate root object
-     * @returns An object containing the snapshot and an array of events that occurred after the snapshot
-     * @throws {MissingAggregateRootNameException} If no `@AggregateRootName` decorator is attached to the aggregateRootClass
-     * @throws {NoSnapshotFoundException} If no snapshot is found for the aggregate root with the specified id
-     * @throws {SnapshotRevisionMismatchException} If the static `snapshotRevision` property on the aggregate class does not match the snapshot revision in the stored snapshot record
+     * @returns An object containing:
+     *   - `snapshot` (optional): the snapshot of the aggregate, if found
+     *   - `events`: an array of events that occurred after the snapshot;
+     *       if `snapshot` is undefined, this array contains **all events associated with the aggregate root**
+     * @throws {SnapshotRevisionMismatchException} If the current snapshotRevision does not match the snapshot revision in the stored snapshot record
+     * @throws {AggregateClassNotSnapshotAwareException} If the aggregate root class is missing the snapshot revision configuration
+     * @throws {MissingAggregateRootNameException} If the aggregate root name is missing
      */
     findWithSnapshot<T extends AggregateRoot>(
-        aggregateRootClass: SnapshotAwareAggregateClass<T>,
+        aggregateRootClass: AggregateRootClass<T>,
         id: string
     ): Promise<{
         events: Array<StoredEvent>;
-        snapshot: AggregateRootSnapshot<T>;
+        snapshot?: AggregateRootSnapshot<T>;
     }>;
 
     /**

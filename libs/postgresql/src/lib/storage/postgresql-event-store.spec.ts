@@ -1,11 +1,13 @@
 import {
     AggregateRoot,
+    AggregateRootConfig,
     AggregateRootName,
     DomainEvent,
     DomainEventEmitter,
     EventConcurrencyException,
+    getAggregateRootName,
     MissingAggregateRootNameException,
-    NoSnapshotFoundException,
+    SnapshotAware,
     SnapshotRevisionMismatchException,
     StoredAggregateRoot,
     StoredEvent,
@@ -40,20 +42,20 @@ class DecoratedAggregateRoot extends AggregateRoot {
     }
 }
 
-@AggregateRootName("snapshot-aggregate")
-class SnapshotAwareAggregateRoot extends AggregateRoot<TestSnapshot> {
-    static snapshotRevision = 1;
+const snapshotRevision = 2;
+@AggregateRootConfig({ name: "aggregate_root_name", snapshotRevision })
+class SnapshotAwareAggregateRoot extends AggregateRoot implements SnapshotAware<TestSnapshot> {
     someData = "";
 
     constructor(id: string) {
         super(id);
     }
 
-    override applySnapshot(snapshot: TestSnapshot): void {
+    applySnapshot(snapshot: TestSnapshot): void {
         this.someData = snapshot.someData;
     }
 
-    override toSnapshot(): TestSnapshot {
+    toSnapshot(): TestSnapshot {
         return {
             someData: this.someData
         };
@@ -519,7 +521,7 @@ describe("PostgreSQLEventStore", () => {
     });
 
     describe("findWithSnapshot tests", () => {
-        test("throws NoSnapshotFoundException when no snapshot exists", async () => {
+        test("returns no snapshot and all events when no snapshot exists", async () => {
             const aggregateRootId = randomUUID();
             await knexConnection(schema + ".es-aggregates").insert({
                 id: aggregateRootId,
@@ -529,9 +531,10 @@ describe("PostgreSQLEventStore", () => {
             const latestSnapshot = undefined;
             snapshotStore.findLatestSnapshotByAggregateId.mockResolvedValue(latestSnapshot);
 
-            await expect(eventStore.findWithSnapshot(SnapshotAwareAggregateRoot, aggregateRootId)).rejects.toThrow(
-                NoSnapshotFoundException
-            );
+            await expect(eventStore.findWithSnapshot(SnapshotAwareAggregateRoot, aggregateRootId)).resolves.toEqual({
+                events: [],
+                snapshot: undefined
+            });
         });
 
         test("throws SnapshotRevisionMismatchException when snapshot revision doesn't match", async () => {
@@ -546,7 +549,7 @@ describe("PostgreSQLEventStore", () => {
             const snapshot = StoredSnapshot.create(
                 snapshotId,
                 5,
-                SnapshotAwareAggregateRoot.snapshotRevision - 1,
+                snapshotRevision - 1,
                 { someData: "test" },
                 aggregateRootId
             );
@@ -576,13 +579,7 @@ describe("PostgreSQLEventStore", () => {
             });
 
             const snapshotPayload: TestSnapshot = { someData: "test-data" };
-            const snapshot = StoredSnapshot.create(
-                snapshotId,
-                10,
-                SnapshotAwareAggregateRoot.snapshotRevision,
-                snapshotPayload,
-                aggregateRootId
-            );
+            const snapshot = StoredSnapshot.create(snapshotId, 10, snapshotRevision, snapshotPayload, aggregateRootId);
 
             snapshotStore.findLatestSnapshotByAggregateId.mockResolvedValue(snapshot);
 
@@ -599,63 +596,71 @@ describe("PostgreSQLEventStore", () => {
             const ev1Id = randomUUID();
             const ev2Id = randomUUID();
             const ev3Id = randomUUID();
+            const ev4Id = randomUUID();
 
             const ev0Date = new Date();
             const ev1Date = new Date();
             const ev2Date = new Date();
             const ev3Date = new Date();
+            const ev4Date = new Date();
 
             await knexConnection(schema + ".es-aggregates").insert({
                 id: aggregateRootId,
                 version: 15
             });
+            const aggregate_root_name = getAggregateRootName(SnapshotAwareAggregateRoot);
 
-            await knexConnection<EventRow>(schema + ".es-events").insert({
-                aggregate_root_id: aggregateRootId,
-                aggregate_root_name: "snapshot-aggregate",
-                aggregate_root_version: 3,
-                created_at: ev0Date,
-                event_name: "sql-event-0",
-                id: ev0Id,
-                payload: JSON.stringify({ data: "event0" })
-            });
-            await knexConnection<EventRow>(schema + ".es-events").insert({
-                aggregate_root_id: aggregateRootId,
-                aggregate_root_name: "snapshot-aggregate",
-                aggregate_root_version: 5,
-                created_at: ev1Date,
-                event_name: "sql-event-1",
-                id: ev1Id,
-                payload: JSON.stringify({ data: "event1" })
-            });
-            await knexConnection<EventRow>(schema + ".es-events").insert({
-                aggregate_root_id: aggregateRootId,
-                aggregate_root_name: "snapshot-aggregate",
-                aggregate_root_version: 11,
-                created_at: ev2Date,
-                event_name: "sql-event-2",
-                id: ev2Id,
-                payload: JSON.stringify({ data: "event2" })
-            });
-            await knexConnection<EventRow>(schema + ".es-events").insert({
-                aggregate_root_id: aggregateRootId,
-                aggregate_root_name: "snapshot-aggregate",
-                aggregate_root_version: 15,
-                created_at: ev3Date,
-                event_name: "sql-event-1",
-                id: ev3Id,
-                payload: JSON.stringify({ data: "event3" })
-            });
+            await knexConnection<EventRow>(schema + ".es-events").insert([
+                {
+                    aggregate_root_id: aggregateRootId,
+                    aggregate_root_name,
+                    aggregate_root_version: 3,
+                    created_at: ev0Date,
+                    event_name: "sql-event-0",
+                    id: ev0Id,
+                    payload: JSON.stringify({ data: "event0" })
+                },
+                {
+                    aggregate_root_id: aggregateRootId,
+                    aggregate_root_name,
+                    aggregate_root_version: 5,
+                    created_at: ev1Date,
+                    event_name: "sql-event-1",
+                    id: ev1Id,
+                    payload: JSON.stringify({ data: "event1" })
+                },
+                // should not be included due to strict aggregate_root_version query ">"
+                {
+                    aggregate_root_id: aggregateRootId,
+                    aggregate_root_name,
+                    aggregate_root_version: 10,
+                    created_at: ev2Date,
+                    event_name: "sql-event-2",
+                    id: ev2Id,
+                    payload: JSON.stringify({ data: "event2" })
+                },
+                {
+                    aggregate_root_id: aggregateRootId,
+                    aggregate_root_name,
+                    aggregate_root_version: 11,
+                    created_at: ev3Date,
+                    event_name: "sql-event-3",
+                    id: ev3Id,
+                    payload: JSON.stringify({ data: "event3" })
+                },
+                {
+                    aggregate_root_id: aggregateRootId,
+                    aggregate_root_name,
+                    aggregate_root_version: 15,
+                    created_at: ev4Date,
+                    event_name: "sql-event-4",
+                    id: ev4Id,
+                    payload: JSON.stringify({ data: "event4" })
+                }
+            ]);
 
             const snapshotPayload: TestSnapshot = { someData: "snapshot-data" };
-            const snapshot = StoredSnapshot.create(
-                snapshotId,
-                10,
-                SnapshotAwareAggregateRoot.snapshotRevision,
-                snapshotPayload,
-                aggregateRootId
-            );
-
+            const snapshot = StoredSnapshot.create(snapshotId, 10, snapshotRevision, snapshotPayload, aggregateRootId);
             snapshotStore.findLatestSnapshotByAggregateId.mockResolvedValue(snapshot);
 
             const result = await eventStore.findWithSnapshot(SnapshotAwareAggregateRoot, aggregateRootId);
@@ -664,21 +669,21 @@ describe("PostgreSQLEventStore", () => {
             expect(result.snapshot).toEqual(snapshotPayload);
             expect(result.events.length).toBe(2);
 
-            expect(result.events[0].id).toBe(ev2Id);
+            expect(result.events[0].id).toBe(ev3Id);
             expect(result.events[0].aggregateRootVersion).toBe(11);
-            expect(result.events[0].eventName).toBe("sql-event-2");
+            expect(result.events[0].eventName).toBe("sql-event-3");
             expect(result.events[0].aggregateRootId).toBe(aggregateRootId);
-            expect(result.events[0].aggregateRootName).toBe("snapshot-aggregate");
-            expect(result.events[0].payload).toEqual({ data: "event2" });
-            expect(result.events[0].createdAt).toEqual(ev2Date);
+            expect(result.events[0].aggregateRootName).toBe(aggregate_root_name);
+            expect(result.events[0].payload).toEqual({ data: "event3" });
+            expect(result.events[0].createdAt).toEqual(ev3Date);
 
-            expect(result.events[1].id).toBe(ev3Id);
+            expect(result.events[1].id).toBe(ev4Id);
             expect(result.events[1].aggregateRootVersion).toBe(15);
-            expect(result.events[1].eventName).toBe("sql-event-1");
+            expect(result.events[1].eventName).toBe("sql-event-4");
             expect(result.events[1].aggregateRootId).toBe(aggregateRootId);
-            expect(result.events[1].aggregateRootName).toBe("snapshot-aggregate");
-            expect(result.events[1].payload).toEqual({ data: "event3" });
-            expect(result.events[1].createdAt).toEqual(ev3Date);
+            expect(result.events[1].aggregateRootName).toBe(aggregate_root_name);
+            expect(result.events[1].payload).toEqual({ data: "event4" });
+            expect(result.events[1].createdAt).toEqual(ev4Date);
         });
 
         test("returns snapshot and all events when snapshot version is at the beginning", async () => {
@@ -686,7 +691,7 @@ describe("PostgreSQLEventStore", () => {
             const snapshotId = randomUUID();
             const ev1Id = randomUUID();
             const ev2Id = randomUUID();
-
+            const aggregate_root_name = getAggregateRootName(SnapshotAwareAggregateRoot);
             const ev1Date = new Date();
             const ev2Date = new Date();
 
@@ -695,34 +700,29 @@ describe("PostgreSQLEventStore", () => {
                 version: 10
             });
 
-            await knexConnection<EventRow>(schema + ".es-events").insert({
-                aggregate_root_id: aggregateRootId,
-                aggregate_root_name: "snapshot-aggregate",
-                aggregate_root_version: 5,
-                created_at: ev1Date,
-                event_name: "sql-event-1",
-                id: ev1Id,
-                payload: JSON.stringify({ data: "event1" })
-            });
-
-            await knexConnection<EventRow>(schema + ".es-events").insert({
-                aggregate_root_id: aggregateRootId,
-                aggregate_root_name: "snapshot-aggregate",
-                aggregate_root_version: 10,
-                created_at: ev2Date,
-                event_name: "sql-event-2",
-                id: ev2Id,
-                payload: JSON.stringify({ data: "event2" })
-            });
+            await knexConnection<EventRow>(schema + ".es-events").insert([
+                {
+                    aggregate_root_id: aggregateRootId,
+                    aggregate_root_name: aggregate_root_name,
+                    aggregate_root_version: 5,
+                    created_at: ev1Date,
+                    event_name: "sql-event-1",
+                    id: ev1Id,
+                    payload: JSON.stringify({ data: "event1" })
+                },
+                {
+                    aggregate_root_id: aggregateRootId,
+                    aggregate_root_name: aggregate_root_name,
+                    aggregate_root_version: 10,
+                    created_at: ev2Date,
+                    event_name: "sql-event-2",
+                    id: ev2Id,
+                    payload: JSON.stringify({ data: "event2" })
+                }
+            ]);
 
             const snapshotPayload: TestSnapshot = { someData: "initial-snapshot" };
-            const snapshot = StoredSnapshot.create(
-                snapshotId,
-                0,
-                SnapshotAwareAggregateRoot.snapshotRevision,
-                snapshotPayload,
-                aggregateRootId
-            );
+            const snapshot = StoredSnapshot.create(snapshotId, 0, snapshotRevision, snapshotPayload, aggregateRootId);
 
             snapshotStore.findLatestSnapshotByAggregateId.mockResolvedValue(snapshot);
 

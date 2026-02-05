@@ -1,4 +1,10 @@
-import { DomainEventEmitter, EVENT_STORE, NoSnapshotStrategy, SnapshotStrategy } from "@event-nest/core";
+import {
+    AbstractSnapshotStore,
+    DomainEventEmitter,
+    EVENT_STORE,
+    NoOpSnapshotStore,
+    SNAPSHOT_STORE
+} from "@event-nest/core";
 import { Provider } from "@nestjs/common";
 import { MongoClient } from "mongodb";
 
@@ -17,24 +23,31 @@ export class ModuleProviders {
                 }
             },
             {
-                provide: SnapshotStrategy,
-                useFactory: () => options.snapshotStrategy || new NoSnapshotStrategy()
-            },
-            {
                 provide: "EVENT_NEST_MONGO_CLIENT",
                 useFactory: () => {
                     return new MongoClient(options.connectionUri, options.mongoClientConfiguration);
                 }
             },
             {
-                inject: [SnapshotStrategy, "EVENT_NEST_MONGO_CLIENT"],
-                provide: MongoSnapshotStore,
-                useFactory: (srategy: SnapshotStrategy, mongoClient: MongoClient) => {
-                    return new MongoSnapshotStore(srategy, mongoClient, options.snapshotCollection);
+                inject: ["EVENT_NEST_MONGO_CLIENT"],
+                provide: SNAPSHOT_STORE,
+                useFactory: (mongoClient: MongoClient) => {
+                    const { snapshotCollection, snapshotStrategy } = options;
+                    if (Boolean(snapshotStrategy) !== Boolean(snapshotCollection)) {
+                        throw new Error(
+                            "To use snapshots, both 'snapshotStrategy' and 'snapshotCollection' must be provided."
+                        );
+                    }
+
+                    if (!snapshotCollection || !snapshotStrategy) {
+                        return new NoOpSnapshotStore();
+                    }
+
+                    return new MongoSnapshotStore(snapshotStrategy, mongoClient, snapshotCollection);
                 }
             },
             {
-                inject: [DomainEventEmitter, "EVENT_NEST_MONGO_CLIENT", MongoSnapshotStore],
+                inject: [DomainEventEmitter, "EVENT_NEST_MONGO_CLIENT", SNAPSHOT_STORE],
                 provide: EVENT_STORE,
                 useFactory: (
                     eventEmitter: DomainEventEmitter,
@@ -62,17 +75,22 @@ export class ModuleProviders {
             }
         };
 
-        const snapshotStrategyProvider = {
-            inject: ["EVENT_NEST_OPTIONS", DomainEventEmitter],
-            provide: SnapshotStrategy,
-            useFactory: (options: MongodbModuleOptions) => options.snapshotStrategy || new NoSnapshotStrategy()
-        };
-
         const snapshotStoreProvider = {
-            inject: [SnapshotStrategy, "EVENT_NEST_MONGO_CLIENT", "EVENT_NEST_OPTIONS"],
-            provide: MongoSnapshotStore,
-            useFactory: (srategy: SnapshotStrategy, mongoClient: MongoClient, options: MongodbModuleOptions) => {
-                return new MongoSnapshotStore(srategy, mongoClient, options.snapshotCollection);
+            inject: ["EVENT_NEST_MONGO_CLIENT", "EVENT_NEST_OPTIONS"],
+            provide: SNAPSHOT_STORE,
+            useFactory: (mongoClient: MongoClient, options: MongodbModuleOptions): AbstractSnapshotStore => {
+                const { snapshotCollection, snapshotStrategy } = options;
+                if (Boolean(snapshotStrategy) !== Boolean(snapshotCollection)) {
+                    throw new Error(
+                        "To use snapshots, both 'snapshotStrategy' and 'snapshotCollection' must be provided."
+                    );
+                }
+
+                if (!snapshotCollection || !snapshotStrategy) {
+                    return new NoOpSnapshotStore();
+                }
+
+                return new MongoSnapshotStore(snapshotStrategy, mongoClient, snapshotCollection);
             }
         };
 
@@ -93,7 +111,7 @@ export class ModuleProviders {
         };
 
         const eventStoreProvider = {
-            inject: ["EVENT_NEST_OPTIONS", DomainEventEmitter, "EVENT_NEST_MONGO_CLIENT", MongoSnapshotStore],
+            inject: ["EVENT_NEST_OPTIONS", DomainEventEmitter, "EVENT_NEST_MONGO_CLIENT", SNAPSHOT_STORE],
             provide: EVENT_STORE,
             useFactory: (
                 options: MongodbModuleOptions,
@@ -111,13 +129,6 @@ export class ModuleProviders {
             }
         };
 
-        return [
-            optionsProvider,
-            eventBusProvider,
-            eventStoreProvider,
-            snapshotStrategyProvider,
-            snapshotStoreProvider,
-            mongoClientProvider
-        ];
+        return [optionsProvider, eventBusProvider, eventStoreProvider, snapshotStoreProvider, mongoClientProvider];
     }
 }

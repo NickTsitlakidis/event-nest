@@ -1,4 +1,4 @@
-import { AggregateRoot, AggregateRootName, ApplyEvent, StoredEvent } from "@event-nest/core";
+import { AggregateRoot, AggregateRootConfig, ApplyEvent, SnapshotAware, StoredEvent } from "@event-nest/core";
 
 import { OrderCreatedEvent, OrderStatusChanged } from "./order-events";
 
@@ -7,9 +7,8 @@ export interface OrderModel {
     userId: string;
 }
 
-@AggregateRootName("order")
-export class Order extends AggregateRoot<OrderModel> {
-    static snapshotRevision = 1;
+@AggregateRootConfig({ name: "Order", snapshotRevision: 1 })
+export class Order extends AggregateRoot implements SnapshotAware<OrderModel> {
     private status: OrderModel["status"];
     private userId: string;
 

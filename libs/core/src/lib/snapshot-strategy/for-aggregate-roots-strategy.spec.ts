@@ -1,5 +1,5 @@
 import { AggregateRoot } from "../aggregate-root/aggregate-root";
-import { AggregateRootName } from "../aggregate-root/aggregate-root-name";
+import { AggregateRootConfig } from "../aggregate-root/aggregate-root-config";
 import { SnapshotAware } from "../aggregate-root/snapshot-aware";
 import { ForAggregateRootsStrategy } from "./for-aggregate-roots-strategy";
 
@@ -8,73 +8,69 @@ interface TestSnapshot {
     id: string;
 }
 
-class AggregateRootWithoutName extends AggregateRoot<TestSnapshot> {
-    static snapshotRevision = 1;
+class AggregateRootWithoutName extends AggregateRoot implements SnapshotAware<TestSnapshot> {
     data = "";
 
     constructor(id: string) {
         super(id);
     }
 
-    override applySnapshot(snapshot: TestSnapshot): void {
+    applySnapshot(snapshot: TestSnapshot): void {
         this.data = snapshot.data;
     }
 
-    override toSnapshot(): TestSnapshot {
+    toSnapshot(): TestSnapshot {
         return { data: this.data, id: this.id };
     }
 }
 
-@AggregateRootName("TestAggregate1")
-class TestAggregateRoot1 extends AggregateRoot<TestSnapshot> {
-    static snapshotRevision = 1;
+@AggregateRootConfig({ name: "TestAggregate1" })
+class TestAggregateRoot1 extends AggregateRoot implements SnapshotAware<TestSnapshot> {
     data = "";
 
     constructor(id: string) {
         super(id);
     }
 
-    override applySnapshot(snapshot: TestSnapshot): void {
+    applySnapshot(snapshot: TestSnapshot): void {
         this.data = snapshot.data;
     }
 
-    override toSnapshot(): TestSnapshot {
+    toSnapshot(): TestSnapshot {
         return { data: this.data, id: this.id };
     }
 }
 
-@AggregateRootName("TestAggregate2")
-class TestAggregateRoot2 extends AggregateRoot<TestSnapshot> {
-    static snapshotRevision = 1;
+@AggregateRootConfig({ name: "TestAggregate2" })
+class TestAggregateRoot2 extends AggregateRoot implements SnapshotAware<TestSnapshot> {
     data = "";
 
     constructor(id: string) {
         super(id);
     }
 
-    override applySnapshot(snapshot: TestSnapshot): void {
+    applySnapshot(snapshot: TestSnapshot): void {
         this.data = snapshot.data;
     }
 
-    override toSnapshot(): TestSnapshot {
+    toSnapshot(): TestSnapshot {
         return { data: this.data, id: this.id };
     }
 }
 
-@AggregateRootName("TestAggregate3")
+@AggregateRootConfig({ name: "TestAggregate3" })
 class TestAggregateRoot3 extends AggregateRoot implements SnapshotAware<TestSnapshot> {
-    static snapshotRevision = 1;
     data = "";
 
     constructor(id: string) {
         super(id);
     }
 
-    override applySnapshot(snapshot: TestSnapshot): void {
+    applySnapshot(snapshot: TestSnapshot): void {
         this.data = snapshot.data;
     }
 
-    override toSnapshot(): TestSnapshot {
+    toSnapshot(): TestSnapshot {
         return { data: this.data, id: this.id };
     }
 }

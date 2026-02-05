@@ -1,9 +1,9 @@
 import { AggregateRoot } from "../aggregate-root/aggregate-root";
-import { AggregateRootName } from "../aggregate-root/aggregate-root-name";
+import { AggregateRootConfig } from "../aggregate-root/aggregate-root-config";
 import { DomainEvent } from "../domain-event";
 import { ForEventsSnapshotStrategy } from "./for-events-snapshot-strategy";
 
-@AggregateRootName("TestAggregateRoot")
+@AggregateRootConfig({ name: "TestAggregateRoot" })
 class TestAggregateRoot extends AggregateRoot {
     constructor(id: string) {
         super(id);

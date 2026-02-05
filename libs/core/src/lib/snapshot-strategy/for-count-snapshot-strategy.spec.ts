@@ -1,14 +1,8 @@
+import { createMock } from "@golevelup/ts-jest";
+
 import { AggregateRoot } from "../aggregate-root/aggregate-root";
-import { AggregateRootName } from "../aggregate-root/aggregate-root-name";
 import { DomainEvent } from "../domain-event";
 import { ForCountSnapshotStrategy } from "./for-count-snapshot-strategy";
-
-@AggregateRootName("TestAggregateRoot")
-class TestAggregateRoot extends AggregateRoot {
-    constructor(id: string) {
-        super(id);
-    }
-}
 
 @DomainEvent("TestEvent")
 class TestEvent {}
@@ -23,25 +17,27 @@ describe("ForCountSnapshotStrategy", () => {
 
     describe("shouldCreateSnapshot=true", () => {
         test("returns true when one event reach threshold", () => {
-            const aggregateRoot = new TestAggregateRoot("test-id");
-            (aggregateRoot as any)._version = 9;
-            const event1 = new TestEvent();
-            aggregateRoot.append(event1);
+            const aggregateRoot = createMock<AggregateRoot>({
+                uncommittedEvents: [
+                    {
+                        payload: new TestEvent()
+                    }
+                ],
+                version: 9
+            });
 
             const strategy = new ForCountSnapshotStrategy({ count: 10 });
 
             expect(strategy.shouldCreateSnapshot(aggregateRoot)).toBe(true);
         });
 
-        test("returns true when multiple hevents reach exact treshold", () => {
+        test("returns true when multiple events reach exact treshold", () => {
             const count = 5;
-            const aggregateRoot = new TestAggregateRoot("test-id");
-            (aggregateRoot as any)._version = count;
-
-            Array.from({ length: count }).forEach(() => {
-                const event1 = new TestEvent();
-
-                aggregateRoot.append(event1);
+            const aggregateRoot = createMock<AggregateRoot>({
+                uncommittedEvents: Array.from({ length: count }, () => ({
+                    payload: new TestEvent()
+                })),
+                version: 5
             });
 
             const strategy = new ForCountSnapshotStrategy({ count });
@@ -51,13 +47,11 @@ describe("ForCountSnapshotStrategy", () => {
 
         test("returns true when crossing threshold with multiple events", () => {
             const count = 5;
-            const aggregateRoot = new TestAggregateRoot("test-id");
-            (aggregateRoot as any)._version = count;
-
-            Array.from({ length: count * 2 }).forEach(() => {
-                const event1 = new TestEvent();
-
-                aggregateRoot.append(event1);
+            const aggregateRoot = createMock<AggregateRoot>({
+                uncommittedEvents: Array.from({ length: count * 2 }, () => ({
+                    payload: new TestEvent()
+                })),
+                version: 5
             });
 
             const strategy = new ForCountSnapshotStrategy({ count });
@@ -68,16 +62,25 @@ describe("ForCountSnapshotStrategy", () => {
 
     describe("shouldCreateSnapshot=false", () => {
         test("returns false when no uncommitted events", () => {
-            const aggregateRoot = new TestAggregateRoot("test-id");
+            const aggregateRoot = createMock<AggregateRoot>({
+                uncommittedEvents: [],
+                version: 0
+            });
+
             const strategy = new ForCountSnapshotStrategy({ count: 1 });
 
             expect(strategy.shouldCreateSnapshot(aggregateRoot)).toBe(false);
         });
 
         test("returns false when count threshold is not reached", () => {
-            const aggregateRoot = new TestAggregateRoot("test-id");
-            const event1 = new TestEvent();
-            aggregateRoot.append(event1);
+            const aggregateRoot = createMock<AggregateRoot>({
+                uncommittedEvents: [
+                    {
+                        payload: new TestEvent()
+                    }
+                ],
+                version: 0
+            });
 
             const strategy = new ForCountSnapshotStrategy({ count: 2 });
 
@@ -85,10 +88,14 @@ describe("ForCountSnapshotStrategy", () => {
         });
 
         test("returns false when not crossing threshold with existing version", () => {
-            const aggregateRoot = new TestAggregateRoot("test-id");
-            (aggregateRoot as any)._version = 8;
-            const event1 = new TestEvent();
-            aggregateRoot.append(event1);
+            const aggregateRoot = createMock<AggregateRoot>({
+                uncommittedEvents: [
+                    {
+                        payload: new TestEvent()
+                    }
+                ],
+                version: 8
+            });
 
             const strategy = new ForCountSnapshotStrategy({ count: 10 });
 
@@ -96,10 +103,14 @@ describe("ForCountSnapshotStrategy", () => {
         });
 
         test("returns false when exactly at threshold without crossing", () => {
-            const aggregateRoot = new TestAggregateRoot("test-id");
-            (aggregateRoot as any)._version = 10;
-            const event1 = new TestEvent();
-            aggregateRoot.append(event1);
+            const aggregateRoot = createMock<AggregateRoot>({
+                uncommittedEvents: [
+                    {
+                        payload: new TestEvent()
+                    }
+                ],
+                version: 10
+            });
 
             const strategy = new ForCountSnapshotStrategy({ count: 10 });
 

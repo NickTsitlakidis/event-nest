@@ -1,11 +1,12 @@
 import {
     AggregateRoot,
+    AggregateRootConfig,
     AggregateRootName,
     DomainEvent,
     DomainEventEmitter,
     EventConcurrencyException,
     MissingAggregateRootNameException,
-    NoSnapshotFoundException,
+    SnapshotAware,
     SnapshotRevisionMismatchException,
     StoredAggregateRoot,
     StoredEvent,
@@ -53,20 +54,20 @@ class DecoratedAggregateRoot extends AggregateRoot {
     }
 }
 
-@AggregateRootName("snapshot-aggregate")
-class SnapshotAwareAggregateRoot extends AggregateRoot<TestSnapshot> {
-    static snapshotRevision = 1;
+const snapshotRevision = 3;
+@AggregateRootConfig({ name: "snapshot-aggregate", snapshotRevision })
+class SnapshotAwareAggregateRoot extends AggregateRoot implements SnapshotAware<TestSnapshot> {
     someData = "";
 
     constructor(id: string) {
         super(id);
     }
 
-    override applySnapshot(snapshot: TestSnapshot): void {
+    applySnapshot(snapshot: TestSnapshot): void {
         this.someData = snapshot.someData;
     }
 
-    override toSnapshot(): TestSnapshot {
+    toSnapshot(): TestSnapshot {
         return {
             someData: this.someData
         };
@@ -442,7 +443,7 @@ test("generateEntityId - returns string with ObjectId format", async () => {
 });
 
 describe("findWithSnapshot tests", () => {
-    test("throws NoSnapshotFoundException when no snapshot exists", async () => {
+    test("returns no snpashot when no snapshot created", async () => {
         const aggregateRootId = new ObjectId().toHexString();
         await aggregatesCollection.insertOne({
             _id: new ObjectId(aggregateRootId),
@@ -452,9 +453,10 @@ describe("findWithSnapshot tests", () => {
         const latestSnapshot = undefined;
         snapshotStore.findLatestSnapshotByAggregateId.mockResolvedValue(latestSnapshot);
 
-        await expect(eventStore.findWithSnapshot(SnapshotAwareAggregateRoot, aggregateRootId)).rejects.toThrow(
-            NoSnapshotFoundException
-        );
+        await expect(eventStore.findWithSnapshot(SnapshotAwareAggregateRoot, aggregateRootId)).resolves.toEqual({
+            events: [],
+            snapshot: undefined
+        });
     });
 
     test("throws SnapshotRevisionMismatchException when snapshot revision doesn't match", async () => {
@@ -469,7 +471,7 @@ describe("findWithSnapshot tests", () => {
         const snapshot = StoredSnapshot.create(
             snapshotId,
             5,
-            SnapshotAwareAggregateRoot.snapshotRevision - 1,
+            snapshotRevision - 1,
             { someData: "test" },
             aggregateRootId
         );
@@ -491,42 +493,17 @@ describe("findWithSnapshot tests", () => {
 
     test("returns snapshot and empty events array when no events exist after snapshot", async () => {
         const aggregateRootId = new ObjectId().toHexString();
-        const snapshotId = new ObjectId().toHexString();
-
-        await aggregatesCollection.insertOne({
-            _id: new ObjectId(aggregateRootId),
-            version: 10
-        });
-
-        const snapshotPayload: TestSnapshot = { someData: "test-data" };
-        const snapshot = StoredSnapshot.create(
-            snapshotId,
-            10,
-            SnapshotAwareAggregateRoot.snapshotRevision,
-            snapshotPayload,
-            aggregateRootId
-        );
-
-        snapshotStore.findLatestSnapshotByAggregateId.mockResolvedValue(snapshot);
-
-        const result = await eventStore.findWithSnapshot(SnapshotAwareAggregateRoot, aggregateRootId);
-
-        expect(result.snapshot).toEqual(snapshotPayload);
-        expect(result.events).toEqual([]);
-    });
-
-    test("returns snapshot and events that occurred after the snapshot version", async () => {
-        const aggregateRootId = new ObjectId().toHexString();
-        const snapshotId = new ObjectId().toHexString();
         const ev0Id = new ObjectId().toHexString();
         const ev1Id = new ObjectId().toHexString();
         const ev2Id = new ObjectId().toHexString();
         const ev3Id = new ObjectId().toHexString();
+        const ev4Id = new ObjectId().toHexString();
 
         const ev0Date = new Date();
         const ev1Date = new Date();
         const ev2Date = new Date();
         const ev3Date = new Date();
+        const ev4Date = new Date();
 
         await aggregatesCollection.insertOne({
             _id: new ObjectId(aggregateRootId),
@@ -555,29 +532,126 @@ describe("findWithSnapshot tests", () => {
             _id: new ObjectId(ev2Id),
             aggregateRootId: aggregateRootId,
             aggregateRootName: "snapshot-aggregate",
-            aggregateRootVersion: 11,
+            aggregateRootVersion: 10,
             createdAt: ev2Date,
             eventName: "test-event-2",
             payload: { data: "event2" }
         });
+
         await eventsCollection.insertOne({
             _id: new ObjectId(ev3Id),
             aggregateRootId: aggregateRootId,
             aggregateRootName: "snapshot-aggregate",
-            aggregateRootVersion: 15,
+            aggregateRootVersion: 11,
             createdAt: ev3Date,
-            eventName: "test-event-1",
+            eventName: "test-event-3",
             payload: { data: "event3" }
+        });
+        await eventsCollection.insertOne({
+            _id: new ObjectId(ev4Id),
+            aggregateRootId: aggregateRootId,
+            aggregateRootName: "snapshot-aggregate",
+            aggregateRootVersion: 15,
+            createdAt: ev4Date,
+            eventName: "test-event-4",
+            payload: { data: "event4" }
+        });
+
+        snapshotStore.findLatestSnapshotByAggregateId.mockResolvedValue(void 0);
+        const result = await eventStore.findWithSnapshot(SnapshotAwareAggregateRoot, aggregateRootId);
+        expect(result.events.length).toBe(5);
+        expect(result.snapshot).toBeUndefined();
+    });
+
+    test("returns events from the beginning if no snapshot exists", async () => {
+        const aggregateRootId = new ObjectId().toHexString();
+        const snapshotId = new ObjectId().toHexString();
+
+        await aggregatesCollection.insertOne({
+            _id: new ObjectId(aggregateRootId),
+            version: 10
+        });
+
+        const snapshotPayload: TestSnapshot = { someData: "test-data" };
+        const snapshot = StoredSnapshot.create(snapshotId, 10, snapshotRevision, snapshotPayload, aggregateRootId);
+
+        snapshotStore.findLatestSnapshotByAggregateId.mockResolvedValue(snapshot);
+
+        const result = await eventStore.findWithSnapshot(SnapshotAwareAggregateRoot, aggregateRootId);
+
+        expect(result.snapshot).toEqual(snapshotPayload);
+        expect(result.events).toEqual([]);
+    });
+
+    test("returns snapshot and events that occurred after the snapshot version", async () => {
+        const aggregateRootId = new ObjectId().toHexString();
+        const snapshotId = new ObjectId().toHexString();
+        const ev0Id = new ObjectId().toHexString();
+        const ev1Id = new ObjectId().toHexString();
+        const ev2Id = new ObjectId().toHexString();
+        const ev3Id = new ObjectId().toHexString();
+        const ev4Id = new ObjectId().toHexString();
+
+        const ev0Date = new Date();
+        const ev1Date = new Date();
+        const ev2Date = new Date();
+        const ev3Date = new Date();
+        const ev4Date = new Date();
+
+        await aggregatesCollection.insertOne({
+            _id: new ObjectId(aggregateRootId),
+            version: 15
+        });
+
+        await eventsCollection.insertOne({
+            _id: new ObjectId(ev0Id),
+            aggregateRootId: aggregateRootId,
+            aggregateRootName: "snapshot-aggregate",
+            aggregateRootVersion: 3,
+            createdAt: ev0Date,
+            eventName: "test-event-0",
+            payload: { data: "event0" }
+        });
+        await eventsCollection.insertOne({
+            _id: new ObjectId(ev1Id),
+            aggregateRootId: aggregateRootId,
+            aggregateRootName: "snapshot-aggregate",
+            aggregateRootVersion: 5,
+            createdAt: ev1Date,
+            eventName: "test-event-1",
+            payload: { data: "event1" }
+        });
+        await eventsCollection.insertOne({
+            _id: new ObjectId(ev2Id),
+            aggregateRootId: aggregateRootId,
+            aggregateRootName: "snapshot-aggregate",
+            aggregateRootVersion: 10,
+            createdAt: ev2Date,
+            eventName: "test-event-2",
+            payload: { data: "event2" }
+        });
+
+        await eventsCollection.insertOne({
+            _id: new ObjectId(ev3Id),
+            aggregateRootId: aggregateRootId,
+            aggregateRootName: "snapshot-aggregate",
+            aggregateRootVersion: 11,
+            createdAt: ev3Date,
+            eventName: "test-event-3",
+            payload: { data: "event3" }
+        });
+        await eventsCollection.insertOne({
+            _id: new ObjectId(ev4Id),
+            aggregateRootId: aggregateRootId,
+            aggregateRootName: "snapshot-aggregate",
+            aggregateRootVersion: 15,
+            createdAt: ev4Date,
+            eventName: "test-event-4",
+            payload: { data: "event4" }
         });
 
         const snapshotPayload: TestSnapshot = { someData: "snapshot-data" };
-        const snapshot = StoredSnapshot.create(
-            snapshotId,
-            10,
-            SnapshotAwareAggregateRoot.snapshotRevision,
-            snapshotPayload,
-            aggregateRootId
-        );
+        const snapshot = StoredSnapshot.create(snapshotId, 10, snapshotRevision, snapshotPayload, aggregateRootId);
 
         snapshotStore.findLatestSnapshotByAggregateId.mockResolvedValue(snapshot);
 
@@ -586,21 +660,21 @@ describe("findWithSnapshot tests", () => {
         expect(result.snapshot).toEqual(snapshotPayload);
         expect(result.events.length).toBe(2);
 
-        expect(result.events[0].id).toBe(ev2Id);
+        expect(result.events[0].id).toBe(ev3Id);
         expect(result.events[0].aggregateRootVersion).toBe(11);
-        expect(result.events[0].eventName).toBe("test-event-2");
+        expect(result.events[0].eventName).toBe("test-event-3");
         expect(result.events[0].aggregateRootId).toBe(aggregateRootId);
         expect(result.events[0].aggregateRootName).toBe("snapshot-aggregate");
-        expect(result.events[0].payload).toEqual({ data: "event2" });
-        expect(result.events[0].createdAt).toEqual(ev2Date);
+        expect(result.events[0].payload).toEqual({ data: "event3" });
+        expect(result.events[0].createdAt).toEqual(ev3Date);
 
-        expect(result.events[1].id).toBe(ev3Id);
+        expect(result.events[1].id).toBe(ev4Id);
         expect(result.events[1].aggregateRootVersion).toBe(15);
-        expect(result.events[1].eventName).toBe("test-event-1");
+        expect(result.events[1].eventName).toBe("test-event-4");
         expect(result.events[1].aggregateRootId).toBe(aggregateRootId);
         expect(result.events[1].aggregateRootName).toBe("snapshot-aggregate");
-        expect(result.events[1].payload).toEqual({ data: "event3" });
-        expect(result.events[1].createdAt).toEqual(ev3Date);
+        expect(result.events[1].payload).toEqual({ data: "event4" });
+        expect(result.events[1].createdAt).toEqual(ev4Date);
     });
 
     test("returns snapshot and all events when snapshot version is at the beginning", async () => {
@@ -638,13 +712,7 @@ describe("findWithSnapshot tests", () => {
         });
 
         const snapshotPayload: TestSnapshot = { someData: "initial-snapshot" };
-        const snapshot = StoredSnapshot.create(
-            snapshotId,
-            0,
-            SnapshotAwareAggregateRoot.snapshotRevision,
-            snapshotPayload,
-            aggregateRootId
-        );
+        const snapshot = StoredSnapshot.create(snapshotId, 0, snapshotRevision, snapshotPayload, aggregateRootId);
 
         snapshotStore.findLatestSnapshotByAggregateId.mockResolvedValue(snapshot);
 

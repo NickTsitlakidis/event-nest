@@ -2,9 +2,9 @@
  * Represents a snapshot of an aggregate root's state at a specific point in time.
  */
 export class StoredSnapshot<T = unknown> {
-    readonly _id: string;
     private _aggregateRootId!: string;
     private _aggregateRootVersion!: number;
+    private readonly _id: string;
     private _payload!: T;
     private _revision!: number;
 
@@ -12,14 +12,14 @@ export class StoredSnapshot<T = unknown> {
         this._id = id;
     }
 
-    static create(
+    static create<T>(
         id: string,
         aggregateRootVersion: number,
         revision: number,
-        payload: unknown,
+        payload: T,
         aggregateRootId: string
-    ): StoredSnapshot {
-        const snapshot = new StoredSnapshot(id);
+    ): StoredSnapshot<T> {
+        const snapshot: StoredSnapshot<T> = new StoredSnapshot(id);
         snapshot._aggregateRootVersion = aggregateRootVersion;
         snapshot._payload = payload;
         snapshot._revision = revision;

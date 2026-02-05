@@ -1,4 +1,10 @@
-import { DomainEventEmitter, EVENT_STORE, NoSnapshotStrategy, SnapshotStrategy } from "@event-nest/core";
+import {
+    DomainEventEmitter,
+    EVENT_STORE,
+    NoOpSnapshotStore,
+    NoSnapshotStrategy,
+    SNAPSHOT_STORE
+} from "@event-nest/core";
 import { Test } from "@nestjs/testing";
 import { MongoClient } from "mongodb";
 
@@ -96,30 +102,44 @@ describe("create", () => {
         expect(MongoClient).toHaveBeenCalledWith("mongodb://localhost:27017", undefined);
     });
 
-    test("creates SnapshotStrategy provider with default NoSnapshotStrategy", async () => {
-        const options: MongodbModuleOptions = {
-            aggregatesCollection: "aggregates",
-            connectionUri: "mongodb://localhost:27017",
-            eventsCollection: "events"
-        };
-        const module = await Test.createTestingModule({ providers: ModuleProviders.create(options) }).compile();
-        const strategy: SnapshotStrategy = module.get(SnapshotStrategy);
-        expect(strategy).toBeDefined();
-        expect(strategy).toBeInstanceOf(NoSnapshotStrategy);
-    });
-
-    test("creates SnapshotStrategy provider with custom strategy", async () => {
+    test("throws when only snapshotStrategy is provided, but no snapshotCollection", async () => {
         const customStrategy = new NoSnapshotStrategy();
+        //@ts-expect-error no snapshotStrategy
         const options: MongodbModuleOptions = {
             aggregatesCollection: "aggregates",
             connectionUri: "mongodb://localhost:27017",
             eventsCollection: "events",
             snapshotStrategy: customStrategy
         };
+
+        expect(() =>
+            Test.createTestingModule({ providers: ModuleProviders.create(options) }).compile()
+        ).rejects.toThrow();
+    });
+
+    test("provides NoOpSnapshotStore when no snapshotStrategy and no snapshotCollection", async () => {
+        const options: MongodbModuleOptions = {
+            aggregatesCollection: "aggregates",
+            connectionUri: "mongodb://localhost:27017",
+            eventsCollection: "events"
+        };
+
         const module = await Test.createTestingModule({ providers: ModuleProviders.create(options) }).compile();
-        const strategy: SnapshotStrategy = module.get(SnapshotStrategy);
-        expect(strategy).toBeDefined();
-        expect(strategy).toBe(customStrategy);
+        expect(module.get(SNAPSHOT_STORE)).toBeInstanceOf(NoOpSnapshotStore);
+    });
+
+    test("throws when only snapshotCollection is provided, but no snapshotStrategy", async () => {
+        //@ts-expect-error no snapshotCollection
+        const options: MongodbModuleOptions = {
+            aggregatesCollection: "aggregates",
+            connectionUri: "mongodb://localhost:27017",
+            eventsCollection: "events",
+            snapshotCollection: "snapshots"
+        };
+
+        expect(() =>
+            Test.createTestingModule({ providers: ModuleProviders.create(options) }).compile()
+        ).rejects.toThrow();
     });
 
     test("creates MongoSnapshotStore provider", async () => {
@@ -127,10 +147,11 @@ describe("create", () => {
             aggregatesCollection: "aggregates",
             connectionUri: "mongodb://localhost:27017",
             eventsCollection: "events",
-            snapshotCollection: "snapshots"
+            snapshotCollection: "snapshots",
+            snapshotStrategy: new NoSnapshotStrategy()
         };
         const module = await Test.createTestingModule({ providers: ModuleProviders.create(options) }).compile();
-        const snapshotStore: MongoSnapshotStore = module.get(MongoSnapshotStore);
+        const snapshotStore: MongoSnapshotStore = module.get(SNAPSHOT_STORE);
         expect(snapshotStore).toBeDefined();
         expect(snapshotStore).toBeInstanceOf(MongoSnapshotStore);
     });
@@ -275,38 +296,38 @@ describe("createAsync", () => {
         expect(MongoClient).toHaveBeenCalledWith("mongodb://localhost:27017", undefined);
     });
 
-    test("creates SnapshotStrategy provider with default NoSnapshotStrategy when options is Promise", async () => {
+    test("throws when no snapshotCollection is provided, but strategy provided", async () => {
         const options: MongoDbModuleAsyncOptions = {
-            useFactory: () => {
-                return Promise.resolve({
-                    aggregatesCollection: "async-aggregates",
-                    connectionUri: "mongodb://localhost:27017",
-                    eventsCollection: "async-events"
-                });
-            }
-        };
-        const module = await Test.createTestingModule({ providers: ModuleProviders.createAsync(options) }).compile();
-        const strategy: SnapshotStrategy = module.get(SnapshotStrategy);
-        expect(strategy).toBeDefined();
-        expect(strategy).toBeInstanceOf(NoSnapshotStrategy);
-    });
-
-    test("creates SnapshotStrategy provider with custom strategy when options is object", async () => {
-        const customStrategy = new NoSnapshotStrategy();
-        const options: MongoDbModuleAsyncOptions = {
+            //@ts-expect-error no snapshotCollection
             useFactory: () => {
                 return {
                     aggregatesCollection: "async-aggregates",
                     connectionUri: "mongodb://localhost:27017",
                     eventsCollection: "async-events",
-                    snapshotStrategy: customStrategy
+                    snapshotStrategy: new NoSnapshotStrategy()
                 };
             }
         };
-        const module = await Test.createTestingModule({ providers: ModuleProviders.createAsync(options) }).compile();
-        const strategy: SnapshotStrategy = module.get(SnapshotStrategy);
-        expect(strategy).toBeDefined();
-        expect(strategy).toBe(customStrategy);
+        expect(() =>
+            Test.createTestingModule({ providers: ModuleProviders.createAsync(options) }).compile()
+        ).rejects.toThrow();
+    });
+
+    test("throws when no strategy is provided, but snapshotCollection is provided", async () => {
+        const options: MongoDbModuleAsyncOptions = {
+            //@ts-expect-error no strategy
+            useFactory: () => {
+                return {
+                    aggregatesCollection: "async-aggregates",
+                    connectionUri: "mongodb://localhost:27017",
+                    eventsCollection: "async-events",
+                    snapshotCollection: "async-snapshots"
+                };
+            }
+        };
+        expect(() =>
+            Test.createTestingModule({ providers: ModuleProviders.createAsync(options) }).compile()
+        ).rejects.toThrow();
     });
 
     test("creates MongoSnapshotStore provider when options is Promise", async () => {
@@ -316,12 +337,13 @@ describe("createAsync", () => {
                     aggregatesCollection: "async-aggregates",
                     connectionUri: "mongodb://localhost:27017",
                     eventsCollection: "async-events",
-                    snapshotCollection: "async-snapshots"
+                    snapshotCollection: "async-snapshots",
+                    snapshotStrategy: new NoSnapshotStrategy()
                 });
             }
         };
         const module = await Test.createTestingModule({ providers: ModuleProviders.createAsync(options) }).compile();
-        const snapshotStore: MongoSnapshotStore = module.get(MongoSnapshotStore);
+        const snapshotStore: MongoSnapshotStore = module.get(SNAPSHOT_STORE);
         expect(snapshotStore).toBeDefined();
         expect(snapshotStore).toBeInstanceOf(MongoSnapshotStore);
     });
@@ -333,14 +355,31 @@ describe("createAsync", () => {
                     aggregatesCollection: "async-aggregates",
                     connectionUri: "mongodb://localhost:27017",
                     eventsCollection: "async-events",
-                    snapshotCollection: "async-snapshots"
+                    snapshotCollection: "async-snapshots",
+                    snapshotStrategy: new NoSnapshotStrategy()
                 };
             }
         };
         const module = await Test.createTestingModule({ providers: ModuleProviders.createAsync(options) }).compile();
-        const snapshotStore: MongoSnapshotStore = module.get(MongoSnapshotStore);
+        const snapshotStore: MongoSnapshotStore = module.get(SNAPSHOT_STORE);
         expect(snapshotStore).toBeDefined();
         expect(snapshotStore).toBeInstanceOf(MongoSnapshotStore);
+    });
+
+    test("creates NoOpSnapshotStore provider when no snapshotCollection and no snapshotStrategy", async () => {
+        const options: MongoDbModuleAsyncOptions = {
+            useFactory: () => {
+                return {
+                    aggregatesCollection: "async-aggregates",
+                    connectionUri: "mongodb://localhost:27017",
+                    eventsCollection: "async-events"
+                };
+            }
+        };
+        const module = await Test.createTestingModule({ providers: ModuleProviders.createAsync(options) }).compile();
+        const snapshotStore: MongoSnapshotStore = module.get(SNAPSHOT_STORE);
+        expect(snapshotStore).toBeDefined();
+        expect(snapshotStore).toBeInstanceOf(NoOpSnapshotStore);
     });
 
     test("creates MongoClient provider when options is Promise", async () => {

@@ -1,5 +1,7 @@
+import { createMock } from "@golevelup/ts-jest";
+
 import { AggregateRoot } from "../aggregate-root/aggregate-root";
-import { AggregateRootName } from "../aggregate-root/aggregate-root-name";
+import { AggregateRootConfig } from "../aggregate-root/aggregate-root-config";
 import { DomainEvent } from "../domain-event";
 import { AnyOfSnapshotStrategy } from "./any-of-snapshot-strategy";
 import { ForCountSnapshotStrategy } from "./for-count-snapshot-strategy";
@@ -18,7 +20,7 @@ class AlwaysTrueStrategy extends SnapshotStrategy {
     }
 }
 
-@AggregateRootName("TestAggregateRoot")
+@AggregateRootConfig({ name: "TestAggregateRoot" })
 class TestAggregateRoot extends AggregateRoot {
     constructor(id: string) {
         super(id);
@@ -73,10 +75,14 @@ describe("AnyOfSnapshotStrategy", () => {
         });
 
         test("returns true when count strategy matches", () => {
-            const aggregateRoot = new TestAggregateRoot("test-id");
-            (aggregateRoot as any)._version = 9;
-            const event1 = new TestEvent1();
-            aggregateRoot.append(event1);
+            const aggregateRoot = createMock<AggregateRoot>({
+                uncommittedEvents: [
+                    {
+                        payload: new TestEvent1()
+                    }
+                ],
+                version: 9
+            });
 
             const strategy = new AnyOfSnapshotStrategy([
                 new ForCountSnapshotStrategy({ count: 10 }),

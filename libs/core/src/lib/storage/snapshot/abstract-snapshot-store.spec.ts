@@ -1,8 +1,12 @@
 import { createMock } from "@golevelup/ts-jest";
+import "reflect-metadata";
 
 import { AggregateRoot } from "../../aggregate-root/aggregate-root";
-import { AggregateRootName } from "../../aggregate-root/aggregate-root-name";
+import { AggregateRootConfig } from "../../aggregate-root/aggregate-root-config";
 import { SnapshotAware } from "../../aggregate-root/snapshot-aware";
+import { AggregateClassNotSnapshotAwareException } from "../../exceptions/aggregate-class-not-snapshot-aware-exception";
+import { AggregateInstanceNotSnapshotAwareException } from "../../exceptions/aggregate-instance-not-snapshot-aware-exception";
+import { MissingAggregateRootNameException } from "../../exceptions/missing-aggregate-root-name-exception";
 import { SnapshotStrategy } from "../../snapshot-strategy/snapshot-strategy";
 import { AbstractSnapshotStore } from "./abstract-snapshot-store";
 import { StoredSnapshot } from "./stored-snapshot";
@@ -12,38 +16,8 @@ interface TestSnapshot {
     value: string;
 }
 
-@AggregateRootName("NoSnapshotMethodsAggregate")
-class NoSnapshotMethodsAggregate extends AggregateRoot {
-    static snapshotRevision = 1;
-
-    constructor(id: string) {
-        super(id);
-    }
-}
-
-@AggregateRootName("NoSnapshotRevisionAggregate")
-class NoSnapshotRevisionAggregate extends AggregateRoot<TestSnapshot> implements SnapshotAware<TestSnapshot> {
-    constructor(id: string) {
-        super(id);
-    }
-
-    override applySnapshot(): void {}
-
-    override toSnapshot(): TestSnapshot {
-        return { count: 0, value: "" };
-    }
-}
-
-@AggregateRootName("RegularAggregate")
-class RegularAggregate extends AggregateRoot {
-    constructor(id: string) {
-        super(id);
-    }
-}
-
-@AggregateRootName("SnapshotAwareAggregate")
-class SnapshotAwareAggregate extends AggregateRoot<TestSnapshot> implements SnapshotAware<TestSnapshot> {
-    static snapshotRevision = 1;
+@AggregateRootConfig({ name: "SnapshotAwareAggregate", snapshotRevision: 1 })
+class SnapshotAwareAggregate extends AggregateRoot implements SnapshotAware<TestSnapshot> {
     private _count = 0;
     private _value = "";
 
@@ -59,7 +33,7 @@ class SnapshotAwareAggregate extends AggregateRoot<TestSnapshot> implements Snap
         return this._value;
     }
 
-    override applySnapshot(snapshot: TestSnapshot): void {
+    applySnapshot(snapshot: TestSnapshot): void {
         this._value = snapshot.value;
         this._count = snapshot.count;
     }
@@ -72,7 +46,7 @@ class SnapshotAwareAggregate extends AggregateRoot<TestSnapshot> implements Snap
         this._value = value;
     }
 
-    override toSnapshot(): TestSnapshot {
+    toSnapshot(): TestSnapshot {
         return {
             count: this._count,
             value: this._value
@@ -80,11 +54,44 @@ class SnapshotAwareAggregate extends AggregateRoot<TestSnapshot> implements Snap
     }
 }
 
+@AggregateRootConfig({ name: "CustomRevisionAggregate", snapshotRevision: 5 })
+class CustomRevisionAggregate extends SnapshotAwareAggregate {
+    constructor(id: string) {
+        super(id);
+    }
+}
+
+class NoNameAggregate extends AggregateRoot {
+    constructor(id: string) {
+        super(id);
+    }
+}
+
+@AggregateRootConfig({ name: "NoSnapshotMethodsAggregate", snapshotRevision: 1 })
+class NoSnapshotMethodsAggregate extends AggregateRoot {
+    constructor(id: string) {
+        super(id);
+    }
+}
+
+@AggregateRootConfig({ name: "NoSnapshotRevisionAggregate" })
+class NoSnapshotRevisionAggregate extends AggregateRoot implements SnapshotAware<TestSnapshot> {
+    constructor(id: string) {
+        super(id);
+    }
+
+    applySnapshot(): void {}
+
+    toSnapshot(): TestSnapshot {
+        return { count: 0, value: "" };
+    }
+}
+
 class TestSnapshotStore extends AbstractSnapshotStore {
     private snapshots: StoredSnapshot[] = [];
 
     async findLatestSnapshotByAggregateId(id: string): Promise<StoredSnapshot | undefined> {
-        return this.snapshots.at(-1);
+        return this.snapshots.find((snapshot) => snapshot.aggregateRootId === id);
     }
 
     async generateEntityId(): Promise<string> {
@@ -106,12 +113,7 @@ describe("AbstractSnapshotStore", () => {
         store = new TestSnapshotStore(mockStrategy);
     });
 
-    describe("when snapshot should be created", () => {
-        beforeEach(() => {
-            mockStrategy.shouldCreateSnapshot.mockResolvedValue(true);
-            SnapshotAwareAggregate.snapshotRevision = 1;
-        });
-
+    describe("create", () => {
         test("creates and saves snapshot for snapshot-aware aggregate", async () => {
             const value = "test-value";
             const count = 5;
@@ -123,17 +125,15 @@ describe("AbstractSnapshotStore", () => {
             aggregate.setCount(count);
             (aggregate as any)._version = aggregateRootVersion;
 
-            jest.spyOn(store, "generateEntityId").mockReturnValue(Promise.resolve(entityId));
+            jest.spyOn(store, "generateEntityId").mockResolvedValue(entityId);
 
-            await store.maybeCreate(aggregate);
-            const snapshot = await store.findLatestSnapshotByAggregateId(aggregate.id);
+            const snapshot = await store.create(aggregate as any);
 
-            expect(mockStrategy.shouldCreateSnapshot).toHaveBeenCalledWith(aggregate);
             expect(snapshot).toBeDefined();
             expect(snapshot?.id).toBe(entityId);
             expect(snapshot?.aggregateRootId).toBe(aggregateRootId);
             expect(snapshot?.aggregateRootVersion).toBe(aggregateRootVersion);
-            expect(snapshot?.revision).toBe(SnapshotAwareAggregate.snapshotRevision);
+            expect(snapshot?.revision).toBe(1);
             expect(snapshot?.payload).toEqual({
                 count,
                 value
@@ -144,10 +144,9 @@ describe("AbstractSnapshotStore", () => {
             const aggregateRootId = "test-id";
             const entityId = "generated-snapshot-id";
             const aggregate = new SnapshotAwareAggregate(aggregateRootId);
-            const generateIdSpy = jest.spyOn(store, "generateEntityId").mockReturnValue(Promise.resolve(entityId));
+            const generateIdSpy = jest.spyOn(store, "generateEntityId").mockResolvedValue(entityId);
 
-            await store.maybeCreate(aggregate);
-            const snapshot = await store.findLatestSnapshotByAggregateId(aggregate.id);
+            const snapshot = await store.create(aggregate as any);
 
             expect(generateIdSpy).toHaveBeenCalledTimes(1);
             expect(snapshot?.id).toEqual(entityId);
@@ -158,7 +157,7 @@ describe("AbstractSnapshotStore", () => {
             const aggregate = new SnapshotAwareAggregate(aggregateRootId);
             const saveSpy = jest.spyOn(store, "save");
 
-            await store.maybeCreate(aggregate);
+            await store.create(aggregate as any);
 
             expect(saveSpy).toHaveBeenCalledTimes(1);
             expect(saveSpy).toHaveBeenCalledWith(expect.any(StoredSnapshot));
@@ -169,18 +168,13 @@ describe("AbstractSnapshotStore", () => {
             const value = "async-value";
             const count = 100;
             const aggregate = new SnapshotAwareAggregate(aggregateRootId);
-            aggregate.setValue(value);
 
-            //@ts-expect-error jest inherits from SnapshotAwareAggregate concrete toSnapshot()
-            jest.spyOn(aggregate, "toSnapshot").mockImplementation(async () => {
-                return {
-                    count,
-                    value
-                };
-            });
+            jest.spyOn(aggregate, "toSnapshot").mockImplementation(() => ({
+                count,
+                value
+            }));
 
-            await store.maybeCreate(aggregate);
-            const snapshot = await store.findLatestSnapshotByAggregateId(aggregate.id);
+            const snapshot = await store.create(aggregate as any);
 
             expect(snapshot?.payload).toEqual({
                 count,
@@ -188,15 +182,12 @@ describe("AbstractSnapshotStore", () => {
             });
         });
 
-        test("uses correct snapshot revision from aggregate class", async () => {
-            const snapshotRevision = 5;
-            const aggregate = new SnapshotAwareAggregate("test-id");
-            SnapshotAwareAggregate.snapshotRevision = snapshotRevision;
+        test("uses snapshot revision from aggregate class metadata", async () => {
+            const aggregate = new CustomRevisionAggregate("test-id");
 
-            await store.maybeCreate(aggregate);
-            const snapshot = await store.findLatestSnapshotByAggregateId(aggregate.id);
+            const snapshot = await store.create(aggregate as any);
 
-            expect(snapshot?.revision).toBe(snapshotRevision);
+            expect(snapshot?.revision).toBe(5);
         });
 
         test("uses current aggregate version for snapshot", async () => {
@@ -205,68 +196,52 @@ describe("AbstractSnapshotStore", () => {
             const aggregate = new SnapshotAwareAggregate(aggregateRootId);
             (aggregate as any)._version = aggregateVersion;
 
-            await store.maybeCreate(aggregate);
-            const snapshot = await store.findLatestSnapshotByAggregateId(aggregate.id);
+            const snapshot = await store.create(aggregate as any);
 
             expect(snapshot?.aggregateRootVersion).toBe(aggregateVersion);
         });
     });
 
-    describe("when snapshot should not be created", () => {
-        test("does not create snapshot when strategy returns false", async () => {
-            mockStrategy.shouldCreateSnapshot.mockResolvedValue(false);
-            const aggregate = new SnapshotAwareAggregate("test-id");
+    describe("shouldCreateSnapshot", () => {
+        test("returns false when strategy returns false", () => {
+            mockStrategy.shouldCreateSnapshot.mockReturnValue(false);
+            const aggregate = new NoNameAggregate("test-id");
 
-            await store.maybeCreate(aggregate);
+            const result = store.shouldCreateSnapshot(aggregate);
 
-            const snapshot = await store.findLatestSnapshotByAggregateId(aggregate.id);
-            const saveSpy = jest.spyOn(store, "save");
-
+            expect(mockStrategy.shouldCreateSnapshot).toHaveBeenCalledTimes(1);
             expect(mockStrategy.shouldCreateSnapshot).toHaveBeenCalledWith(aggregate);
-            expect(snapshot).toBeUndefined();
-            expect(saveSpy).not.toHaveBeenCalled();
+            expect(result).toBe(false);
         });
 
-        test("does not create snapshot for aggregate without snapshot methods", async () => {
-            mockStrategy.shouldCreateSnapshot.mockResolvedValue(true);
+        test("throws when aggregate root name is missing", () => {
+            mockStrategy.shouldCreateSnapshot.mockReturnValue(true);
+            const aggregate = new NoNameAggregate("test-id");
+
+            expect(() => store.shouldCreateSnapshot(aggregate)).toThrow(MissingAggregateRootNameException);
+        });
+
+        test("throws when aggregate instance is not snapshot aware", () => {
+            mockStrategy.shouldCreateSnapshot.mockReturnValue(true);
             const aggregate = new NoSnapshotMethodsAggregate("test-id");
 
-            await store.maybeCreate(aggregate);
-
-            const snapshot = await store.findLatestSnapshotByAggregateId(aggregate.id);
-            const saveSpy = jest.spyOn(store, "save");
-
-            expect(mockStrategy.shouldCreateSnapshot).toHaveBeenCalledWith(aggregate);
-            expect(snapshot).toBeUndefined();
-            expect(saveSpy).not.toHaveBeenCalled();
+            expect(() => store.shouldCreateSnapshot(aggregate)).toThrow(AggregateInstanceNotSnapshotAwareException);
         });
 
-        test("does not create snapshot for aggregate class without snapshotRevision", async () => {
-            mockStrategy.shouldCreateSnapshot.mockResolvedValue(true);
+        test("throws when aggregate class is not snapshot aware", () => {
+            mockStrategy.shouldCreateSnapshot.mockReturnValue(true);
             const aggregate = new NoSnapshotRevisionAggregate("test-id");
 
-            await store.maybeCreate(aggregate);
-
-            const snapshot = await store.findLatestSnapshotByAggregateId(aggregate.id);
-            const saveSpy = jest.spyOn(store, "save");
-
-            expect(mockStrategy.shouldCreateSnapshot).toHaveBeenCalledWith(aggregate);
-            expect(snapshot).toBeUndefined();
-            expect(saveSpy).not.toHaveBeenCalled();
+            expect(() => store.shouldCreateSnapshot(aggregate)).toThrow(AggregateClassNotSnapshotAwareException);
         });
 
-        test("does not create snapshot for regular aggregate", async () => {
-            mockStrategy.shouldCreateSnapshot.mockResolvedValue(true);
-            const aggregate = new RegularAggregate("test-id");
+        test("returns true for snapshot-aware aggregate with snapshotRevision", () => {
+            mockStrategy.shouldCreateSnapshot.mockReturnValue(true);
+            const aggregate = new SnapshotAwareAggregate("test-id");
 
-            await store.maybeCreate(aggregate);
+            const result = store.shouldCreateSnapshot(aggregate);
 
-            const snapshot = await store.findLatestSnapshotByAggregateId(aggregate.id);
-            const saveSpy = jest.spyOn(store, "save");
-
-            expect(mockStrategy.shouldCreateSnapshot).toHaveBeenCalledWith(aggregate);
-            expect(snapshot).toBeUndefined();
-            expect(saveSpy).not.toHaveBeenCalled();
+            expect(result).toBe(true);
         });
     });
 });

@@ -1,6 +1,5 @@
-import { Class } from "type-fest";
-
 import { AggregateRoot } from "../aggregate-root/aggregate-root";
+import { Class } from "../utils/type-utils";
 import { SnapshotStrategy } from "./snapshot-strategy";
 
 export interface ForEventsSnapshotStrategyConfig {

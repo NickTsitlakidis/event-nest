@@ -1,4 +1,4 @@
-import { AggregateRoot, SnapshotStrategy, StoredEvent, StoredSnapshot } from "@event-nest/core";
+import { SnapshotStrategy, StoredSnapshot } from "@event-nest/core";
 import { createMock } from "@golevelup/ts-jest";
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from "@testcontainers/postgresql";
 import { knex } from "knex";
@@ -15,55 +15,6 @@ let connectionUri: string;
 let knexConnection: knex.Knex;
 const schema = "event_nest_tests";
 const snapshotStrategy = createMock<SnapshotStrategy>();
-
-interface TestSnapshot {
-    someData: string;
-}
-
-class SnapshotAwareAggregateRoot extends AggregateRoot<TestSnapshot> {
-    static snapshotRevision = 7;
-    someData = "";
-
-    constructor(id: string) {
-        super(id);
-    }
-
-    override applySnapshot(snapshot: TestSnapshot): void {
-        this.someData = snapshot.someData;
-    }
-
-    override toSnapshot(): TestSnapshot {
-        return {
-            someData: this.someData
-        };
-    }
-}
-
-class SnapshotAwareInstanceButNoRevision extends AggregateRoot<TestSnapshot> {
-    someData = "";
-
-    constructor(id: string) {
-        super(id);
-    }
-
-    override applySnapshot(snapshot: TestSnapshot): void {
-        this.someData = snapshot.someData;
-    }
-
-    override toSnapshot(): TestSnapshot {
-        return {
-            someData: this.someData
-        };
-    }
-}
-
-class WithRevisionButNotSnapshotAwareInstance extends AggregateRoot {
-    static snapshotRevision = 1;
-
-    constructor(id: string) {
-        super(id);
-    }
-}
 
 describe("PostgreSQLSnapshotStore", () => {
     beforeAll(async () => {
@@ -107,7 +58,7 @@ describe("PostgreSQLSnapshotStore", () => {
     beforeEach(async () => {
         store = new PostgreSQLSnapshotStore(
             snapshotStrategy,
-            new SchemaConfiguration(schema, "es-aggregates", "es-events", "es-snapshots"),
+            new SchemaConfiguration(schema, "es-aggregates", "es-events", "es-snapshots").schemaAwareSnapshotTable!,
             knexConnection
         );
     });
@@ -124,18 +75,7 @@ describe("PostgreSQLSnapshotStore", () => {
         jest.clearAllMocks();
     });
 
-    describe("findLatestSnapshotByAggregateId tests", () => {
-        test("returns undefined when snapshot table is not configured", async () => {
-            const noSnapshotTableStore = new PostgreSQLSnapshotStore(
-                snapshotStrategy,
-                new SchemaConfiguration(schema, "es-aggregates", "es-events"),
-                knexConnection
-            );
-
-            const snapshot = await noSnapshotTableStore.findLatestSnapshotByAggregateId(randomUUID());
-            expect(snapshot).toBeUndefined();
-        });
-
+    describe("findLatestSnapshotByAggregateId", () => {
         test("returns undefined when snapshot is not found", async () => {
             const aggregateRootId = randomUUID();
 
@@ -205,134 +145,37 @@ describe("PostgreSQLSnapshotStore", () => {
         });
     });
 
-    describe("save tests", () => {
-        test("returns undefined when snapshot table is not configured", async () => {
-            const noSnapshotTableStore = new PostgreSQLSnapshotStore(
-                snapshotStrategy,
-                new SchemaConfiguration(schema, "es-aggregates", "es-events"),
-                knexConnection
-            );
-
-            const snapshot = StoredSnapshot.create(randomUUID(), 1, 1, { someData: "test" }, randomUUID());
-            const saved = await noSnapshotTableStore.save(snapshot);
-            expect(saved).toBeUndefined();
-        });
-
+    describe("save", () => {
         test("saves snapshot row and returns snapshot", async () => {
             const aggregateRootId = randomUUID();
+            const version = 10;
             const snapshotId = randomUUID();
-
+            const revision = 3;
             await knexConnection<AggregateRootRow>(schema + ".es-aggregates").insert({
                 id: aggregateRootId,
-                version: 10
+                version
             });
-
-            const snapshot = StoredSnapshot.create(snapshotId, 10, 3, { someData: "snapshot-data" }, aggregateRootId);
-
+            const snapshot = StoredSnapshot.create(
+                snapshotId,
+                version,
+                revision,
+                { someData: "snapshot-data" },
+                aggregateRootId
+            );
             const saved = await store.save(snapshot);
-
             const rows = await knexConnection<SnapshotRow>(schema + ".es-snapshots").select("*");
             expect(rows.length).toBe(1);
             expect(rows[0].id).toBe(snapshotId);
             expect(rows[0].aggregate_root_id).toBe(aggregateRootId);
-            expect(rows[0].aggregate_root_version).toBe(10);
-            expect(rows[0].revision).toBe(3);
+            expect(rows[0].aggregate_root_version).toBe(version);
+            expect(rows[0].revision).toBe(revision);
             expect(rows[0].payload).toEqual({ someData: "snapshot-data" });
-
             expect(saved).toEqual(snapshot);
         });
     });
 
-    test("generateEntityId - returns string with UUID format", async () => {
+    test("generateEntityId", async () => {
         const id = await store.generateEntityId();
         expect(/^[a-z,0-9-]{36}$/.test(id)).toBe(true);
-    });
-
-    describe("maybeCreate tests", () => {
-        test("does nothing when snapshot strategy does not create snapshot", async () => {
-            snapshotStrategy.shouldCreateSnapshot.mockResolvedValue(false);
-
-            const aggregateRootId = randomUUID();
-            const aggregate = new SnapshotAwareAggregateRoot(aggregateRootId);
-            aggregate.someData = "x";
-
-            await knexConnection<AggregateRootRow>(schema + ".es-aggregates").insert({
-                id: aggregateRootId,
-                version: 10
-            });
-
-            const res = await store.maybeCreate(aggregate);
-
-            const rows = await knexConnection<SnapshotRow>(schema + ".es-snapshots").select("*");
-            expect(rows.length).toBe(0);
-            expect(res).toBe(false);
-        });
-
-        test("does nothing when aggregate instance is not snapshot aware", async () => {
-            snapshotStrategy.shouldCreateSnapshot.mockResolvedValue(true);
-
-            const aggregateRootId = randomUUID();
-            const aggregate = new WithRevisionButNotSnapshotAwareInstance(aggregateRootId);
-
-            await knexConnection<AggregateRootRow>(schema + ".es-aggregates").insert({
-                id: aggregateRootId,
-                version: 10
-            });
-
-            const res = await store.maybeCreate(aggregate);
-
-            const rows = await knexConnection<SnapshotRow>(schema + ".es-snapshots").select("*");
-            expect(rows.length).toBe(0);
-            expect(res).toBe(false);
-        });
-
-        test("does nothing when aggregate class is not snapshot aware", async () => {
-            snapshotStrategy.shouldCreateSnapshot.mockResolvedValue(true);
-
-            const aggregateRootId = randomUUID();
-            const aggregate = new SnapshotAwareInstanceButNoRevision(aggregateRootId);
-            aggregate.someData = "x";
-
-            await knexConnection<AggregateRootRow>(schema + ".es-aggregates").insert({
-                id: aggregateRootId,
-                version: 10
-            });
-
-            const res = await store.maybeCreate(aggregate);
-
-            const rows = await knexConnection<SnapshotRow>(schema + ".es-snapshots").select("*");
-            expect(rows.length).toBe(0);
-            expect(res).toBe(false);
-        });
-
-        test("creates snapshot when aggregate is snapshot aware and strategy matches", async () => {
-            snapshotStrategy.shouldCreateSnapshot.mockResolvedValue(true);
-
-            const aggregateRootId = randomUUID();
-            const aggregate = new SnapshotAwareAggregateRoot(aggregateRootId);
-            aggregate.someData = "snapshot-value";
-            aggregate.resolveVersion([
-                StoredEvent.fromStorage(randomUUID(), aggregateRootId, "event", new Date(), 10, "name", {})
-            ]);
-
-            await knexConnection<AggregateRootRow>(schema + ".es-aggregates").insert({
-                id: aggregateRootId,
-                version: 10
-            });
-
-            const generatedSnapshotId = randomUUID();
-            jest.spyOn(store, "generateEntityId").mockResolvedValue(generatedSnapshotId);
-
-            const res = await store.maybeCreate(aggregate);
-
-            const rows = await knexConnection<SnapshotRow>(schema + ".es-snapshots").select("*");
-            expect(res).toBe(true);
-            expect(rows.length).toBe(1);
-            expect(rows[0].id).toBe(generatedSnapshotId);
-            expect(rows[0].aggregate_root_id).toBe(aggregateRootId);
-            expect(rows[0].aggregate_root_version).toBe(10);
-            expect(rows[0].revision).toBe(SnapshotAwareAggregateRoot.snapshotRevision);
-            expect(rows[0].payload).toEqual({ someData: "snapshot-value" });
-        });
     });
 });

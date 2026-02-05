@@ -1,3 +1,5 @@
+import { createMock } from "@golevelup/ts-jest";
+
 import { AggregateRoot } from "../aggregate-root/aggregate-root";
 import { AggregateRootName } from "../aggregate-root/aggregate-root-name";
 import { DomainEvent } from "../domain-event";
@@ -28,8 +30,6 @@ class TestAggregateRoot extends AggregateRoot {
 
 @AggregateRootName("TestAggregateRoot2")
 class TestAggregateRoot2 extends AggregateRoot {
-    static snapshotRevision = 1;
-
     constructor(id: string) {
         super(id);
     }
@@ -68,10 +68,14 @@ describe("AllOfSnapshotStrategy", () => {
         });
 
         test("returns true when all real strategies match", () => {
-            const aggregateRoot = new TestAggregateRoot("test-id");
-            (aggregateRoot as any)._version = 9;
-            const event1 = new TestEvent1();
-            aggregateRoot.append(event1);
+            const aggregateRoot = createMock<AggregateRoot>({
+                uncommittedEvents: [
+                    {
+                        payload: new TestEvent1()
+                    }
+                ],
+                version: 9
+            });
 
             const strategy = new AllOfSnapshotStrategy([
                 new ForCountSnapshotStrategy({ count: 10 }),
@@ -82,10 +86,14 @@ describe("AllOfSnapshotStrategy", () => {
         });
 
         test("returns true when multiple count and event strategies all match", () => {
-            const aggregateRoot = new TestAggregateRoot("test-id");
-            (aggregateRoot as any)._version = 9;
-            const event1 = new TestEvent1();
-            aggregateRoot.append(event1);
+            const aggregateRoot = createMock<AggregateRoot>({
+                uncommittedEvents: [
+                    {
+                        payload: new TestEvent1()
+                    }
+                ],
+                version: 9
+            });
 
             const strategy = new AllOfSnapshotStrategy([
                 new ForCountSnapshotStrategy({ count: 10 }),
@@ -130,10 +138,14 @@ describe("AllOfSnapshotStrategy", () => {
         });
 
         test("returns false when event strategy does not match", () => {
-            const aggregateRoot = new TestAggregateRoot("test-id");
-            (aggregateRoot as any)._version = 9;
-            const event1 = new TestEvent1();
-            aggregateRoot.append(event1);
+            const aggregateRoot = createMock<AggregateRoot>({
+                uncommittedEvents: [
+                    {
+                        payload: new TestEvent1()
+                    }
+                ],
+                version: 9
+            });
 
             const strategy = new AllOfSnapshotStrategy([
                 new ForCountSnapshotStrategy({ count: 10 }),
@@ -144,10 +156,14 @@ describe("AllOfSnapshotStrategy", () => {
         });
 
         test("returns false when only some strategies match", () => {
-            const aggregateRoot = new TestAggregateRoot("test-id");
-            (aggregateRoot as any)._version = 9;
-            const event1 = new TestEvent1();
-            aggregateRoot.append(event1);
+            const aggregateRoot = createMock<AggregateRoot>({
+                uncommittedEvents: [
+                    {
+                        payload: new TestEvent1()
+                    }
+                ],
+                version: 9
+            });
 
             const strategy = new AllOfSnapshotStrategy([
                 new ForCountSnapshotStrategy({ count: 10 }),
@@ -159,10 +175,14 @@ describe("AllOfSnapshotStrategy", () => {
         });
 
         test("returns false when aggregate strategy does not match", () => {
-            const aggregateRoot = new TestAggregateRoot("test-id");
-            (aggregateRoot as any)._version = 9;
-            const event1 = new TestEvent1();
-            aggregateRoot.append(event1);
+            const aggregateRoot = createMock<AggregateRoot>({
+                uncommittedEvents: [
+                    {
+                        payload: new TestEvent1()
+                    }
+                ],
+                version: 9
+            });
 
             const strategy = new AllOfSnapshotStrategy([
                 new ForCountSnapshotStrategy({ count: 10 }),

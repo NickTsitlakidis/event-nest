@@ -2,21 +2,19 @@ import { Logger } from "@nestjs/common";
 import { isNil } from "es-toolkit";
 
 import { AggregateRoot } from "../aggregate-root/aggregate-root";
-import { getAggregateRootName } from "../aggregate-root/aggregate-root-name";
-import { SnapshotAwareAggregateClass } from "../storage/event-store";
+import { getAggregateRootName } from "../aggregate-root/aggregate-root-config";
+import { AggregateRootClass } from "../storage/event-store";
 import { SnapshotStrategy } from "./snapshot-strategy";
 
 export interface ForAggregateRootsStrategyConfig {
-    aggregates: SnapshotAwareAggregateClass[];
+    aggregates: AggregateRootClass<unknown>[];
 }
 
 /**
  * A snapshot strategy that creates snapshots only for a specific list of aggregate root types.
  * This strategy is useful when you want to enable snapshotting for certain aggregates while
  * excluding others.
- *
- * The aggregate root classes provided must be decorated with the {@link AggregateRootName} decorator
- * to be properly identified.
+ * It is meant to be used alongside with the {@link AllOfSnapshotStrategy} to filter out snapshot creation for specific aggregate root types.
  *
  * @example
  * ```typescript

@@ -9,7 +9,7 @@ import { SubscriptionException } from "../exceptions/subscription-exception";
 import { UnknownEventVersionException } from "../exceptions/unknown-event-version-exception";
 import { PublishedDomainEvent } from "../published-domain-event";
 import { AbstractEventStore } from "./abstract-event-store";
-import { AggregateRootClass, AggregateRootSnapshot, SnapshotAwareAggregateClass } from "./event-store";
+import { AggregateRootClass, AggregateRootSnapshot } from "./event-store";
 import { AbstractSnapshotStore } from "./snapshot/abstract-snapshot-store";
 import { StoredAggregateRoot } from "./stored-aggregate-root";
 import { StoredEvent } from "./stored-event";
@@ -33,13 +33,15 @@ class TestEvent {
     constructor(public someProperty: string) {}
 }
 
-const snapshotStore = createMock<AbstractSnapshotStore>();
+const snapshotStore = createMock<AbstractSnapshotStore>({
+    shouldCreateSnapshot: jest.fn().mockReturnValue(false)
+});
 
 class TestStore extends AbstractEventStore {
     savedAggregate: StoredAggregateRoot | undefined;
     savedEvents: Array<StoredEvent> = [];
-    constructor() {
-        super(eventEmitter, snapshotStore);
+    constructor(eventEmitterProvider = eventEmitter, snapshotStoreProvider = snapshotStore) {
+        super(eventEmitterProvider, snapshotStoreProvider);
     }
 
     findAggregateRootVersion(): Promise<number> {
@@ -50,15 +52,12 @@ class TestStore extends AbstractEventStore {
         return Promise.resolve([]);
     }
 
-    async findByAggregateRootIds<T extends AggregateRoot>(
-        aggregateRootClass: AggregateRootClass<T>,
-        ids: string[]
-    ): Promise<Record<string, Array<StoredEvent>>> {
+    async findByAggregateRootIds() {
         return {};
     }
 
     override findWithSnapshot<T extends AggregateRoot>(
-        aggregateRootClass: SnapshotAwareAggregateClass<T>,
+        aggregateRootClass: AggregateRootClass<T>,
         id: string
     ): Promise<{ events: Array<StoredEvent>; snapshot: AggregateRootSnapshot<T> }> {
         return Promise.resolve({
@@ -131,15 +130,52 @@ describe("addPublisher", () => {
         expect(eventEmitter.emitMultiple).toHaveBeenCalledTimes(1);
     });
 
-    test("publisher calls snapshotStore.maybeCreate with aggregate", async () => {
+    test("publisher calls snapshotStore.shouldCreateSnapshot with aggregate", async () => {
+        const snapshotStore = createMock<AbstractSnapshotStore>({
+            shouldCreateSnapshot: jest.fn().mockReturnValue(false)
+        });
+
         const creationDate = new Date();
-        const store = new TestStore();
+        const store = new TestStore(eventEmitter, snapshotStore);
         const entity = store.addPublisher(new TestEntity());
         const toPublish = [{ aggregateRootId: "id", occurredAt: creationDate, payload: new TestEvent("test") }];
         await entity.publish(toPublish);
 
-        expect(snapshotStore.maybeCreate).toHaveBeenCalledTimes(1);
-        expect(snapshotStore.maybeCreate).toHaveBeenCalledWith(entity);
+        expect(snapshotStore.shouldCreateSnapshot).toHaveBeenCalledTimes(1);
+        expect(snapshotStore.shouldCreateSnapshot).toHaveBeenCalledWith(entity);
+    });
+
+    test("publisher calls snapshotStore.create if the strategy matches", async () => {
+        const snapshotStore = createMock<AbstractSnapshotStore>({
+            create: jest.fn().mockResolvedValue({}),
+            shouldCreateSnapshot: jest.fn().mockReturnValue(true)
+        });
+
+        const creationDate = new Date();
+        const store = new TestStore(eventEmitter, snapshotStore);
+        const entity = store.addPublisher(new TestEntity());
+        const toPublish = [{ aggregateRootId: "id", occurredAt: creationDate, payload: new TestEvent("test") }];
+        await entity.publish(toPublish);
+
+        expect(snapshotStore.shouldCreateSnapshot).toHaveBeenCalledTimes(1);
+        expect(snapshotStore.shouldCreateSnapshot).toHaveBeenCalledWith(entity);
+        expect(snapshotStore.create).toHaveBeenCalledTimes(1);
+        expect(snapshotStore.create).toHaveBeenCalledWith(entity);
+    });
+
+    test("publisher stop execution in case shouldCreateSnapshot throws", async () => {
+        const snapshotStore = createMock<AbstractSnapshotStore>({
+            create: jest.fn().mockResolvedValue({}),
+            shouldCreateSnapshot: jest.fn().mockImplementation(() => {
+                throw new Error("ooops");
+            })
+        });
+
+        const creationDate = new Date();
+        const store = new TestStore(eventEmitter, snapshotStore);
+        const entity = store.addPublisher(new TestEntity());
+        const toPublish = [{ aggregateRootId: "id", occurredAt: creationDate, payload: new TestEvent("test") }];
+        await expect(entity.publish(toPublish)).rejects.toThrow();
     });
 
     test("publisher throws when id generation throws", async () => {

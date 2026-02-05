@@ -1,14 +1,14 @@
 import {
     AbstractEventStore,
+    AggregateClassNotSnapshotAwareException,
     AggregateRoot,
     AggregateRootClass,
     AggregateRootSnapshot,
     DomainEventEmitter,
     EventConcurrencyException,
     getAggregateRootName,
+    getAggregateRootSnapshotRevision,
     MissingAggregateRootNameException,
-    NoSnapshotFoundException,
-    SnapshotAwareAggregateClass,
     SnapshotRevisionMismatchException,
     StoredAggregateRoot,
     StoredEvent
@@ -130,10 +130,10 @@ export class MongoEventStore extends AbstractEventStore {
         return grouped;
     }
 
-    override async findWithSnapshot<T extends AggregateRoot>(
-        aggregateRootClass: SnapshotAwareAggregateClass<T>,
+    async findWithSnapshot<T extends AggregateRoot>(
+        aggregateRootClass: AggregateRootClass<T>,
         id: string
-    ): Promise<{ events: Array<StoredEvent>; snapshot: AggregateRootSnapshot<T> }> {
+    ): Promise<{ events: Array<StoredEvent>; snapshot?: AggregateRootSnapshot<T> }> {
         const aggregateRootName = getAggregateRootName(aggregateRootClass);
         if (isNil(aggregateRootName)) {
             this._logger.error(
@@ -142,12 +142,20 @@ export class MongoEventStore extends AbstractEventStore {
             throw new MissingAggregateRootNameException(aggregateRootClass.name);
         }
 
-        const snapshot = await this._snapshotStore.findLatestSnapshotByAggregateId(id);
-        if (!snapshot) {
-            throw new NoSnapshotFoundException(aggregateRootName);
+        const snapshotRevision = getAggregateRootSnapshotRevision(aggregateRootClass);
+        if (isNil(snapshotRevision)) {
+            this._logger.error(
+                `Missing snapshot revision for class: ${aggregateRootClass.name}. Use the @AggregateRootConfig decorator to set the snapshotRevision.`
+            );
+            throw new AggregateClassNotSnapshotAwareException(aggregateRootName);
         }
 
-        if (snapshot.revision != aggregateRootClass.snapshotRevision) {
+        const snapshot = await this._snapshotStore.findLatestSnapshotByAggregateId(id);
+        if (!snapshot) {
+            return { events: await this.findByAggregateRootId(aggregateRootClass, id), snapshot: undefined };
+        }
+
+        if (snapshot.revision != snapshotRevision) {
             throw new SnapshotRevisionMismatchException(aggregateRootName);
         }
 
@@ -157,7 +165,7 @@ export class MongoEventStore extends AbstractEventStore {
             .find({
                 aggregateRootId: id,
                 aggregateRootName: aggregateRootName,
-                aggregateRootVersion: { $gte: snapshot.aggregateRootVersion }
+                aggregateRootVersion: { $gt: snapshot.aggregateRootVersion }
             })
             .toArray();
 

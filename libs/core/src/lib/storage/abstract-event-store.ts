@@ -1,15 +1,15 @@
 import { isNil } from "es-toolkit";
 
 import { AggregateRoot } from "../aggregate-root/aggregate-root";
+import { getAggregateRootName } from "../aggregate-root/aggregate-root-config";
 import { AggregateRootEvent } from "../aggregate-root/aggregate-root-event";
-import { getAggregateRootName } from "../aggregate-root/aggregate-root-name";
 import { DomainEventEmitter } from "../domain-event-emitter";
 import { IdGenerationException } from "../exceptions/id-generation-exception";
 import { MissingAggregateRootNameException } from "../exceptions/missing-aggregate-root-name-exception";
 import { UnknownEventVersionException } from "../exceptions/unknown-event-version-exception";
 import { PublishedDomainEvent } from "../published-domain-event";
 import { hasAllValues } from "../utils/type-utils";
-import { AggregateRootClass, AggregateRootSnapshot, EventStore, SnapshotAwareAggregateClass } from "./event-store";
+import { AggregateRootClass, AggregateRootSnapshot, EventStore } from "./event-store";
 import { AbstractSnapshotStore } from "./snapshot/abstract-snapshot-store";
 import { StoredAggregateRoot } from "./stored-aggregate-root";
 import { StoredEvent } from "./stored-event";
@@ -40,6 +40,7 @@ export abstract class AbstractEventStore implements EventStore {
             if (ids.length !== events.length || !hasAllValues(ids)) {
                 throw new IdGenerationException(ids.length, events.length);
             }
+            const shouldCreateSnapshot = this._snapshotStore.shouldCreateSnapshot(aggregateRoot);
             const published: Array<PublishedDomainEvent<object>> = [];
             const storedEvents: Array<StoredEvent> = [];
 
@@ -63,7 +64,10 @@ export abstract class AbstractEventStore implements EventStore {
 
             const toStore = new StoredAggregateRoot(aggregateRoot.id, aggregateRoot.version);
             const saved = await this.save(storedEvents, toStore);
-            await this._snapshotStore.maybeCreate(aggregateRoot);
+
+            if (shouldCreateSnapshot) {
+                await this._snapshotStore.create(aggregateRoot);
+            }
 
             for (const publishedEvent of published) {
                 const found = saved.find((s) => s.id === publishedEvent.eventId);
@@ -94,11 +98,11 @@ export abstract class AbstractEventStore implements EventStore {
     ): Promise<Record<string, Array<StoredEvent>>>;
 
     abstract findWithSnapshot<T extends AggregateRoot>(
-        aggregateRootClass: SnapshotAwareAggregateClass<T>,
+        aggregateRootClass: AggregateRootClass<T>,
         id: string
     ): Promise<{
         events: Array<StoredEvent>;
-        snapshot: AggregateRootSnapshot<T>;
+        snapshot?: AggregateRootSnapshot<T>;
     }>;
 
     abstract generateEntityId(): Promise<string>;

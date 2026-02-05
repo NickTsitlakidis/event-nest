@@ -1,4 +1,10 @@
-import { DomainEventEmitter, EVENT_STORE, NoSnapshotStrategy, SnapshotStrategy } from "@event-nest/core";
+import {
+    AbstractSnapshotStore,
+    DomainEventEmitter,
+    EVENT_STORE,
+    NoOpSnapshotStore,
+    SNAPSHOT_STORE
+} from "@event-nest/core";
 import { Provider } from "@nestjs/common";
 import { isNil } from "es-toolkit";
 import { knex } from "knex";
@@ -36,18 +42,32 @@ export class ModuleProviders {
                 useValue: buildKnexConnection(options)
             },
             {
-                inject: [SnapshotStrategy, SchemaConfiguration, KNEX_CONNECTION],
-                provide: PostgreSQLSnapshotStore,
+                inject: [KNEX_CONNECTION, SchemaConfiguration],
+                provide: SNAPSHOT_STORE,
                 useFactory: (
-                    strategy: SnapshotStrategy,
-                    schemaConfiguration: SchemaConfiguration,
-                    knexConnection: knex.Knex
-                ) => {
-                    return new PostgreSQLSnapshotStore(strategy, schemaConfiguration, knexConnection);
+                    knexConnection: knex.Knex,
+                    schemaConfiguration: SchemaConfiguration
+                ): AbstractSnapshotStore => {
+                    const { snapshotStrategy, snapshotTableName } = options;
+                    if (Boolean(snapshotStrategy) !== Boolean(snapshotTableName)) {
+                        throw new Error(
+                            "To use snapshots, both 'snapshotStrategy' and 'snapshotTableName' must be provided."
+                        );
+                    }
+
+                    if (!snapshotTableName || !snapshotStrategy) {
+                        return new NoOpSnapshotStore();
+                    }
+
+                    return new PostgreSQLSnapshotStore(
+                        snapshotStrategy,
+                        schemaConfiguration.schemaAwareSnapshotTable!,
+                        knexConnection
+                    );
                 }
             },
             {
-                inject: [DomainEventEmitter, KNEX_CONNECTION, PostgreSQLSnapshotStore, SchemaConfiguration],
+                inject: [DomainEventEmitter, KNEX_CONNECTION, SNAPSHOT_STORE, SchemaConfiguration],
                 provide: EVENT_STORE,
                 useFactory: (
                     eventEmitter: DomainEventEmitter,
@@ -68,10 +88,6 @@ export class ModuleProviders {
                         knexConnection
                     );
                 }
-            },
-            {
-                provide: SnapshotStrategy,
-                useFactory: () => options.snapshotStrategy || new NoSnapshotStrategy()
             }
         ];
     }
@@ -115,7 +131,7 @@ export class ModuleProviders {
         };
 
         const eventStoreProvider = {
-            inject: [DomainEventEmitter, KNEX_CONNECTION, PostgreSQLSnapshotStore, SchemaConfiguration],
+            inject: [DomainEventEmitter, KNEX_CONNECTION, SNAPSHOT_STORE, SchemaConfiguration],
             provide: EVENT_STORE,
             useFactory: (
                 emitter: DomainEventEmitter,
@@ -143,21 +159,30 @@ export class ModuleProviders {
             }
         };
 
-        const snapshotStrategyProvider = {
-            inject: ["EVENT_NEST_PG_OPTIONS"],
-            provide: SnapshotStrategy,
-            useFactory: (options: PostgreSQLModuleOptions) => options.snapshotStrategy || new NoSnapshotStrategy()
-        };
-
-        const snapshotStoreInject = {
-            inject: [SnapshotStrategy, KNEX_CONNECTION, SchemaConfiguration],
-            provide: PostgreSQLSnapshotStore,
+        const snapshotStoreProvider = {
+            inject: ["EVENT_NEST_PG_OPTIONS", KNEX_CONNECTION, SchemaConfiguration],
+            provide: SNAPSHOT_STORE,
             useFactory: (
-                strategy: SnapshotStrategy,
+                options: PostgreSQLModuleOptions,
                 knexConnection: knex.Knex,
                 schemaConfiguration: SchemaConfiguration
             ) => {
-                return new PostgreSQLSnapshotStore(strategy, schemaConfiguration, knexConnection);
+                const { snapshotStrategy, snapshotTableName } = options;
+                if (Boolean(snapshotStrategy) !== Boolean(snapshotTableName)) {
+                    throw new Error(
+                        "To use snapshots, both 'snapshotStrategy' and 'snapshotTableName' must be provided."
+                    );
+                }
+
+                if (!snapshotTableName || !snapshotStrategy) {
+                    return new NoOpSnapshotStore();
+                }
+
+                return new PostgreSQLSnapshotStore(
+                    snapshotStrategy,
+                    schemaConfiguration.schemaAwareSnapshotTable!,
+                    knexConnection
+                );
             }
         };
 
@@ -167,8 +192,7 @@ export class ModuleProviders {
             emitterProvider,
             eventStoreProvider,
             tableInitializerProvider,
-            snapshotStrategyProvider,
-            snapshotStoreInject,
+            snapshotStoreProvider,
             schemaConfigurationProvider
         ];
     }
