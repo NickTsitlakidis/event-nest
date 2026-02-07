@@ -25,16 +25,9 @@ export class Order extends AggregateRoot implements SnapshotAware<OrderModel> {
         return order;
     }
 
-    public static fromEvents(id: string, events: Array<StoredEvent>): Order {
+    public static fromEvents(id: string, events: Array<StoredEvent>, snapshot?: OrderModel): Order {
         const order = new Order(id);
-        order.reconstitute(events);
-        return order;
-    }
-
-    public static fromSnapshot(id: string, snapshot: OrderModel, events: Array<StoredEvent>): Order {
-        const order = new Order(id);
-        order.applySnapshot(snapshot);
-        order.reconstitute(events);
+        order.reconstitute(events, snapshot);
         return order;
     }
 

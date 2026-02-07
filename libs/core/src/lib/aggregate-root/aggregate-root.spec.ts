@@ -1,13 +1,50 @@
 import { Logger } from "@nestjs/common";
 
 import { DomainEvent } from "../domain-event";
+import { AggregateInstanceNotSnapshotAwareException } from "../exceptions/aggregate-instance-not-snapshot-aware-exception";
 import { SubscriptionException } from "../exceptions/subscription-exception";
 import { UnknownEventException } from "../exceptions/unknown-event-exception";
 import { UnregisteredEventException } from "../exceptions/unregistered-event-exception";
 import { StoredEvent } from "../storage/stored-event";
 import { AggregateRoot } from "./aggregate-root";
+import { AggregateRootConfig } from "./aggregate-root-config";
 import { AggregateRootEvent } from "./aggregate-root-event";
 import { ApplyEvent } from "./apply-event.decorator";
+import { SnapshotAware } from "./snapshot-aware";
+
+@DomainEvent("event-with-value")
+class EventWithValue {
+    constructor(public value: string) {}
+}
+
+@AggregateRootConfig({ name: "NotSnapshotAwareRoot", snapshotRevision: 1 })
+class NotSnapshotAwareRoot extends AggregateRoot {
+    constructor(id: string) {
+        super(id);
+    }
+}
+
+@AggregateRootConfig({ name: "SnapshotAwareRoot", snapshotRevision: 1 })
+class SnapshotRoot extends AggregateRoot implements SnapshotAware<{ value: string }> {
+    value!: string;
+
+    constructor(id: string) {
+        super(id);
+    }
+
+    applySnapshot(snapshot: { value: string }): void {
+        this.value = snapshot.value;
+    }
+
+    @ApplyEvent(EventWithValue)
+    applyValueEvent({ value }: EventWithValue) {
+        this.value = value;
+    }
+
+    toSnapshot(): { value: string } {
+        return { value: this.value };
+    }
+}
 
 @DomainEvent("test-event-1")
 class TestEvent1 {}
@@ -86,6 +123,38 @@ describe("AggregateRoot", () => {
     });
 
     describe("reconstitute", () => {
+        test("applies snapshot before events when provided", () => {
+            const ev1 = StoredEvent.fromStorage("ev1", "id1", "event-with-value", new Date(), 10, "ag-name", {
+                value: "from-event"
+            });
+            const entity = new SnapshotRoot("id1");
+            const applySnapshotSpy = jest.spyOn(entity, "applySnapshot");
+
+            entity.reconstitute([ev1], { value: "from-snapshot" });
+
+            expect(applySnapshotSpy).toHaveBeenCalledTimes(1);
+            expect(applySnapshotSpy).toHaveBeenCalledWith({ value: "from-snapshot" });
+            expect(entity.value).toBe("from-event");
+        });
+
+        test("applies snapshot when no events provided", () => {
+            const entity = new SnapshotRoot("id1");
+            const applySnapshotSpy = jest.spyOn(entity, "applySnapshot");
+
+            entity.reconstitute([], { value: "from-snapshot" });
+
+            expect(applySnapshotSpy).toHaveBeenCalledTimes(1);
+            expect(applySnapshotSpy).toHaveBeenCalledWith({ value: "from-snapshot" });
+            expect(entity.value).toBe("from-snapshot");
+        });
+
+        test("throws when snapshot is provided for a non-snapshot-aware aggregate", () => {
+            const entity = new NotSnapshotAwareRoot("id1");
+            expect(() => entity.reconstitute([], { value: "from-snapshot" })).toThrow(
+                AggregateInstanceNotSnapshotAwareException
+            );
+        });
+
         test("calls mapped apply methods after sorting", () => {
             const ev1 = StoredEvent.fromStorage("ev1", "id1", "test-event-2", new Date(), 10, "ag-name", {});
             const ev2 = StoredEvent.fromStorage("ev2", "id1", "test-event-1", new Date(), 2, "ag-name", {});

@@ -164,18 +164,22 @@ describe("addPublisher", () => {
     });
 
     test("publisher stop execution in case shouldCreateSnapshot throws", async () => {
+        const createSnapshotError = new Error("createSnapshotError");
         const snapshotStore = createMock<AbstractSnapshotStore>({
             create: jest.fn().mockResolvedValue({}),
             shouldCreateSnapshot: jest.fn().mockImplementation(() => {
-                throw new Error("ooops");
+                throw createSnapshotError;
             })
         });
-
-        const creationDate = new Date();
         const store = new TestStore(eventEmitter, snapshotStore);
+        const saveSpy = jest.spyOn(store, "save");
         const entity = store.addPublisher(new TestEntity());
-        const toPublish = [{ aggregateRootId: "id", occurredAt: creationDate, payload: new TestEvent("test") }];
-        await expect(entity.publish(toPublish)).rejects.toThrow();
+        const toPublish = [{ aggregateRootId: "id", occurredAt: new Date(), payload: new TestEvent("test") }];
+
+        await expect(entity.publish(toPublish)).rejects.toThrow(createSnapshotError);
+        expect(saveSpy).not.toHaveBeenCalled();
+        expect(snapshotStore.create).not.toHaveBeenCalled();
+        expect(eventEmitter.emitMultiple).not.toHaveBeenCalled();
     });
 
     test("publisher throws when id generation throws", async () => {

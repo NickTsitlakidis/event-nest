@@ -24,9 +24,9 @@ export class User extends AggregateRoot implements SnapshotAware<UserModel> {
         return user;
     }
 
-    public static fromEvents(id: string, events: Array<StoredEvent>): User {
+    public static fromEvents(id: string, events: Array<StoredEvent>, snapshot?: UserModel): User {
         const user = new User(id);
-        user.reconstitute(events);
+        user.reconstitute(events, snapshot);
         return user;
     }
 

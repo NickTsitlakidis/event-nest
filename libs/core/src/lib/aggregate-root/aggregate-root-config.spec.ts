@@ -23,13 +23,14 @@ describe("AggregateRootConfig", () => {
             expect(result).toBeUndefined();
         });
 
-        // Type Tests
-        const snapshotRevisionDefault = getAggregateRootSnapshotRevision({} as AggregateRootClass<unknown>);
-        const snapshotRevisionWithSnapshotAware = getAggregateRootSnapshotRevision(
-            {} as AggregateRootClass<SnapshotAwareAggregateRoot>
-        );
-        expectTypeOf(snapshotRevisionDefault).toEqualTypeOf<number | undefined>();
-        expectTypeOf(snapshotRevisionWithSnapshotAware).toEqualTypeOf<number>();
+        it("test return type at type-level", () => {
+            const snapshotRevisionDefault = getAggregateRootSnapshotRevision({} as AggregateRootClass<unknown>);
+            const snapshotRevisionWithSnapshotAware = getAggregateRootSnapshotRevision(
+                {} as AggregateRootClass<SnapshotAwareAggregateRoot>
+            );
+            expectTypeOf(snapshotRevisionDefault).toEqualTypeOf<number | undefined>();
+            expectTypeOf(snapshotRevisionWithSnapshotAware).toEqualTypeOf<number>();
+        });
     });
 
     describe("getAggregateRootName", () => {
@@ -42,12 +43,13 @@ describe("AggregateRootConfig", () => {
             expect(result).toBe(name);
         });
 
-        // Type tests
-        const aggregateNameDefault = getAggregateRootName({} as AggregateRootClass<unknown>);
-        const aggregateNameWithSnapshotAware = getAggregateRootName(
-            {} as AggregateRootClass<SnapshotAwareAggregateRoot>
-        );
-        expectTypeOf(aggregateNameDefault).toEqualTypeOf<string | undefined>();
-        expectTypeOf(aggregateNameWithSnapshotAware).toEqualTypeOf<string>();
+        it("test return type at type-level", () => {
+            const aggregateNameDefault = getAggregateRootName({} as AggregateRootClass<unknown>);
+            const aggregateNameWithSnapshotAware = getAggregateRootName(
+                {} as AggregateRootClass<SnapshotAwareAggregateRoot>
+            );
+            expectTypeOf(aggregateNameDefault).toEqualTypeOf<string | undefined>();
+            expectTypeOf(aggregateNameWithSnapshotAware).toEqualTypeOf<string>();
+        });
     });
 });

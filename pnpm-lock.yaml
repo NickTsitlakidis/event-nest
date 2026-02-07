@@ -124,7 +124,7 @@ importers:
         specifier: 56.0.1
         version: 56.0.1(eslint@9.39.2)
       expect-type:
-        specifier: ^1.3.0
+        specifier: 1.3.0
         version: 1.3.0
       husky:
         specifier: 9.1.7

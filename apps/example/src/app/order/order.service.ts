@@ -19,7 +19,7 @@ export class OrderService {
         let order: Order;
         try {
             const { events, snapshot } = await this._eventStore.findWithSnapshot(Order, id);
-            order = snapshot ? Order.fromSnapshot(id, snapshot, events) : Order.fromEvents(id, events);
+            order = Order.fromEvents(id, events, snapshot);
         } catch {
             //fallback to full events reconstituion
             const events = await this._eventStore.findByAggregateRootId(Order, id);

@@ -5,7 +5,7 @@ export class SnapshotRevisionMismatchException extends Error {
     constructor(aggregateRootName: string) {
         super(
             `The snapshotRevision on ${aggregateRootName} doesn't match the latest stored snapshot.
-             Please, check that the YourAggregateRootClass.snapshotRevision static property is correclty configured.`
+             Please, check that the snapshotRevision defined in AggregateRootConfig is correclty configured.`
         );
     }
 }
