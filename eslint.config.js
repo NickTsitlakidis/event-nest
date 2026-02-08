@@ -1,7 +1,8 @@
 const nx = require("@nx/eslint-plugin");
 const perfectionist = require("eslint-plugin-perfectionist");
 const eslintPluginPrettierRecommended = require("eslint-plugin-prettier/recommended");
-const eslintPluginUnicorn = require("eslint-plugin-unicorn");
+const eslintPluginUnicornModule = require("eslint-plugin-unicorn");
+const eslintPluginUnicorn = eslintPluginUnicornModule.default ?? eslintPluginUnicornModule;
 
 module.exports = [
     ...nx.configs["flat/base"],
