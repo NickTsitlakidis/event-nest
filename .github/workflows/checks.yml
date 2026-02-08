@@ -7,17 +7,14 @@ on:
     push:
         branches: [ master ]
     pull_request:
-        branches: [ master, develop ]
+        branches: [ master ]
 
 jobs:
     main:
-
         runs-on: ubuntu-latest
-
         strategy:
             matrix:
-                node-version: [ 22.x ]
-
+                node-version: [ 20.x, 22.x ]
         steps:
             -   name: Checkout
                 uses: actions/checkout@v4
@@ -27,8 +24,8 @@ jobs:
                 uses: actions/setup-node@v4
                 with:
                     node-version: ${{ matrix.node-version }}
-            -   uses: pnpm/action-setup@v3
-                name: Install pnpm
+            -   name: Install pnpm
+                uses: pnpm/action-setup@v4
                 with:
                     version: 9
                     run_install: false
@@ -51,5 +48,11 @@ jobs:
                 run: pnpm nx run mongodb:lint && pnpm nx run mongodb:test
             -   name: Check postgresql
                 run: pnpm nx run postgresql:lint && pnpm nx run postgresql:test
+            -   name: Build core
+                run: pnpm nx run core:build
+            -   name: Build mongodb
+                run: pnpm nx run mongodb:build
+            -   name: Build postgresql
+                run: pnpm nx run postgresql:build
             -   name: Upload test coverage
                 uses: coverallsapp/github-action@v2
