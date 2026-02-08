@@ -523,18 +523,61 @@ describe("PostgreSQLEventStore", () => {
     describe("findWithSnapshot tests", () => {
         test("returns no snapshot and all events when no snapshot exists", async () => {
             const aggregateRootId = randomUUID();
+            const aggregate_root_name = getAggregateRootName(SnapshotAwareAggregateRoot);
+
+            const ev1Id = randomUUID();
+            const ev2Id = randomUUID();
+
+            const ev1Date = new Date();
+            const ev2Date = new Date();
+
             await knexConnection(schema + ".es-aggregates").insert({
                 id: aggregateRootId,
                 version: 10
             });
 
+            await knexConnection<EventRow>(schema + ".es-events").insert({
+                aggregate_root_id: aggregateRootId,
+                aggregate_root_name,
+                aggregate_root_version: 1,
+                created_at: ev1Date,
+                event_name: "sql-event-1",
+                id: ev1Id,
+                payload: "{}"
+            });
+
+            await knexConnection<EventRow>(schema + ".es-events").insert({
+                aggregate_root_id: aggregateRootId,
+                aggregate_root_name,
+                aggregate_root_version: 2,
+                created_at: ev2Date,
+                event_name: "sql-event-2",
+                id: ev2Id,
+                payload: "{}"
+            });
+
             const latestSnapshot = undefined;
             snapshotStore.findLatestSnapshotByAggregateId.mockResolvedValue(latestSnapshot);
 
-            await expect(eventStore.findWithSnapshot(SnapshotAwareAggregateRoot, aggregateRootId)).resolves.toEqual({
-                events: [],
-                snapshot: undefined
-            });
+            const result = await eventStore.findWithSnapshot(SnapshotAwareAggregateRoot, aggregateRootId);
+            expect(result.snapshot).toBeUndefined();
+
+            expect(result.events.length).toBe(2);
+            expect(result.events[0].id).toBe(ev1Id);
+            expect(result.events[0].aggregateRootVersion).toBe(1);
+            expect(result.events[0].eventName).toBe("sql-event-1");
+            expect(result.events[0].aggregateRootId).toBe(aggregateRootId);
+            expect(result.events[0].aggregateRootName).toBe(aggregate_root_name);
+            expect(result.events[0].payload).toEqual({});
+            expect(result.events[0].createdAt).toEqual(ev1Date);
+
+            expect(result.events[1].id).toBe(ev2Id);
+            expect(result.events[1].aggregateRootVersion).toBe(2);
+            expect(result.events[1].eventName).toBe("sql-event-2");
+            expect(result.events[1].aggregateRootId).toBe(aggregateRootId);
+            expect(result.events[1].aggregateRootName).toBe(aggregate_root_name);
+            expect(result.events[1].payload).toEqual({});
+            expect(result.events[1].createdAt).toEqual(ev2Date);
         });
 
         test("throws SnapshotRevisionMismatchException when snapshot revision doesn't match", async () => {

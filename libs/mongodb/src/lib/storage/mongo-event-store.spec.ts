@@ -5,6 +5,7 @@ import {
     DomainEvent,
     DomainEventEmitter,
     EventConcurrencyException,
+    getAggregateRootName,
     MissingAggregateRootNameException,
     SnapshotAware,
     SnapshotRevisionMismatchException,
@@ -443,20 +444,59 @@ test("generateEntityId - returns string with ObjectId format", async () => {
 });
 
 describe("findWithSnapshot tests", () => {
-    test("returns no snpashot when no snapshot created", async () => {
+    test("returns no snapshot when no snapshot created", async () => {
         const aggregateRootId = new ObjectId().toHexString();
         await aggregatesCollection.insertOne({
             _id: new ObjectId(aggregateRootId),
             version: 10
         });
+        const ev0Id = new ObjectId().toHexString();
+        const ev1Id = new ObjectId().toHexString();
+
+        const ev0Date = new Date();
+        const ev1Date = new Date();
+
+        const aggregateRootName = getAggregateRootName(SnapshotAwareAggregateRoot);
+        await eventsCollection.insertOne({
+            _id: new ObjectId(ev0Id),
+            aggregateRootId: aggregateRootId,
+            aggregateRootName,
+            aggregateRootVersion: 3,
+            createdAt: ev0Date,
+            eventName: "test-event-0",
+            payload: { data: "event0" }
+        });
+        await eventsCollection.insertOne({
+            _id: new ObjectId(ev1Id),
+            aggregateRootId: aggregateRootId,
+            aggregateRootName,
+            aggregateRootVersion: 5,
+            createdAt: ev1Date,
+            eventName: "test-event-1",
+            payload: { data: "event1" }
+        });
 
         const latestSnapshot = undefined;
         snapshotStore.findLatestSnapshotByAggregateId.mockResolvedValue(latestSnapshot);
 
-        await expect(eventStore.findWithSnapshot(SnapshotAwareAggregateRoot, aggregateRootId)).resolves.toEqual({
-            events: [],
-            snapshot: undefined
-        });
+        const res = await eventStore.findWithSnapshot(SnapshotAwareAggregateRoot, aggregateRootId);
+        expect(res.snapshot).toBeUndefined();
+        expect(res.events.length).toEqual(2);
+        expect(res.events[0].id).toBe(ev0Id);
+        expect(res.events[0].aggregateRootVersion).toBe(3);
+        expect(res.events[0].eventName).toBe("test-event-0");
+        expect(res.events[0].aggregateRootId).toBe(aggregateRootId);
+        expect(res.events[0].aggregateRootName).toBe(aggregateRootName);
+        expect(res.events[0].payload).toEqual({ data: "event0" });
+        expect(res.events[0].createdAt).toEqual(ev0Date);
+
+        expect(res.events[1].id).toBe(ev1Id);
+        expect(res.events[1].aggregateRootVersion).toBe(5);
+        expect(res.events[1].eventName).toBe("test-event-1");
+        expect(res.events[1].aggregateRootId).toBe(aggregateRootId);
+        expect(res.events[1].aggregateRootName).toBe(aggregateRootName);
+        expect(res.events[1].payload).toEqual({ data: "event1" });
+        expect(res.events[1].createdAt).toEqual(ev1Date);
     });
 
     test("throws SnapshotRevisionMismatchException when snapshot revision doesn't match", async () => {
