@@ -1,11 +1,15 @@
 import {
     AbstractEventStore,
+    AggregateClassNotSnapshotAwareException,
     AggregateRoot,
     AggregateRootClass,
+    AggregateRootSnapshot,
     DomainEventEmitter,
     EventConcurrencyException,
     getAggregateRootName,
+    getAggregateRootSnapshotRevision,
     MissingAggregateRootNameException,
+    SnapshotRevisionMismatchException,
     StoredAggregateRoot,
     StoredEvent
 } from "@event-nest/core";
@@ -13,16 +17,18 @@ import { Logger } from "@nestjs/common";
 import { isNil } from "es-toolkit";
 import { MongoClient, ObjectId } from "mongodb";
 
+import { MongoSnapshotStore } from "./mongo-snapshot-store";
+
 export class MongoEventStore extends AbstractEventStore {
     private readonly _logger: Logger;
-
     constructor(
         eventEmitter: DomainEventEmitter,
+        mongoSnapshotStore: MongoSnapshotStore,
         private readonly _mongoClient: MongoClient,
         private readonly _aggregatesCollectionName: string,
         private readonly _eventsCollectionName: string
     ) {
-        super(eventEmitter);
+        super(eventEmitter, mongoSnapshotStore);
         this._logger = new Logger(MongoEventStore.name);
     }
 
@@ -122,6 +128,63 @@ export class MongoEventStore extends AbstractEventStore {
         }
 
         return grouped;
+    }
+
+    async findWithSnapshot<T extends AggregateRoot>(
+        aggregateRootClass: AggregateRootClass<T>,
+        id: string
+    ): Promise<{ events: Array<StoredEvent>; snapshot?: AggregateRootSnapshot<T> }> {
+        const aggregateRootName = getAggregateRootName(aggregateRootClass);
+        if (isNil(aggregateRootName)) {
+            this._logger.error(
+                `Missing aggregate root name for class: ${aggregateRootClass.name}. Use the @AggregateRootName decorator.`
+            );
+            throw new MissingAggregateRootNameException(aggregateRootClass.name);
+        }
+
+        const snapshotRevision = getAggregateRootSnapshotRevision(aggregateRootClass);
+        if (isNil(snapshotRevision)) {
+            this._logger.error(
+                `Missing snapshot revision for class: ${aggregateRootClass.name}. Use the @AggregateRootConfig decorator to set the snapshotRevision.`
+            );
+            throw new AggregateClassNotSnapshotAwareException(aggregateRootName);
+        }
+
+        const snapshot = await this._snapshotStore.findLatestSnapshotByAggregateId(id);
+        if (!snapshot) {
+            return { events: await this.findByAggregateRootId(aggregateRootClass, id), snapshot: undefined };
+        }
+
+        if (snapshot.revision != snapshotRevision) {
+            throw new SnapshotRevisionMismatchException(aggregateRootName);
+        }
+
+        const documents = await this._mongoClient
+            .db()
+            .collection(this._eventsCollectionName)
+            .find({
+                aggregateRootId: id,
+                aggregateRootName: aggregateRootName,
+                aggregateRootVersion: { $gt: snapshot.aggregateRootVersion }
+            })
+            .toArray();
+
+        const events = documents.map((document) => {
+            return StoredEvent.fromStorage(
+                document._id.toHexString(),
+                document["aggregateRootId"],
+                document["eventName"],
+                document["createdAt"],
+                document["aggregateRootVersion"],
+                document["aggregateRootName"],
+                document["payload"]
+            );
+        });
+
+        return {
+            events,
+            snapshot: snapshot.payload as AggregateRootSnapshot<T>
+        };
     }
 
     generateEntityId(): Promise<string> {

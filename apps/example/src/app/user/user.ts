@@ -1,9 +1,14 @@
-import { AggregateRoot, AggregateRootName, ApplyEvent, StoredEvent } from "@event-nest/core";
+import { AggregateRoot, AggregateRootConfig, ApplyEvent, SnapshotAware, StoredEvent } from "@event-nest/core";
 
 import { UserCreatedEvent, UserUpdatedEvent } from "./user-events";
 
-@AggregateRootName("User")
-export class User extends AggregateRoot {
+interface UserModel {
+    email: string;
+    name: string;
+}
+
+@AggregateRootConfig({ name: "User", snapshotRevision: 1 })
+export class User extends AggregateRoot implements SnapshotAware<UserModel> {
     private _email: string;
     private _name: string;
 
@@ -19,18 +24,29 @@ export class User extends AggregateRoot {
         return user;
     }
 
-    public static fromEvents(id: string, events: Array<StoredEvent>): User {
+    public static fromEvents(id: string, events: Array<StoredEvent>, snapshot?: UserModel): User {
         const user = new User(id);
-        user.reconstitute(events);
+        user.reconstitute(events, snapshot);
         return user;
     }
 
     get email(): string {
         return this._email;
     }
-
     public get name(): string {
         return this._name;
+    }
+
+    applySnapshot(snapshot: { email: string; name: string }) {
+        this._email = snapshot.email;
+        this._name = snapshot.name;
+    }
+
+    toSnapshot() {
+        return {
+            email: this._email,
+            name: this._name
+        };
     }
 
     public update(newName: string) {

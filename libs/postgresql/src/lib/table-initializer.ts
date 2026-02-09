@@ -27,13 +27,18 @@ export class TableInitializer implements OnApplicationBootstrap {
         }
 
         try {
-            const [hasAggregatesTable, hasEventsTable] = await Promise.all([
+            const [hasAggregatesTable, hasEventsTable, hasSnapshotTable] = await Promise.all([
                 this._knexConnection.schema
                     .withSchema(this._schemaConfiguration.schema)
                     .hasTable(this._schemaConfiguration.aggregatesTable),
                 this._knexConnection.schema
                     .withSchema(this._schemaConfiguration.schema)
-                    .hasTable(this._schemaConfiguration.eventsTable)
+                    .hasTable(this._schemaConfiguration.eventsTable),
+                this.schemaConfiguration.snapshotTable
+                    ? this._knexConnection.schema
+                          .withSchema(this._schemaConfiguration.schema)
+                          .hasTable(this.schemaConfiguration.snapshotTable)
+                    : Promise.resolve(false)
             ]);
 
             if (hasAggregatesTable) {
@@ -67,6 +72,27 @@ export class TableInitializer implements OnApplicationBootstrap {
                             .inTable(this._schemaConfiguration.schemaAwareAggregatesTable);
                     });
                 this._logger.log("Events table created successfully");
+            }
+
+            if (hasSnapshotTable) {
+                this._logger.log("Skipping snapshot table initialization. Table already exists");
+            } else {
+                if (this._schemaConfiguration.snapshotTable) {
+                    await this._knexConnection.schema
+                        .withSchema(this._schemaConfiguration.schema)
+                        .createTable(this._schemaConfiguration.snapshotTable, (table) => {
+                            table.uuid("id").primary();
+                            table.uuid("aggregate_root_id").notNullable();
+                            table.integer("aggregate_root_version").notNullable();
+                            table.jsonb("payload").notNullable();
+                            table.integer("revision").notNullable();
+                            table
+                                .foreign("aggregate_root_id")
+                                .references("id")
+                                .inTable(this._schemaConfiguration.schemaAwareAggregatesTable);
+                        });
+                    this._logger.log("Snapshot table created successfully");
+                }
             }
         } catch (error) {
             this._logger.error(

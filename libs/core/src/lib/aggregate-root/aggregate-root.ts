@@ -8,6 +8,7 @@ import { UnregisteredEventException } from "../exceptions/unregistered-event-exc
 import { StoredEvent } from "../storage/stored-event";
 import { AggregateRootEvent } from "./aggregate-root-event";
 import { getDecoratedPropertyKey } from "./reflection";
+import { assertIsSnapshotAwareAggregateRoot } from "./snapshot-aware";
 
 type KnownEvent = {
     payload: unknown;
@@ -120,10 +121,17 @@ export abstract class AggregateRoot {
      * method will trigger all the matching {@link ApplyEvent} functions of the entity to populate the object based on
      * application logic.
      * @param events The events that will be sent to {@link ApplyEvent} functions
+     * @param snapshot Optional snapshot to apply before replaying events
+     * @throws AggregateInstanceNotSnapshotAwareException if a snapshot is provided but the aggregate is not snapshot-aware
      * @throws UnknownEventException if an event is not known
      */
-    reconstitute(events: Array<StoredEvent>) {
+    reconstitute<Snapshot = unknown>(events: Array<StoredEvent>, snapshot?: Snapshot) {
         const startedAt = Date.now();
+        if (!isNil(snapshot)) {
+            assertIsSnapshotAwareAggregateRoot(this);
+            this.applySnapshot(snapshot);
+        }
+
         if (events.length > 0) {
             const [unregistered, missingProcessor, known] = this.splitEvents(this.sortEvents(events));
 

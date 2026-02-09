@@ -1,6 +1,5 @@
 import { Test } from "@nestjs/testing";
-// eslint-disable-next-line
-import * as knex from "knex";
+
 const mockedKnex = jest.fn().mockImplementation(() => {
     return {};
 });
@@ -10,11 +9,18 @@ jest.mock("knex", () => {
     };
 });
 
-import { DomainEventEmitter, EVENT_STORE } from "@event-nest/core";
+import {
+    DomainEventEmitter,
+    EVENT_STORE,
+    ForCountSnapshotStrategy,
+    NoOpSnapshotStore,
+    SNAPSHOT_STORE
+} from "@event-nest/core";
 
 import { ModuleProviders } from "./module-providers";
 import { PostgreSQLModuleAsyncOptions, PostgreSQLModuleOptions } from "./postgresql-module-options";
 import { PostgreSQLEventStore } from "./storage/postgresql-event-store";
+import { PostgreSQLSnapshotStore } from "./storage/postgresql-snapshot-store";
 import { TableInitializer } from "./table-initializer";
 
 describe("PostgreSQLModuleProviders", () => {
@@ -115,6 +121,65 @@ describe("PostgreSQLModuleProviders", () => {
             expect(emitter).toBeDefined();
             expect(emitter).toBeInstanceOf(DomainEventEmitter);
             expect(emitter.concurrentSubscriptions).toBe(false);
+        });
+
+        test("creates PostgreSQLSnapshotStore provider", async () => {
+            const options: PostgreSQLModuleOptions = {
+                aggregatesTableName: "aggregates",
+                connectionUri: "postgres://test:test@docker:32770/db",
+                eventsTableName: "events",
+                schemaName: "the-schema",
+                snapshotStrategy: new ForCountSnapshotStrategy({ count: 5 }),
+                snapshotTableName: "snapshots"
+            };
+            const module = await Test.createTestingModule({ providers: ModuleProviders.create(options) }).compile();
+            const snapshotStore: PostgreSQLSnapshotStore = module.get(SNAPSHOT_STORE);
+            expect(snapshotStore).toBeDefined();
+            expect(snapshotStore).toBeInstanceOf(PostgreSQLSnapshotStore);
+        });
+
+        test("throws when snapshotStrategy is provided but snapshotTableName is not", async () => {
+            //@ts-expect-error testing invalid configuration
+            const options: PostgreSQLModuleOptions = {
+                aggregatesTableName: "aggregates",
+                connectionUri: "postgres://test:test@docker:32770/db",
+                eventsTableName: "events",
+                schemaName: "the-schema",
+                snapshotStrategy: new ForCountSnapshotStrategy({ count: 5 })
+            };
+
+            expect(() =>
+                Test.createTestingModule({ providers: ModuleProviders.create(options) }).compile()
+            ).rejects.toThrow();
+        });
+
+        test("throws when snapshotTableName is provided but snapshotStrategy is not", async () => {
+            //@ts-expect-error testing invalid configuration
+            const options: PostgreSQLModuleOptions = {
+                aggregatesTableName: "aggregates",
+                connectionUri: "postgres://test:test@docker:32770/db",
+                eventsTableName: "events",
+                schemaName: "the-schema",
+                snapshotStrategy: new ForCountSnapshotStrategy({ count: 5 })
+            };
+
+            expect(() =>
+                Test.createTestingModule({ providers: ModuleProviders.create(options) }).compile()
+            ).rejects.toThrow();
+        });
+
+        test("creates default NoOpSnapshotStore when no snapshotStrategy and snapshotTableName", async () => {
+            const options: PostgreSQLModuleOptions = {
+                aggregatesTableName: "aggregates",
+                connectionUri: "postgres://test:test@docker:32770/db",
+                eventsTableName: "events",
+                schemaName: "the-schema"
+            };
+
+            const module = await Test.createTestingModule({ providers: ModuleProviders.create(options) }).compile();
+            const snapshotStore: PostgreSQLSnapshotStore = module.get(SNAPSHOT_STORE);
+            expect(snapshotStore).toBeDefined();
+            expect(snapshotStore).toBeInstanceOf(NoOpSnapshotStore);
         });
 
         test("skips ssl configuration when it is not provided", async () => {
@@ -477,6 +542,85 @@ describe("PostgreSQLModuleProviders", () => {
             expect(emitter).toBeDefined();
             expect(emitter).toBeInstanceOf(DomainEventEmitter);
             expect(emitter.concurrentSubscriptions).toBe(false);
+        });
+
+        test("creates PostgreSQLSnapshotStore provider", async () => {
+            const options: PostgreSQLModuleAsyncOptions = {
+                useFactory: () => {
+                    return {
+                        aggregatesTableName: "async-aggregates",
+                        connectionUri: "postgres://test:test@docker:32770/db",
+                        eventsTableName: "async-events",
+                        schemaName: "the-async-schema",
+                        snapshotStrategy: new ForCountSnapshotStrategy({ count: 5 }),
+                        snapshotTableName: "snapshots"
+                    };
+                }
+            };
+            const module = await Test.createTestingModule({
+                providers: ModuleProviders.createAsync(options)
+            }).compile();
+            const snapshotStore: PostgreSQLSnapshotStore = module.get(SNAPSHOT_STORE);
+            expect(snapshotStore).toBeDefined();
+            expect(snapshotStore).toBeInstanceOf(PostgreSQLSnapshotStore);
+        });
+
+        test("throws when snapshotStrategy is provided but snapshotTableName is not", async () => {
+            const options: PostgreSQLModuleAsyncOptions = {
+                //@ts-expect-error testing invalid configuration
+                useFactory: () => {
+                    return {
+                        aggregatesTableName: "aggregates",
+                        connectionUri: "postgres://test:test@docker:32770/db",
+                        eventsTableName: "events",
+                        schemaName: "the-schema",
+                        snapshotStrategy: new ForCountSnapshotStrategy({ count: 5 })
+                    };
+                }
+            };
+
+            expect(() =>
+                Test.createTestingModule({ providers: ModuleProviders.createAsync(options) }).compile()
+            ).rejects.toThrow();
+        });
+
+        test("throws when snapshotTableName is provided but snapshotStrategy is not", async () => {
+            const options: PostgreSQLModuleAsyncOptions = {
+                //@ts-expect-error testing invalid configuration
+                useFactory: () => {
+                    return {
+                        aggregatesTableName: "aggregates",
+                        connectionUri: "postgres://test:test@docker:32770/db",
+                        eventsTableName: "events",
+                        schemaName: "the-schema",
+                        snapshotStrategy: new ForCountSnapshotStrategy({ count: 5 })
+                    };
+                }
+            };
+
+            expect(() =>
+                Test.createTestingModule({ providers: ModuleProviders.createAsync(options) }).compile()
+            ).rejects.toThrow();
+        });
+
+        test("creates default NoOpSnapshotStore when no snapshotStrategy and snapshotTableName", async () => {
+            const options: PostgreSQLModuleAsyncOptions = {
+                useFactory: () => {
+                    return {
+                        aggregatesTableName: "aggregates",
+                        connectionUri: "postgres://test:test@docker:32770/db",
+                        eventsTableName: "events",
+                        schemaName: "the-schema"
+                    };
+                }
+            };
+
+            const module = await Test.createTestingModule({
+                providers: ModuleProviders.createAsync(options)
+            }).compile();
+            const snapshotStore: PostgreSQLSnapshotStore = module.get(SNAPSHOT_STORE);
+            expect(snapshotStore).toBeDefined();
+            expect(snapshotStore).toBeInstanceOf(NoOpSnapshotStore);
         });
 
         test("skips ssl configuration when it is not provided", async () => {

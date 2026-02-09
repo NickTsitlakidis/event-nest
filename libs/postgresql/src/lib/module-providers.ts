@@ -1,4 +1,10 @@
-import { DomainEventEmitter, EVENT_STORE } from "@event-nest/core";
+import {
+    AbstractSnapshotStore,
+    DomainEventEmitter,
+    EVENT_STORE,
+    NoOpSnapshotStore,
+    SNAPSHOT_STORE
+} from "@event-nest/core";
 import { Provider } from "@nestjs/common";
 import { isNil } from "es-toolkit";
 import { knex } from "knex";
@@ -6,6 +12,7 @@ import { knex } from "knex";
 import { PostgreSQLModuleAsyncOptions, PostgreSQLModuleOptions } from "./postgresql-module-options";
 import { SchemaConfiguration } from "./schema-configuration";
 import { PostgreSQLEventStore } from "./storage/postgresql-event-store";
+import { PostgreSQLSnapshotStore } from "./storage/postgresql-snapshot-store";
 import { TableInitializer } from "./table-initializer";
 
 const KNEX_CONNECTION = Symbol("EVENT_NEST_KNEX_CONNECTION");
@@ -13,6 +20,17 @@ const KNEX_CONNECTION = Symbol("EVENT_NEST_KNEX_CONNECTION");
 export class ModuleProviders {
     static create(options: PostgreSQLModuleOptions): Provider[] {
         return [
+            {
+                provide: SchemaConfiguration,
+                useFactory: () => {
+                    return new SchemaConfiguration(
+                        options.schemaName,
+                        options.aggregatesTableName,
+                        options.eventsTableName,
+                        options.snapshotTableName
+                    );
+                }
+            },
             {
                 provide: DomainEventEmitter,
                 useFactory: () => {
@@ -24,28 +42,48 @@ export class ModuleProviders {
                 useValue: buildKnexConnection(options)
             },
             {
-                inject: [DomainEventEmitter, KNEX_CONNECTION],
-                provide: EVENT_STORE,
-                useFactory: (eventEmitter: DomainEventEmitter, knexConnection: knex.Knex) => {
-                    return new PostgreSQLEventStore(
-                        eventEmitter,
-                        options.schemaName,
-                        options.aggregatesTableName,
-                        options.eventsTableName,
+                inject: [KNEX_CONNECTION, SchemaConfiguration],
+                provide: SNAPSHOT_STORE,
+                useFactory: (
+                    knexConnection: knex.Knex,
+                    schemaConfiguration: SchemaConfiguration
+                ): AbstractSnapshotStore => {
+                    const { snapshotStrategy, snapshotTableName } = options;
+                    if (Boolean(snapshotStrategy) !== Boolean(snapshotTableName)) {
+                        throw new Error(
+                            "To use snapshots, both 'snapshotStrategy' and 'snapshotTableName' must be provided."
+                        );
+                    }
+
+                    if (!snapshotTableName || !snapshotStrategy) {
+                        return new NoOpSnapshotStore();
+                    }
+
+                    return new PostgreSQLSnapshotStore(
+                        snapshotStrategy,
+                        schemaConfiguration.schemaAwareSnapshotTable!,
                         knexConnection
                     );
                 }
             },
             {
-                inject: [KNEX_CONNECTION],
+                inject: [DomainEventEmitter, KNEX_CONNECTION, SNAPSHOT_STORE, SchemaConfiguration],
+                provide: EVENT_STORE,
+                useFactory: (
+                    eventEmitter: DomainEventEmitter,
+                    knexConnection: knex.Knex,
+                    snapshotStore: PostgreSQLSnapshotStore,
+                    schemaConfiguration: SchemaConfiguration
+                ) => {
+                    return new PostgreSQLEventStore(eventEmitter, snapshotStore, schemaConfiguration, knexConnection);
+                }
+            },
+            {
+                inject: [KNEX_CONNECTION, SchemaConfiguration],
                 provide: TableInitializer,
-                useFactory: (knexConnection: knex.Knex) => {
+                useFactory: (knexConnection: knex.Knex, schemaConfiguration: SchemaConfiguration) => {
                     return new TableInitializer(
-                        new SchemaConfiguration(
-                            options.schemaName,
-                            options.aggregatesTableName,
-                            options.eventsTableName
-                        ),
+                        schemaConfiguration,
                         isNil(options.ensureTablesExist) ? false : options.ensureTablesExist,
                         knexConnection
                     );
@@ -60,6 +98,19 @@ export class ModuleProviders {
             provide: "EVENT_NEST_PG_OPTIONS",
             useFactory: async (...parameters: unknown[]) => {
                 return await options.useFactory(...parameters);
+            }
+        };
+
+        const schemaConfigurationProvider = {
+            inject: ["EVENT_NEST_PG_OPTIONS"],
+            provide: SchemaConfiguration,
+            useFactory: (options: PostgreSQLModuleOptions) => {
+                return new SchemaConfiguration(
+                    options.schemaName,
+                    options.aggregatesTableName,
+                    options.eventsTableName,
+                    options.snapshotTableName
+                );
             }
         };
 
@@ -80,32 +131,70 @@ export class ModuleProviders {
         };
 
         const eventStoreProvider = {
-            inject: ["EVENT_NEST_PG_OPTIONS", DomainEventEmitter, KNEX_CONNECTION],
+            inject: [DomainEventEmitter, KNEX_CONNECTION, SNAPSHOT_STORE, SchemaConfiguration],
             provide: EVENT_STORE,
-            useFactory: (options: PostgreSQLModuleOptions, emitter: DomainEventEmitter, knexConnection: knex.Knex) => {
-                return new PostgreSQLEventStore(
-                    emitter,
-                    options.schemaName,
-                    options.aggregatesTableName,
-                    options.eventsTableName,
-                    knexConnection
-                );
+            useFactory: (
+                emitter: DomainEventEmitter,
+                knexConnection: knex.Knex,
+                snapshotStore: PostgreSQLSnapshotStore,
+                schemaConfiguration: SchemaConfiguration
+            ) => {
+                return new PostgreSQLEventStore(emitter, snapshotStore, schemaConfiguration, knexConnection);
             }
         };
 
         const tableInitializerProvider = {
-            inject: [KNEX_CONNECTION, "EVENT_NEST_PG_OPTIONS"],
+            inject: [KNEX_CONNECTION, "EVENT_NEST_PG_OPTIONS", SchemaConfiguration],
             provide: TableInitializer,
-            useFactory: (knexConnection: knex.Knex, options: PostgreSQLModuleOptions) => {
+            useFactory: (
+                knexConnection: knex.Knex,
+                options: PostgreSQLModuleOptions,
+                schemaConfiguration: SchemaConfiguration
+            ) => {
                 return new TableInitializer(
-                    new SchemaConfiguration(options.schemaName, options.aggregatesTableName, options.eventsTableName),
+                    schemaConfiguration,
                     isNil(options.ensureTablesExist) ? false : options.ensureTablesExist,
                     knexConnection
                 );
             }
         };
 
-        return [optionsProvider, knexProvider, emitterProvider, eventStoreProvider, tableInitializerProvider];
+        const snapshotStoreProvider = {
+            inject: ["EVENT_NEST_PG_OPTIONS", KNEX_CONNECTION, SchemaConfiguration],
+            provide: SNAPSHOT_STORE,
+            useFactory: (
+                options: PostgreSQLModuleOptions,
+                knexConnection: knex.Knex,
+                schemaConfiguration: SchemaConfiguration
+            ) => {
+                const { snapshotStrategy, snapshotTableName } = options;
+                if (Boolean(snapshotStrategy) !== Boolean(snapshotTableName)) {
+                    throw new Error(
+                        "To use snapshots, both 'snapshotStrategy' and 'snapshotTableName' must be provided."
+                    );
+                }
+
+                if (!snapshotTableName || !snapshotStrategy) {
+                    return new NoOpSnapshotStore();
+                }
+
+                return new PostgreSQLSnapshotStore(
+                    snapshotStrategy,
+                    schemaConfiguration.schemaAwareSnapshotTable!,
+                    knexConnection
+                );
+            }
+        };
+
+        return [
+            optionsProvider,
+            knexProvider,
+            emitterProvider,
+            eventStoreProvider,
+            tableInitializerProvider,
+            snapshotStoreProvider,
+            schemaConfigurationProvider
+        ];
     }
 }
 function buildKnexConnection(options: PostgreSQLModuleOptions): knex.Knex {

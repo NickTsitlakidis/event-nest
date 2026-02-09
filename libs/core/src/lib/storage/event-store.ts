@@ -1,9 +1,23 @@
 import { AggregateRoot } from "../aggregate-root/aggregate-root";
+import { SnapshotAware } from "../aggregate-root/snapshot-aware";
 import { StoredAggregateRoot } from "./stored-aggregate-root";
 import { StoredEvent } from "./stored-event";
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 export type AggregateRootClass<T> = Function & { prototype: T };
+
+export type AggregateRootSnapshot<T extends AggregateRoot = AggregateRoot> =
+    T extends SnapshotAware<infer Snapshot> ? Snapshot : unknown;
+
+/**
+ * Branded type to confirm that AggregateRoot instance correctly implements the SnapshotAware and AggregateRootClass has snapshotRevision attached.
+ * Should be created with caution @see {assertAggregateRootSnapshotAware}
+ */
+export type SnapshotAwareAggregateRoot<T extends AggregateRoot = AggregateRoot> = SnapshotAware<unknown> &
+    T & {
+        readonly __snapshotAwareAggregateRootSymbol: unique symbol;
+        constructor: AggregateRootClass<SnapshotAwareAggregateRoot<T>>;
+    };
 
 /**
  * A unique symbol that can be used to inject the event store into other classes.
@@ -55,6 +69,29 @@ export interface EventStore {
         aggregateRootClass: AggregateRootClass<T>,
         ids: string[]
     ): Promise<Record<string, Array<StoredEvent>>>;
+
+    /**
+     * Finds a snapshot and all events that occurred after that snapshot for the specified aggregate root.
+     * This method retrieves the most recent stored snapshot (obtained from the aggregate's `.toSnapshot()` method)
+     * and returns it along with all events that were stored after the snapshot was written to the database.
+     *
+     * @param aggregateRootClass The snapshot-aware aggregate root class.
+     * @param id The unique id of the aggregate root object
+     * @returns An object containing:
+     *   - `snapshot` (optional): the snapshot of the aggregate, if found
+     *   - `events`: an array of events that occurred after the snapshot;
+     *       if `snapshot` is undefined, this array contains **all events associated with the aggregate root**
+     * @throws {SnapshotRevisionMismatchException} If the current snapshotRevision does not match the snapshot revision in the stored snapshot record
+     * @throws {AggregateClassNotSnapshotAwareException} If the aggregate root class is missing the snapshot revision configuration
+     * @throws {MissingAggregateRootNameException} If the aggregate root name is missing
+     */
+    findWithSnapshot<T extends AggregateRoot>(
+        aggregateRootClass: AggregateRootClass<T>,
+        id: string
+    ): Promise<{
+        events: Array<StoredEvent>;
+        snapshot?: AggregateRootSnapshot<T>;
+    }>;
 
     /**
      * Each storage solution has its own way of dealing with unique ids. This method's implementation should reflect
