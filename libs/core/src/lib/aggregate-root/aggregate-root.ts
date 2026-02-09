@@ -29,13 +29,6 @@ export abstract class AggregateRoot {
         this._logger = isNil(logger) ? new Logger(AggregateRoot.name) : logger;
     }
 
-    /**
-     * @deprecated Use {@link uncommittedEvents} instead. It will be removed in version 5.x
-     */
-    get appendedEvents(): Array<AggregateRootEvent<object>> {
-        return [...this._uncommittedEvents];
-    }
-
     get id(): string {
         return this._id;
     }

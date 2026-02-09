@@ -38,29 +38,8 @@ export class PostgreSQLEventStore extends AbstractEventStore {
         this._schemaConfiguration = schemaConfiguration;
     }
 
-    /**
-     * @deprecated Use {@link schemaConfiguration} instead. It will be removed in version 5.x
-     */
-    get aggregatesTableName(): string {
-        return this.schemaConfiguration.aggregatesTable;
-    }
-
-    /**
-     * @deprecated Use {@link schemaConfiguration} instead. It will be removed in version 5.x
-     */
-    get eventsTableName(): string {
-        return this.schemaConfiguration.eventsTable;
-    }
-
     get schemaConfiguration(): SchemaConfiguration {
         return this._schemaConfiguration;
-    }
-
-    /**
-     * @deprecated Use {@link schemaConfiguration} instead. It will be removed in version 5.x
-     */
-    get schemaName(): string {
-        return this.schemaConfiguration.schema;
     }
 
     async findAggregateRootVersion(id: string): Promise<number> {
