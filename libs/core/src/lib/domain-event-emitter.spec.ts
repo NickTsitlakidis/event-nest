@@ -59,17 +59,11 @@ describe("DomainEventEmitter", () => {
 
         const asyncSubscription = new TestEvent2Subscription();
         const syncSubscription = new TestEvent2SyncSubscription();
-        const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>();
-        providersMap.set(
-            TestEvent2Subscription,
-            createMock<InstanceWrapper<Injectable>>({ instance: asyncSubscription })
-        );
-        providersMap.set(
-            TestEvent2SyncSubscription,
-            createMock<InstanceWrapper<Injectable>>({ instance: syncSubscription })
-        );
-        const injectorModules = new Map<string, Module>();
-        injectorModules.set("test", createMock<Module>({ providers: providersMap }));
+        const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>([
+            [TestEvent2Subscription, createMock<InstanceWrapper<Injectable>>({ instance: asyncSubscription })],
+            [TestEvent2SyncSubscription, createMock<InstanceWrapper<Injectable>>({ instance: syncSubscription })]
+        ]);
+        const injectorModules = new Map<string, Module>([["test", createMock<Module>({ providers: providersMap })]]);
 
         const asyncSpy = jest.spyOn(asyncSubscription, "onDomainEvent");
         const syncSpy = jest.spyOn(syncSubscription, "onDomainEvent");
@@ -106,13 +100,12 @@ describe("DomainEventEmitter", () => {
         test("throws mapped exception when sync subscription throws", async () => {
             const syncSubscription = new TestEvent2SyncSubscription();
 
-            const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>();
-            providersMap.set(
-                TestEvent2SyncSubscription,
-                createMock<InstanceWrapper<Injectable>>({ instance: syncSubscription })
-            );
-            const injectorModules = new Map<string, Module>();
-            injectorModules.set("test", createMock<Module>({ providers: providersMap }));
+            const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>([
+                [TestEvent2SyncSubscription, createMock<InstanceWrapper<Injectable>>({ instance: syncSubscription })]
+            ]);
+            const injectorModules = new Map<string, Module>([
+                ["test", createMock<Module>({ providers: providersMap })]
+            ]);
 
             const syncSpy = jest.spyOn(syncSubscription, "onDomainEvent").mockRejectedValue(new Error("a new error"));
 
@@ -140,17 +133,13 @@ describe("DomainEventEmitter", () => {
             const syncSubscription = new TestEvent2SyncSubscription();
             const asyncSubscription = new TestSubscription();
 
-            const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>();
-            providersMap.set(
-                TestEvent2SyncSubscription,
-                createMock<InstanceWrapper<Injectable>>({ instance: syncSubscription })
-            );
-            providersMap.set(
-                TestSubscription,
-                createMock<InstanceWrapper<Injectable>>({ instance: asyncSubscription })
-            );
-            const injectorModules = new Map<string, Module>();
-            injectorModules.set("test", createMock<Module>({ providers: providersMap }));
+            const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>([
+                [TestEvent2SyncSubscription, createMock<InstanceWrapper<Injectable>>({ instance: syncSubscription })],
+                [TestSubscription, createMock<InstanceWrapper<Injectable>>({ instance: asyncSubscription })]
+            ]);
+            const injectorModules = new Map<string, Module>([
+                ["test", createMock<Module>({ providers: providersMap })]
+            ]);
 
             const handledParameters: Array<any> = [];
             const asyncSpy = jest.spyOn(asyncSubscription, "onDomainEvent").mockImplementation(() => {
@@ -208,17 +197,13 @@ describe("DomainEventEmitter", () => {
             const syncSubscription = new TestEvent2SyncSubscription();
             const asyncSubscription = new TestSubscription();
 
-            const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>();
-            providersMap.set(
-                TestEvent2SyncSubscription,
-                createMock<InstanceWrapper<Injectable>>({ instance: syncSubscription })
-            );
-            providersMap.set(
-                TestSubscription,
-                createMock<InstanceWrapper<Injectable>>({ instance: asyncSubscription })
-            );
-            const injectorModules = new Map<string, Module>();
-            injectorModules.set("test", createMock<Module>({ providers: providersMap }));
+            const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>([
+                [TestEvent2SyncSubscription, createMock<InstanceWrapper<Injectable>>({ instance: syncSubscription })],
+                [TestSubscription, createMock<InstanceWrapper<Injectable>>({ instance: asyncSubscription })]
+            ]);
+            const injectorModules = new Map<string, Module>([
+                ["test", createMock<Module>({ providers: providersMap })]
+            ]);
 
             const handledParameters: Array<any> = [];
             const asyncSpy = jest.spyOn(asyncSubscription, "onDomainEvent").mockImplementation(() => {
@@ -274,17 +259,13 @@ describe("DomainEventEmitter", () => {
             const event2Subscription = new TestEvent2Subscription();
             const event1Subscription = new TestSubscription();
 
-            const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>();
-            providersMap.set(
-                TestEvent2Subscription,
-                createMock<InstanceWrapper<Injectable>>({ instance: event2Subscription })
-            );
-            providersMap.set(
-                TestSubscription,
-                createMock<InstanceWrapper<Injectable>>({ instance: event1Subscription })
-            );
-            const injectorModules = new Map<string, Module>();
-            injectorModules.set("test", createMock<Module>({ providers: providersMap }));
+            const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>([
+                [TestEvent2Subscription, createMock<InstanceWrapper<Injectable>>({ instance: event2Subscription })],
+                [TestSubscription, createMock<InstanceWrapper<Injectable>>({ instance: event1Subscription })]
+            ]);
+            const injectorModules = new Map<string, Module>([
+                ["test", createMock<Module>({ providers: providersMap })]
+            ]);
 
             const handledParameters: Array<any> = [];
             const asyncSpy = jest.spyOn(event2Subscription, "onDomainEvent").mockImplementation(() => {
@@ -344,11 +325,13 @@ describe("DomainEventEmitter", () => {
             const subscription1 = new TestSubscription();
             const subscription2 = new WithMultiple();
 
-            const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>();
-            providersMap.set(TestSubscription, createMock<InstanceWrapper<Injectable>>({ instance: subscription1 }));
-            providersMap.set(WithMultiple, createMock<InstanceWrapper<Injectable>>({ instance: subscription2 }));
-            const injectorModules = new Map<string, Module>();
-            injectorModules.set("test", createMock<Module>({ providers: providersMap }));
+            const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>([
+                [TestSubscription, createMock<InstanceWrapper<Injectable>>({ instance: subscription1 })],
+                [WithMultiple, createMock<InstanceWrapper<Injectable>>({ instance: subscription2 })]
+            ]);
+            const injectorModules = new Map<string, Module>([
+                ["test", createMock<Module>({ providers: providersMap })]
+            ]);
 
             const handleSpy = jest.spyOn(subscription1, "onDomainEvent").mockResolvedValue("anything");
             const handleSpy2 = jest.spyOn(subscription2, "onDomainEvent").mockResolvedValue("anything");
@@ -403,10 +386,12 @@ describe("DomainEventEmitter", () => {
 
         test("returns when events have no bound subscriptions", async () => {
             const subscription1 = new TestSubscription();
-            const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>();
-            providersMap.set(TestSubscription, createMock<InstanceWrapper<Injectable>>({ instance: subscription1 }));
-            const injectorModules = new Map<string, Module>();
-            injectorModules.set("test", createMock<Module>({ providers: providersMap }));
+            const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>([
+                [TestSubscription, createMock<InstanceWrapper<Injectable>>({ instance: subscription1 })]
+            ]);
+            const injectorModules = new Map<string, Module>([
+                ["test", createMock<Module>({ providers: providersMap })]
+            ]);
 
             const handleSpy = jest.spyOn(subscription1, "onDomainEvent").mockResolvedValue("anything");
 
@@ -437,10 +422,12 @@ describe("DomainEventEmitter", () => {
 
         test("ignores events without handlers", async () => {
             const subscription1 = new TestSubscription();
-            const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>();
-            providersMap.set(TestSubscription, createMock<InstanceWrapper<Injectable>>({ instance: subscription1 }));
-            const injectorModules = new Map<string, Module>();
-            injectorModules.set("test", createMock<Module>({ providers: providersMap }));
+            const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>([
+                [TestSubscription, createMock<InstanceWrapper<Injectable>>({ instance: subscription1 })]
+            ]);
+            const injectorModules = new Map<string, Module>([
+                ["test", createMock<Module>({ providers: providersMap })]
+            ]);
 
             const handleSpy = jest.spyOn(subscription1, "onDomainEvent").mockResolvedValue("anything");
 
@@ -479,14 +466,13 @@ describe("DomainEventEmitter", () => {
         test("emits sequentially when flag is set", async () => {
             const subscription1 = new TestSubscription();
             const subscription2 = new TestEvent2Subscription();
-            const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>();
-            providersMap.set(TestSubscription, createMock<InstanceWrapper<Injectable>>({ instance: subscription1 }));
-            providersMap.set(
-                TestEvent2Subscription,
-                createMock<InstanceWrapper<Injectable>>({ instance: subscription2 })
-            );
-            const injectorModules = new Map<string, Module>();
-            injectorModules.set("test", createMock<Module>({ providers: providersMap }));
+            const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>([
+                [TestEvent2Subscription, createMock<InstanceWrapper<Injectable>>({ instance: subscription2 })],
+                [TestSubscription, createMock<InstanceWrapper<Injectable>>({ instance: subscription1 })]
+            ]);
+            const injectorModules = new Map<string, Module>([
+                ["test", createMock<Module>({ providers: providersMap })]
+            ]);
 
             const handledParameters: Array<any> = [];
             const handleSpy = jest.spyOn(subscription1, "onDomainEvent").mockImplementation(() => {
@@ -555,14 +541,13 @@ describe("DomainEventEmitter", () => {
         test("stops on error when running sequentially", async () => {
             const subscription1 = new TestSubscription();
             const subscription2 = new TestEvent2Subscription();
-            const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>();
-            providersMap.set(TestSubscription, createMock<InstanceWrapper<Injectable>>({ instance: subscription1 }));
-            providersMap.set(
-                TestEvent2Subscription,
-                createMock<InstanceWrapper<Injectable>>({ instance: subscription2 })
-            );
-            const injectorModules = new Map<string, Module>();
-            injectorModules.set("test", createMock<Module>({ providers: providersMap }));
+            const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>([
+                [TestEvent2Subscription, createMock<InstanceWrapper<Injectable>>({ instance: subscription2 })],
+                [TestSubscription, createMock<InstanceWrapper<Injectable>>({ instance: subscription1 })]
+            ]);
+            const injectorModules = new Map<string, Module>([
+                ["test", createMock<Module>({ providers: providersMap })]
+            ]);
 
             const handledParameters: Array<any> = [];
             const handleSpy = jest.spyOn(subscription1, "onDomainEvent").mockImplementation(() => {

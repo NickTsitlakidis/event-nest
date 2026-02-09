@@ -156,7 +156,7 @@ export abstract class AggregateRoot {
     }
 
     resolveVersion(events: Array<StoredEvent>) {
-        const sorted: Array<StoredEvent> = events.sort(
+        const sorted: Array<StoredEvent> = events.toSorted(
             (event1, event2) => event1.aggregateRootVersion - event2.aggregateRootVersion
         );
         const lastElement = sorted.at(-1);
@@ -164,7 +164,7 @@ export abstract class AggregateRoot {
     }
 
     protected sortEvents(events: Array<StoredEvent>): Array<StoredEvent> {
-        return events.sort((event1, event2) => event1.aggregateRootVersion - event2.aggregateRootVersion);
+        return events.toSorted((event1, event2) => event1.aggregateRootVersion - event2.aggregateRootVersion);
     }
 
     private splitEvents(events: Array<StoredEvent>): [Array<string>, Array<string>, Array<KnownEvent>] {
