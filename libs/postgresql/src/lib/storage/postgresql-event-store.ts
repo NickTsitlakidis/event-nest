@@ -1,11 +1,15 @@
 import {
     AbstractEventStore,
+    AggregateClassNotSnapshotAwareException,
     AggregateRoot,
     AggregateRootClass,
+    AggregateRootSnapshot,
     DomainEventEmitter,
     EventConcurrencyException,
     getAggregateRootName,
+    getAggregateRootSnapshotRevision,
     MissingAggregateRootNameException,
+    SnapshotRevisionMismatchException,
     StoredAggregateRoot,
     StoredEvent
 } from "@event-nest/core";
@@ -17,6 +21,7 @@ import { randomUUID } from "node:crypto";
 import { SchemaConfiguration } from "../schema-configuration";
 import { AggregateRootRow } from "./aggregate-root-row";
 import { EventRow } from "./event-row";
+import { PostgreSQLSnapshotStore } from "./postgresql-snapshot-store";
 
 export class PostgreSQLEventStore extends AbstractEventStore {
     private readonly _logger: Logger;
@@ -24,14 +29,13 @@ export class PostgreSQLEventStore extends AbstractEventStore {
 
     constructor(
         eventEmitter: DomainEventEmitter,
-        schemaName: string,
-        aggregatesTableName: string,
-        eventsTableName: string,
+        snapshotStore: PostgreSQLSnapshotStore,
+        schemaConfiguration: SchemaConfiguration,
         private readonly _knexConnection: knex.Knex
     ) {
-        super(eventEmitter);
+        super(eventEmitter, snapshotStore);
         this._logger = new Logger(PostgreSQLEventStore.name);
-        this._schemaConfiguration = new SchemaConfiguration(schemaName, aggregatesTableName, eventsTableName);
+        this._schemaConfiguration = schemaConfiguration;
     }
 
     /**
@@ -76,7 +80,6 @@ export class PostgreSQLEventStore extends AbstractEventStore {
         aggregateRootClass: AggregateRootClass<T>,
         id: string
     ): Promise<Array<StoredEvent>> {
-        const startedAt = Date.now();
         const aggregateRootName = getAggregateRootName(aggregateRootClass);
         if (isNil(aggregateRootName)) {
             this._logger.error(
@@ -85,29 +88,7 @@ export class PostgreSQLEventStore extends AbstractEventStore {
             throw new MissingAggregateRootNameException(aggregateRootClass.name);
         }
 
-        const rows = await this._knexConnection<EventRow>(this._schemaConfiguration.schemaAwareEventsTable)
-            .select("*")
-            .where({
-                aggregate_root_id: id,
-                aggregate_root_name: aggregateRootName
-            });
-        const duration = Date.now() - startedAt;
-        this._logger.debug(`Finding events for aggregate ${id} took ${duration}ms`);
-        if (rows.length > 0) {
-            return rows.map((row) => {
-                return StoredEvent.fromStorage(
-                    row.id,
-                    row.aggregate_root_id,
-                    row.event_name,
-                    row.created_at,
-                    row.aggregate_root_version,
-                    row.aggregate_root_name,
-                    row.payload
-                );
-            });
-        }
-
-        return [];
+        return this.findEvents(id, aggregateRootName);
     }
 
     async findByAggregateRootIds<T extends AggregateRoot>(
@@ -148,6 +129,43 @@ export class PostgreSQLEventStore extends AbstractEventStore {
         }
 
         return grouped;
+    }
+
+    async findWithSnapshot<T extends AggregateRoot>(
+        aggregateRootClass: AggregateRootClass<T>,
+        id: string
+    ): Promise<{ events: Array<StoredEvent>; snapshot?: AggregateRootSnapshot<T> }> {
+        const aggregateRootName = getAggregateRootName(aggregateRootClass);
+        if (isNil(aggregateRootName)) {
+            this._logger.error(
+                `Missing aggregate root name for class: ${aggregateRootClass.name}. Use the @AggregateRootName decorator.`
+            );
+            throw new MissingAggregateRootNameException(aggregateRootClass.name);
+        }
+
+        const snapshotRevision = getAggregateRootSnapshotRevision(aggregateRootClass);
+        if (isNil(snapshotRevision)) {
+            this._logger.error(
+                `Missing snapshot revision for class: ${aggregateRootClass.name}. Use the @AggregateRootConfig decorator to set the snapshotRevision.`
+            );
+            throw new AggregateClassNotSnapshotAwareException(aggregateRootName);
+        }
+
+        const snapshot = await this._snapshotStore.findLatestSnapshotByAggregateId(id);
+        if (!snapshot) {
+            return { events: await this.findByAggregateRootId(aggregateRootClass, id), snapshot: undefined };
+        }
+
+        if (snapshot.revision != snapshotRevision) {
+            throw new SnapshotRevisionMismatchException(aggregateRootName);
+        }
+
+        const events = await this.findEvents(id, aggregateRootName, snapshot.aggregateRootVersion);
+
+        return {
+            events,
+            snapshot: snapshot.payload as AggregateRootSnapshot<T>
+        };
     }
 
     generateEntityId(): Promise<string> {
@@ -227,5 +245,38 @@ export class PostgreSQLEventStore extends AbstractEventStore {
         const duration = Date.now() - startedAt;
         this._logger.debug(`Saving events for aggregate ${aggregate.id} took ${duration}ms`);
         return events;
+    }
+
+    private async findEvents(id: string, aggregateRootName: string, minVersion?: number): Promise<Array<StoredEvent>> {
+        const startedAt = Date.now();
+
+        let query = this._knexConnection<EventRow>(this._schemaConfiguration.schemaAwareEventsTable).select("*").where({
+            aggregate_root_id: id,
+            aggregate_root_name: aggregateRootName
+        });
+
+        if (!isNil(minVersion)) {
+            query = query.andWhere("aggregate_root_version", ">", minVersion);
+        }
+
+        const rows = await query;
+        const duration = Date.now() - startedAt;
+        this._logger.debug(`Finding events for aggregate ${id} took ${duration}ms`);
+
+        if (rows.length > 0) {
+            return rows.map((row) => {
+                return StoredEvent.fromStorage(
+                    row.id,
+                    row.aggregate_root_id,
+                    row.event_name,
+                    row.created_at,
+                    row.aggregate_root_version,
+                    row.aggregate_root_name,
+                    row.payload
+                );
+            });
+        }
+
+        return [];
     }
 }
