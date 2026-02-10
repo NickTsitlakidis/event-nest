@@ -14,7 +14,7 @@ module.exports = [
         ignores: ["**/dist"]
     },
     {
-        files: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"],
+        files: ["**/*.ts"],
         rules: {
             "@nx/enforce-module-boundaries": [
                 "error",
@@ -28,13 +28,7 @@ module.exports = [
                     ],
                     enforceBuildableLibDependency: true
                 }
-            ]
-        }
-    },
-    {
-        files: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"],
-        // Override or add rules here
-        rules: {
+            ],
             "perfectionist/sort-classes": [
                 "error",
                 {
@@ -63,7 +57,7 @@ module.exports = [
         }
     },
     {
-        files: ["**/*.spec.ts", "**/*.spec.tsx", "**/*.spec.js", "**/*.spec.jsx"],
+        files: ["**/*.{spec,test}.ts"],
         rules: {
             "@typescript-eslint/no-empty-function": "off",
             "@typescript-eslint/no-explicit-any": "off",
@@ -73,7 +67,7 @@ module.exports = [
         }
     },
     {
-        files: ["**/*.config.js"],
+        files: ["**/*.config.js", "**/eslint.config.js"],
         rules: {
             "unicorn/prefer-module": "off"
         }
