@@ -6,9 +6,11 @@ class TestClass1 {}
 
 class TestClass2 {}
 
-test("DomainEvent - throws for duplicate event names", () => {
-    DomainEvent("event-one")(TestClass1);
-    expect(() => DomainEvent("event-one")(TestClass2)).toThrow(EventNameConflictException);
-    expect(isRegistered(new TestClass1())).toBe(true);
-    expect(isRegistered(new TestClass2())).toBe(false);
+describe("DomainEvent", () => {
+    test("throws for duplicate event names", () => {
+        DomainEvent("event-one")(TestClass1);
+        expect(() => DomainEvent("event-one")(TestClass2)).toThrow(EventNameConflictException);
+        expect(isRegistered(new TestClass1())).toBe(true);
+        expect(isRegistered(new TestClass2())).toBe(false);
+    });
 });
