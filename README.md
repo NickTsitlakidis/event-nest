@@ -25,6 +25,11 @@ What Event Nest is Not:
 - [Concepts](#concepts)
     - [Event](#event)
     - [Aggregate Root](#aggregate-root)
+    - [Snapshots](#snapshots)
+        - [Making an aggregate root snapshot-aware](#making-an-aggregate-root-snapshot-aware)
+        - [Snapshot strategies](#snapshot-strategies)
+        - [Loading an aggregate root with a snapshot](#loading-an-aggregate-root-with-a-snapshot)
+        - [Snapshot revision](#snapshot-revision)
     - [Domain Event Subscription](#domain-event-subscription)
         - [Order of execution in subscriptions](#order-of-execution-in-subscriptions)
         - [Waiting for subscriptions to complete](#waiting-for-subscriptions-to-complete)
@@ -71,6 +76,26 @@ export class AppModule {}
 ```
 The collections specified in the configuration will store the aggregates and events.
 
+If you want to enable [snapshots](#snapshots), you will also need to provide a `snapshotCollection` and a `snapshotStrategy` :
+```typescript
+import { ForCountSnapshotStrategy } from "@event-nest/core";
+import { EventNestMongoDbModule } from "@event-nest/mongodb";
+import { Module } from "@nestjs/common";
+
+@Module({
+    imports: [
+        EventNestMongoDbModule.forRoot({
+            connectionUri: "mongodb://localhost:27017/example",
+            aggregatesCollection: "aggregates-collection",
+            eventsCollection: "events-collection",
+            snapshotCollection: "snapshots-collection",
+            snapshotStrategy: new ForCountSnapshotStrategy({ count: 10 })
+        }),
+    ],
+})
+export class AppModule {}
+```
+
 
 ### PostgreSQL setup
 
@@ -99,6 +124,28 @@ export class AppModule {}
 
 If the database user has privileges to create tables, set the `ensureTablesExist` option to true to automatically create the necessary tables during bootstrap. Otherwise, refer to the manual table creation instructions below.
 
+If you want to enable [snapshots](#snapshots), you will also need to provide a `snapshotTableName` and a `snapshotStrategy` :
+```typescript
+import { ForCountSnapshotStrategy } from "@event-nest/core";
+import { EventNestPostgreSQLModule } from "@event-nest/postgresql";
+import { Module } from "@nestjs/common";
+
+@Module({
+    imports: [
+        EventNestPostgreSQLModule.forRoot({
+            aggregatesTableName: "aggregates",
+            connectionUri: "postgresql://postgres:password@localhost:5432/event_nest",
+            eventsTableName: "events",
+            schemaName: "event_nest_schema",
+            ensureTablesExist: true,
+            snapshotTableName: "snapshots",
+            snapshotStrategy: new ForCountSnapshotStrategy({ count: 10 })
+        })
+    ]
+})
+export class AppModule {}
+```
+
 
 #### Manual creation of PostgreSQL tables
 If you prefer to create the tables manually, the following guidelines describe the structure of the tables that need to be created.
@@ -121,6 +168,16 @@ If you prefer to create the tables manually, the following guidelines describe t
 | event_name             | text                     | The unique name of the event. <br/>Must be set as NOT NULL                                                                    |
 | payload                | jsonb                    | A JSON representation of the event's additional data.                                                                         |
 | created_at             | timestamp with time zone | The timestamp when the event was produced. <br/>Must be set as NOT NULL                                                       |
+
+**Snapshots Table (optional) :**
+
+| Column Name            | Type    | Description                                                                                                                    |
+|------------------------|---------|--------------------------------------------------------------------------------------------------------------------------------|
+| id                     | uuid    | The unique identifier of the snapshot. <br/>Must be set as NOT NULL and it is the table's primary key                          |
+| aggregate_root_id      | uuid    | The id of the aggregate that the snapshot belongs to.<br/> Must be set as NOT NULL and it is a foreign key to the aggregates table |
+| aggregate_root_version | integer | The version of the aggregate root when the snapshot was created. <br/>Must be set as NOT NULL                                  |
+| payload                | jsonb   | A JSON representation of the snapshot data. <br/>Must be set as NOT NULL                                                       |
+| revision               | integer | The snapshot revision number. <br/>Must be set as NOT NULL                                                                     |
 
 
 ## Concepts
@@ -180,8 +237,10 @@ export class UserUpdatedEvent {
 
 Next, we will define the aggregate root for the user. Let's break down what this class should do and how.
 
-First of all, the class has to extend the `AggregateRoot` class, and it has to be decorated with the `@AggregateRootName` decorator.
+First of all, the class has to extend the `AggregateRoot` class, and it has to be decorated with the `@AggregateRootConfig` decorator.
 The name is required to associate persisted events with the correct aggregate root when retrieving them from storage.
+
+> **Note:** The `@AggregateRootName` decorator is deprecated and will be removed in version 7.x. Use `@AggregateRootConfig` instead.
 
 Now let's talk about constructors. TypeScript doesn't allow us to define multiple constructors. Therefore, if we have two ways of creating an object, we could use static methods as factories.
 In our case, we have the following creation cases :
@@ -198,9 +257,9 @@ It's important to note that the append method will not save the event. All the a
 
 
 ```typescript
-import { AggregateRoot, AggregateRootName, ApplyEvent, StoredEvent } from "@event-nest/core";
+import { AggregateRoot, AggregateRootConfig, ApplyEvent, StoredEvent } from "@event-nest/core";
 
-@AggregateRootName("User")
+@AggregateRootConfig({ name: "User" })
 export class User extends AggregateRoot {
     private name: string;
     private email: string;
@@ -276,6 +335,192 @@ export class UserService {
 }
 ```
 
+### Snapshots
+As the number of events for an aggregate root grows, replaying the full event stream to reconstruct its state can become increasingly slow. Snapshots address this by periodically capturing the aggregate's state, so that reconstitution can start from a recent snapshot instead of replaying every event from the beginning.
+
+Snapshots are entirely optional. When enabled, the library will automatically create snapshots based on a configurable strategy and use them during reconstitution. The complete event history is always preserved in storage regardless of whether snapshots are used.
+
+To use snapshots, you need to :
+* Configure a snapshot strategy and a snapshot storage location in your module setup (see [MongoDB setup](#mongodb-setup) or [PostgreSQL setup](#postgresql-setup))
+* Have your aggregate root classes implement the `SnapshotAware` interface
+
+#### Making an aggregate root snapshot-aware
+
+An aggregate root needs two things to support snapshots :
+
+1. The `@AggregateRootConfig` decorator must include a `snapshotRevision` number.
+2. The class must implement the `SnapshotAware` interface, which requires two methods: `toSnapshot()` and `applySnapshot()`.
+
+Let's extend the `User` example from above to support snapshots :
+
+```typescript
+import { AggregateRoot, AggregateRootConfig, ApplyEvent, SnapshotAware, StoredEvent } from "@event-nest/core";
+
+interface UserSnapshot {
+    name: string;
+    email: string;
+}
+
+@AggregateRootConfig({ name: "User", snapshotRevision: 1 })
+export class User extends AggregateRoot implements SnapshotAware<UserSnapshot> {
+    private name: string;
+    private email: string;
+
+    private constructor(id: string) {
+        super(id);
+    }
+
+    public static createNew(id: string, name: string, email: string): User {
+        const user = new User(id);
+        const event = new UserCreatedEvent(name, email);
+        user.applyUserCreatedEvent(event);
+        user.append(event);
+        return user;
+    }
+
+    public static fromEvents(id: string, events: Array<StoredEvent>, snapshot?: UserSnapshot): User {
+        const user = new User(id);
+        user.reconstitute(events, snapshot);
+        return user;
+    }
+
+    toSnapshot(): UserSnapshot {
+        return { name: this.name, email: this.email };
+    }
+
+    applySnapshot(snapshot: UserSnapshot) {
+        this.name = snapshot.name;
+        this.email = snapshot.email;
+    }
+
+    public update(newName: string) {
+        const event = new UserUpdatedEvent(newName);
+        this.applyUserUpdatedEvent(event);
+        this.append(event);
+    }
+
+    @ApplyEvent(UserCreatedEvent)
+    private applyUserCreatedEvent(event: UserCreatedEvent) {
+        this.name = event.name;
+        this.email = event.email;
+    }
+
+    @ApplyEvent(UserUpdatedEvent)
+    private applyUserUpdatedEvent(event: UserUpdatedEvent) {
+        this.name = event.newName;
+    }
+}
+```
+
+The `toSnapshot()` method returns a plain representation of the aggregate's current state. The `applySnapshot()` method restores that state when a snapshot is loaded from storage. The `reconstitute` method accepts an optional snapshot parameter. When a snapshot is provided, it will be applied first, and then any remaining events will be replayed on top of it.
+
+Note that when calling `commit`, the library will automatically evaluate the configured snapshot strategy to determine whether a new snapshot should be created. If the strategy says yes, it will call `toSnapshot()` and persist the result. You don't need to manage snapshot creation manually.
+
+
+#### Snapshot strategies
+
+Snapshot strategies determine when the library should create a snapshot for an aggregate root. You configure the strategy once in your module setup, and it applies globally. Several built-in strategies are available, and they can be composed to build more complex rules.
+
+**ForCountSnapshotStrategy**
+
+Creates a snapshot when the aggregate root crosses a version threshold. For example, with a count of 10, a snapshot will be created when the version goes from 9 to 10, from 19 to 20, and so on.
+
+```typescript
+import { ForCountSnapshotStrategy } from "@event-nest/core";
+
+new ForCountSnapshotStrategy({ count: 10 })
+```
+
+**ForEventsSnapshotStrategy**
+
+Creates a snapshot when specific event types are present in the uncommitted events. This is useful when certain events represent significant state changes that are worth snapshotting.
+
+```typescript
+import { ForEventsSnapshotStrategy } from "@event-nest/core";
+
+new ForEventsSnapshotStrategy({ eventClasses: [UserCreatedEvent, UserUpdatedEvent] })
+```
+
+**ForAggregateRootsStrategy**
+
+Creates snapshots only for specific aggregate root classes. This is useful when only some of your aggregates have enough events to benefit from snapshots.
+
+```typescript
+import { ForAggregateRootsStrategy } from "@event-nest/core";
+
+new ForAggregateRootsStrategy({ aggregates: [User, Order] })
+```
+
+**AllOfSnapshotStrategy**
+
+A composite strategy that creates a snapshot only when **all** of the provided strategies agree. This acts as a logical AND.
+
+```typescript
+import { AllOfSnapshotStrategy, ForAggregateRootsStrategy, ForCountSnapshotStrategy } from "@event-nest/core";
+
+new AllOfSnapshotStrategy([
+    new ForAggregateRootsStrategy({ aggregates: [User] }),
+    new ForCountSnapshotStrategy({ count: 10 })
+])
+```
+In this example, snapshots will only be created for `User` aggregates and only when they cross a version threshold of 10.
+
+**AnyOfSnapshotStrategy**
+
+A composite strategy that creates a snapshot when **any** of the provided strategies agrees. This acts as a logical OR.
+
+```typescript
+import { AnyOfSnapshotStrategy, ForCountSnapshotStrategy, ForEventsSnapshotStrategy } from "@event-nest/core";
+
+new AnyOfSnapshotStrategy([
+    new ForCountSnapshotStrategy({ count: 10 }),
+    new ForEventsSnapshotStrategy({ eventClasses: [UserCreatedEvent] })
+])
+```
+In this example, a snapshot will be created either when the version crosses a threshold of 10 or when a `UserCreatedEvent` is committed.
+
+The composite strategies can be nested to express more complex rules. For example, you could use an `AnyOfSnapshotStrategy` that contains an `AllOfSnapshotStrategy` alongside a `ForEventsSnapshotStrategy`.
+
+
+#### Loading an aggregate root with a snapshot
+
+The `EventStore` provides a `findWithSnapshot` method that retrieves the latest snapshot for an aggregate root along with any events that occurred after that snapshot. If no snapshot is found, all events are returned.
+
+```typescript
+import { EVENT_STORE, EventStore } from "@event-nest/core";
+
+@Injectable()
+export class UserService {
+    constructor(@Inject(EVENT_STORE) private eventStore: EventStore) {}
+
+    async updateUser(id: string, newName: string) {
+        const { events, snapshot } = await this.eventStore.findWithSnapshot(User, id);
+        const user = User.fromEvents(id, events, snapshot);
+        const userWithPublisher = this.eventStore.addPublisher(user);
+        user.update(newName);
+        await userWithPublisher.commit();
+    }
+}
+```
+
+If the snapshot cannot be loaded for any reason (for example, a revision mismatch), you can fall back to loading all events with `findByAggregateRootId` as shown in the [Aggregate Root](#aggregate-root) example.
+
+
+#### Snapshot revision
+
+The `snapshotRevision` number in `@AggregateRootConfig` is a compatibility version for the snapshot format. When loading a snapshot from storage, the library compares the stored revision with the one defined on the class. If they don't match, a `SnapshotRevisionMismatchException` is thrown.
+
+This mechanism exists to protect against applying outdated snapshots when the structure of your snapshot changes. For example, if you add a new field to a `User` aggregate and update `toSnapshot()` to include it, the old snapshots in the database no longer match the new format. By incrementing the `snapshotRevision`, the library will reject old snapshots and the aggregate will be reconstituted from the full event stream instead. New snapshots created from that point on will use the updated format and revision number.
+
+```typescript
+// Before: snapshot only includes name and email
+@AggregateRootConfig({ name: "User", snapshotRevision: 1 })
+
+// After: snapshot now includes name, email, and role
+@AggregateRootConfig({ name: "User", snapshotRevision: 2 })
+```
+
+
 ### Domain Event Subscription
 When working with event sourcing, you will often need to update other parts of your system after an event has been persisted. For example, you may have a read model for users that needs to be updated when a user is created or updated. Or, perhaps you need to send an email notification when a specific event occurs.
 
@@ -338,7 +583,7 @@ The `DomainEventSubscription` decorator supports an alternative syntax for those
 When your subscription is defined like this, the `commit` method will not return until the `onDomainEvent` method is completed for all the events that the service is subscribed to.
 
 If your subscription throws an exception, the exception will be wrapped in a `SubscriptionException` which will be thrown by the `commit` method.
-It's important to note that when the `commit` method throws such an exception, it doesn't mean that the events were not saved to the storage. Since the subscriptions run after the events are saved, an exception from a subscription doesn't roll back the events.
+> **Note:** When the `commit` method throws such a `SubscriptionException`, it doesn't mean that the events were not saved to the storage. Since the subscriptions run after the events are saved, an exception from a subscription doesn't roll back the events.
 
 
 ## License
