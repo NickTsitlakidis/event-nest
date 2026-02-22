@@ -1,6 +1,6 @@
 {
     "name": "@event-nest/source",
-    "version": "4.0.2",
+    "version": "5.0.0",
     "license": "MIT",
     "author": "Nick Tsitlakidis",
     "private": true,
