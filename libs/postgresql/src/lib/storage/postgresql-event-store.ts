@@ -1,5 +1,6 @@
 import {
     AbstractEventStore,
+    AbstractSnapshotStore,
     AggregateClassNotSnapshotAwareException,
     AggregateRoot,
     AggregateRootClass,
@@ -21,23 +22,20 @@ import { randomUUID } from "node:crypto";
 import { SchemaConfiguration } from "../schema-configuration";
 import { AggregateRootRow } from "./aggregate-root-row";
 import { EventRow } from "./event-row";
-import { PostgreSQLSnapshotStore } from "./postgresql-snapshot-store";
 
 export class PostgreSQLEventStore extends AbstractEventStore {
     private readonly _logger: Logger;
-    private readonly _postgresSnapshotStore: PostgreSQLSnapshotStore;
     private readonly _schemaConfiguration: SchemaConfiguration;
 
     constructor(
         eventEmitter: DomainEventEmitter,
-        snapshotStore: PostgreSQLSnapshotStore,
+        snapshotStore: AbstractSnapshotStore,
         schemaConfiguration: SchemaConfiguration,
         private readonly _knexConnection: knex.Knex
     ) {
         super(eventEmitter, snapshotStore);
         this._logger = new Logger(PostgreSQLEventStore.name);
         this._schemaConfiguration = schemaConfiguration;
-        this._postgresSnapshotStore = snapshotStore;
     }
 
     get schemaConfiguration(): SchemaConfiguration {
@@ -158,7 +156,7 @@ export class PostgreSQLEventStore extends AbstractEventStore {
 
         try {
             await this._knexConnection.transaction(async (trx) => {
-                await this._postgresSnapshotStore.deleteByAggregateId(id, trx);
+                await this._snapshotStore.deleteByAggregateId(id, trx);
 
                 await trx<EventRow>(this._schemaConfiguration.schemaAwareEventsTable)
                     .where("aggregate_root_id", id)

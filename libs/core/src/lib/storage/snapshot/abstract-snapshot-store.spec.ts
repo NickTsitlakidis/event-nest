@@ -90,6 +90,10 @@ class NoSnapshotRevisionAggregate extends AggregateRoot implements SnapshotAware
 class TestSnapshotStore extends AbstractSnapshotStore {
     private snapshots: StoredSnapshot[] = [];
 
+    async deleteByAggregateId(id: string): Promise<void> {
+        this.snapshots = this.snapshots.filter((snapshot) => snapshot.aggregateRootId !== id);
+    }
+
     async findLatestSnapshotByAggregateId(id: string): Promise<StoredSnapshot | undefined> {
         return this.snapshots.find((snapshot) => snapshot.aggregateRootId === id);
     }

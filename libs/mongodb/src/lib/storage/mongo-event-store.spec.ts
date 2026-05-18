@@ -7,6 +7,7 @@ import {
     EventConcurrencyException,
     getAggregateRootName,
     MissingAggregateRootNameException,
+    NoOpSnapshotStore,
     SnapshotAware,
     SnapshotRevisionMismatchException,
     StoredAggregateRoot,
@@ -14,7 +15,7 @@ import {
     StoredSnapshot
 } from "@event-nest/core";
 import { createMock } from "@golevelup/ts-jest";
-import { Collection, ClientSession, MongoClient, ObjectId } from "mongodb";
+import { ClientSession, Collection, MongoClient, ObjectId } from "mongodb";
 
 import { MongoEventStore } from "./mongo-event-store";
 import { MongoSnapshotStore } from "./mongo-snapshot-store";
@@ -533,6 +534,33 @@ describe("MongoEventStore", () => {
 
             expect(snapshotStore.deleteByAggregateId).toHaveBeenCalledTimes(1);
             expect(snapshotStore.deleteByAggregateId).toHaveBeenCalledWith(aggregateId, expect.any(ClientSession));
+        });
+
+        test("succeeds when snapshots are disabled (NoOpSnapshotStore)", async () => {
+            const storeWithoutSnapshots = new MongoEventStore(
+                createMock<DomainEventEmitter>(),
+                new NoOpSnapshotStore(),
+                mongoClient,
+                "aggregates",
+                "events"
+            );
+
+            const aggregateId = new ObjectId().toHexString();
+            await aggregatesCollection.insertOne({ _id: new ObjectId(aggregateId), version: 1 });
+            await eventsCollection.insertOne({
+                _id: new ObjectId(),
+                aggregateRootId: aggregateId,
+                aggregateRootName: "test-aggregate",
+                aggregateRootVersion: 1,
+                createdAt: new Date(),
+                eventName: "test-event-1",
+                payload: {}
+            });
+
+            await expect(storeWithoutSnapshots.purgeAggregate(aggregateId)).resolves.toBeUndefined();
+
+            expect(await aggregatesCollection.findOne({ _id: new ObjectId(aggregateId) })).toBeNull();
+            expect(await eventsCollection.countDocuments({ aggregateRootId: aggregateId })).toBe(0);
         });
     });
 

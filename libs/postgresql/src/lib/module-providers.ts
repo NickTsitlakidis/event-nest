@@ -72,7 +72,7 @@ export class ModuleProviders {
                 useFactory: (
                     eventEmitter: DomainEventEmitter,
                     knexConnection: knex.Knex,
-                    snapshotStore: PostgreSQLSnapshotStore,
+                    snapshotStore: AbstractSnapshotStore,
                     schemaConfiguration: SchemaConfiguration
                 ) => {
                     return new PostgreSQLEventStore(eventEmitter, snapshotStore, schemaConfiguration, knexConnection);
@@ -136,7 +136,7 @@ export class ModuleProviders {
             useFactory: (
                 emitter: DomainEventEmitter,
                 knexConnection: knex.Knex,
-                snapshotStore: PostgreSQLSnapshotStore,
+                snapshotStore: AbstractSnapshotStore,
                 schemaConfiguration: SchemaConfiguration
             ) => {
                 return new PostgreSQLEventStore(emitter, snapshotStore, schemaConfiguration, knexConnection);

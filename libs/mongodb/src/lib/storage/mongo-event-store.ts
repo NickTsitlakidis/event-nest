@@ -1,5 +1,6 @@
 import {
     AbstractEventStore,
+    AbstractSnapshotStore,
     AggregateClassNotSnapshotAwareException,
     AggregateRoot,
     AggregateRootClass,
@@ -17,21 +18,17 @@ import { Logger } from "@nestjs/common";
 import { isNil } from "es-toolkit";
 import { MongoClient, ObjectId } from "mongodb";
 
-import { MongoSnapshotStore } from "./mongo-snapshot-store";
-
 export class MongoEventStore extends AbstractEventStore {
     private readonly _logger: Logger;
-    private readonly _mongoSnapshotStore: MongoSnapshotStore;
 
     constructor(
         eventEmitter: DomainEventEmitter,
-        mongoSnapshotStore: MongoSnapshotStore,
+        snapshotStore: AbstractSnapshotStore,
         private readonly _mongoClient: MongoClient,
         private readonly _aggregatesCollectionName: string,
         private readonly _eventsCollectionName: string
     ) {
-        super(eventEmitter, mongoSnapshotStore);
-        this._mongoSnapshotStore = mongoSnapshotStore;
+        super(eventEmitter, snapshotStore);
         this._logger = new Logger(MongoEventStore.name);
     }
 
@@ -199,7 +196,7 @@ export class MongoEventStore extends AbstractEventStore {
         const session = this._mongoClient.startSession();
         try {
             await session.withTransaction(async () => {
-                await this._mongoSnapshotStore.deleteByAggregateId(id, session);
+                await this._snapshotStore.deleteByAggregateId(id, session);
                 await this._mongoClient
                     .db()
                     .collection(this._eventsCollectionName)

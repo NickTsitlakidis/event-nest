@@ -7,6 +7,7 @@ import {
     EventConcurrencyException,
     getAggregateRootName,
     MissingAggregateRootNameException,
+    NoOpSnapshotStore,
     SnapshotAware,
     SnapshotRevisionMismatchException,
     StoredAggregateRoot,
@@ -598,6 +599,41 @@ describe("PostgreSQLEventStore", () => {
 
             expect(snapshotStore.deleteByAggregateId).toHaveBeenCalledTimes(1);
             expect(snapshotStore.deleteByAggregateId).toHaveBeenCalledWith(aggregateRootId, expect.anything());
+        });
+
+        test("succeeds when snapshots are disabled (NoOpSnapshotStore)", async () => {
+            const storeWithoutSnapshots = new PostgreSQLEventStore(
+                createMock<DomainEventEmitter>(),
+                new NoOpSnapshotStore(),
+                new SchemaConfiguration(schema, "es-aggregates", "es-events", "es-snapshots"),
+                knexConnection
+            );
+
+            const aggregateRootId = randomUUID();
+            await knexConnection<AggregateRootRow>(schema + ".es-aggregates").insert({
+                id: aggregateRootId,
+                version: 1
+            });
+            await knexConnection<EventRow>(schema + ".es-events").insert({
+                aggregate_root_id: aggregateRootId,
+                aggregate_root_name: "test-aggregate",
+                aggregate_root_version: 1,
+                created_at: new Date(),
+                event_name: "sql-event-1",
+                id: randomUUID(),
+                payload: "{}"
+            });
+
+            await expect(storeWithoutSnapshots.purgeAggregate(aggregateRootId)).resolves.toBeUndefined();
+
+            expect(
+                await knexConnection<AggregateRootRow>(schema + ".es-aggregates")
+                    .where("id", aggregateRootId)
+                    .first()
+            ).toBeUndefined();
+            expect(
+                await knexConnection<EventRow>(schema + ".es-events").where("aggregate_root_id", aggregateRootId)
+            ).toHaveLength(0);
         });
     });
 
