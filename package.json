@@ -7,8 +7,7 @@
     "scripts": {
         "test": "nx run-many -t test --projects=tag:publishable",
         "lint": "nx run-many -t lint --projects=tag:publishable --fix",
-        "prepare": "husky || true",
-        "commit-checks": "nx affected -t lint --uncommitted=true"
+        "prepare": "husky || true"
     },
     "repository": {
         "type": "git",

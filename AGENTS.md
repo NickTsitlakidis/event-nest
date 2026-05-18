@@ -78,12 +78,6 @@ pnpm nx build mongodb
 pnpm nx build postgresql
 ```
 
-Pre-commit behavior:
-
-```bash
-pnpm commit-checks
-```
-
 ## Workflow for Agents
 
 - Understand behavior from existing tests before modifying logic.
