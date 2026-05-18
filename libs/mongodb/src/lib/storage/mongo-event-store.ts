@@ -200,11 +200,14 @@ export class MongoEventStore extends AbstractEventStore {
         try {
             await session.withTransaction(async () => {
                 await this._mongoSnapshotStore.deleteByAggregateId(id, session);
-                await this._mongoClient.db().collection(this._eventsCollectionName).deleteMany({ aggregateRootId: id });
+                await this._mongoClient
+                    .db()
+                    .collection(this._eventsCollectionName)
+                    .deleteMany({ aggregateRootId: id }, { session });
                 await this._mongoClient
                     .db()
                     .collection(this._aggregatesCollectionName)
-                    .deleteOne({ _id: new ObjectId(id) });
+                    .deleteOne({ _id: new ObjectId(id) }, { session });
             });
         } finally {
             await session.endSession();

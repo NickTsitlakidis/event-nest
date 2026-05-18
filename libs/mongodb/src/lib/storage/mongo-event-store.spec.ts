@@ -14,7 +14,7 @@ import {
     StoredSnapshot
 } from "@event-nest/core";
 import { createMock } from "@golevelup/ts-jest";
-import { Collection, MongoClient, ObjectId } from "mongodb";
+import { Collection, ClientSession, MongoClient, ObjectId } from "mongodb";
 
 import { MongoEventStore } from "./mongo-event-store";
 import { MongoSnapshotStore } from "./mongo-snapshot-store";
@@ -459,7 +459,13 @@ describe("MongoEventStore", () => {
 
     describe("purgeAggregate", () => {
         test("deletes events and aggregate while keeping unrelated data and delegates snapshot deletion to snapshot store", async () => {
-            snapshotStore.deleteByAggregateId.mockReturnValue(Promise.resolve());
+            let snapshotSession: ClientSession | undefined;
+            let snapshotInTransaction: boolean | undefined;
+            snapshotStore.deleteByAggregateId.mockImplementation((_id, session) => {
+                snapshotSession = session;
+                snapshotInTransaction = session?.inTransaction();
+                return Promise.resolve();
+            });
 
             const aggregateId = new ObjectId().toHexString();
             const otherAggregateId = new ObjectId().toHexString();
@@ -498,7 +504,9 @@ describe("MongoEventStore", () => {
             expect(await eventsCollection.countDocuments({ aggregateRootId: otherAggregateId })).toBe(1);
 
             expect(snapshotStore.deleteByAggregateId).toHaveBeenCalledTimes(1);
-            expect(snapshotStore.deleteByAggregateId).toHaveBeenCalledWith(aggregateId, expect.anything());
+            expect(snapshotStore.deleteByAggregateId).toHaveBeenCalledWith(aggregateId, expect.any(ClientSession));
+            expect(snapshotInTransaction).toBe(true);
+            expect(snapshotSession?.hasEnded).toBe(true);
         });
 
         test("is a no-op for unknown aggregate id", async () => {
@@ -524,7 +532,7 @@ describe("MongoEventStore", () => {
             expect(await eventsCollection.countDocuments()).toBe(1);
 
             expect(snapshotStore.deleteByAggregateId).toHaveBeenCalledTimes(1);
-            expect(snapshotStore.deleteByAggregateId).toHaveBeenCalledWith(aggregateId, expect.anything());
+            expect(snapshotStore.deleteByAggregateId).toHaveBeenCalledWith(aggregateId, expect.any(ClientSession));
         });
     });
 
