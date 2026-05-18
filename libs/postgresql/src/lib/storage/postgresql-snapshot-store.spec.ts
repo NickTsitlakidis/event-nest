@@ -145,6 +145,76 @@ describe("PostgreSQLSnapshotStore", () => {
         });
     });
 
+    describe("deleteByAggregateId", () => {
+        test("deletes all snapshots for the target aggregate id", async () => {
+            const aggregateRootId = randomUUID();
+            const otherAggregateRootId = randomUUID();
+
+            await knexConnection<AggregateRootRow>(schema + ".es-aggregates").insert([
+                { id: aggregateRootId, version: 2 },
+                { id: otherAggregateRootId, version: 1 }
+            ]);
+
+            await knexConnection<SnapshotRow>(schema + ".es-snapshots").insert([
+                {
+                    aggregate_root_id: aggregateRootId,
+                    aggregate_root_version: 1,
+                    id: randomUUID(),
+                    payload: JSON.stringify({ target: 1 }),
+                    revision: 1
+                },
+                {
+                    aggregate_root_id: aggregateRootId,
+                    aggregate_root_version: 2,
+                    id: randomUUID(),
+                    payload: JSON.stringify({ target: 2 }),
+                    revision: 1
+                },
+                {
+                    aggregate_root_id: otherAggregateRootId,
+                    aggregate_root_version: 1,
+                    id: randomUUID(),
+                    payload: JSON.stringify({ target: 3 }),
+                    revision: 1
+                }
+            ]);
+
+            await store.deleteByAggregateId(aggregateRootId);
+
+            expect(
+                await knexConnection<SnapshotRow>(schema + ".es-snapshots").where("aggregate_root_id", aggregateRootId)
+            ).toHaveLength(0);
+
+            expect(
+                await knexConnection<SnapshotRow>(schema + ".es-snapshots").where(
+                    "aggregate_root_id",
+                    otherAggregateRootId
+                )
+            ).toHaveLength(1);
+        });
+
+        test("is a no-op for unknown aggregate id", async () => {
+            const aggregateRootId = randomUUID();
+            const otherAggregateRootId = randomUUID();
+
+            await knexConnection<AggregateRootRow>(schema + ".es-aggregates").insert({
+                id: otherAggregateRootId,
+                version: 1
+            });
+            await knexConnection<SnapshotRow>(schema + ".es-snapshots").insert({
+                aggregate_root_id: otherAggregateRootId,
+                aggregate_root_version: 1,
+                id: randomUUID(),
+                payload: JSON.stringify({ other: true }),
+                revision: 1
+            });
+
+            await expect(store.deleteByAggregateId(aggregateRootId)).resolves.toBeUndefined();
+
+            expect(await knexConnection<SnapshotRow>(schema + ".es-snapshots").select("*")).toHaveLength(1);
+        });
+    });
+
     describe("save", () => {
         test("saves snapshot row and returns snapshot", async () => {
             const aggregateRootId = randomUUID();

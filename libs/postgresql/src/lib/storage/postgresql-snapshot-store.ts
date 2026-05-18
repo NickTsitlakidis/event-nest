@@ -1,6 +1,6 @@
 import { AbstractSnapshotStore, SnapshotStrategy, StoredSnapshot } from "@event-nest/core";
 import { Injectable, Logger } from "@nestjs/common";
-import { isNil } from "es-toolkit";
+import { isNil, isNotNil } from "es-toolkit";
 import knex from "knex";
 import { randomUUID } from "node:crypto";
 
@@ -12,15 +12,24 @@ export class PostgreSQLSnapshotStore extends AbstractSnapshotStore {
 
     constructor(
         snapshotStrategy: SnapshotStrategy,
-        private readonly schemaAwareSnapshotTable: string,
+        private readonly _schemaAwareSnapshotTable: string,
         private readonly _knexConnection: knex.Knex
     ) {
         super(snapshotStrategy);
         this._logger = new Logger(PostgreSQLSnapshotStore.name);
     }
 
+    async deleteByAggregateId(id: string, transaction?: knex.Knex.Transaction): Promise<void> {
+        const startedAt = Date.now();
+        const connection = isNotNil(transaction) ? transaction : this._knexConnection;
+        await connection<SnapshotRow>(this._schemaAwareSnapshotTable).where("aggregate_root_id", id).delete();
+
+        const duration = Date.now() - startedAt;
+        this._logger.debug(`Deleting snapshots for aggregate ${id} took ${duration}ms`);
+    }
+
     async findLatestSnapshotByAggregateId(id: string): Promise<StoredSnapshot | undefined> {
-        const row = await this._knexConnection<SnapshotRow>(this.schemaAwareSnapshotTable)
+        const row = await this._knexConnection<SnapshotRow>(this._schemaAwareSnapshotTable)
             .select("*")
             .where("aggregate_root_id", id)
             .orderBy("aggregate_root_version", "desc")
@@ -53,7 +62,7 @@ export class PostgreSQLSnapshotStore extends AbstractSnapshotStore {
         };
 
         const startedAt = Date.now();
-        await this._knexConnection<SnapshotRow>(this.schemaAwareSnapshotTable).insert(snapshotRow);
+        await this._knexConnection<SnapshotRow>(this._schemaAwareSnapshotTable).insert(snapshotRow);
 
         const duration = Date.now() - startedAt;
         this._logger.debug(`Saving snapshot for aggregate ${snapshot.id} took ${duration}ms`);

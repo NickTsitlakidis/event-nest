@@ -70,6 +70,10 @@ class TestStore extends AbstractEventStore {
         return Promise.resolve("generated-id");
     }
 
+    purgeAggregate(): Promise<void> {
+        return Promise.resolve();
+    }
+
     save(events: Array<StoredEvent>, aggregate: StoredAggregateRoot): Promise<Array<StoredEvent>> {
         this.savedEvents = events;
         this.savedAggregate = aggregate;

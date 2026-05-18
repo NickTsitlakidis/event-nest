@@ -1,7 +1,7 @@
 import { AbstractSnapshotStore, SnapshotStrategy, StoredSnapshot } from "@event-nest/core";
 import { Injectable, Logger } from "@nestjs/common";
 import { isNil } from "es-toolkit";
-import { MongoClient, ObjectId } from "mongodb";
+import { ClientSession, MongoClient, ObjectId } from "mongodb";
 
 import { SnapshotDocument } from "./snapshot-document";
 
@@ -16,6 +16,17 @@ export class MongoSnapshotStore extends AbstractSnapshotStore {
     ) {
         super(snapshotStrategy);
         this._logger = new Logger(MongoSnapshotStore.name);
+    }
+
+    async deleteByAggregateId(id: string, session?: ClientSession): Promise<void> {
+        const startedAt = Date.now();
+        await this._mongoClient
+            .db()
+            .collection<SnapshotDocument>(this._snapshotsCollectionName)
+            .deleteMany({ aggregateRootId: id }, { session });
+
+        const duration = Date.now() - startedAt;
+        this._logger.debug(`Deleting snapshots for aggregate ${id} took ${duration}ms`);
     }
 
     async findLatestSnapshotByAggregateId(id: string): Promise<StoredSnapshot | undefined> {

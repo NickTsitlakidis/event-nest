@@ -25,6 +25,7 @@ import { PostgreSQLSnapshotStore } from "./postgresql-snapshot-store";
 
 export class PostgreSQLEventStore extends AbstractEventStore {
     private readonly _logger: Logger;
+    private readonly _postgresSnapshotStore: PostgreSQLSnapshotStore;
     private readonly _schemaConfiguration: SchemaConfiguration;
 
     constructor(
@@ -36,6 +37,7 @@ export class PostgreSQLEventStore extends AbstractEventStore {
         super(eventEmitter, snapshotStore);
         this._logger = new Logger(PostgreSQLEventStore.name);
         this._schemaConfiguration = schemaConfiguration;
+        this._postgresSnapshotStore = snapshotStore;
     }
 
     get schemaConfiguration(): SchemaConfiguration {
@@ -149,6 +151,29 @@ export class PostgreSQLEventStore extends AbstractEventStore {
 
     generateEntityId(): Promise<string> {
         return Promise.resolve(randomUUID());
+    }
+
+    async purgeAggregate(id: string): Promise<void> {
+        const startedAt = Date.now();
+
+        try {
+            await this._knexConnection.transaction(async (trx) => {
+                await this._postgresSnapshotStore.deleteByAggregateId(id, trx);
+
+                await trx<EventRow>(this._schemaConfiguration.schemaAwareEventsTable)
+                    .where("aggregate_root_id", id)
+                    .delete();
+                await trx<AggregateRootRow>(this._schemaConfiguration.schemaAwareAggregatesTable)
+                    .where("id", id)
+                    .delete();
+            });
+        } catch (error) {
+            this._logger.error("Unable to purge aggregate root with id : " + id);
+            throw error;
+        }
+
+        const duration = Date.now() - startedAt;
+        this._logger.debug(`Purging aggregate ${id} took ${duration}ms`);
     }
 
     async save(events: Array<StoredEvent>, aggregate: StoredAggregateRoot): Promise<Array<StoredEvent>> {

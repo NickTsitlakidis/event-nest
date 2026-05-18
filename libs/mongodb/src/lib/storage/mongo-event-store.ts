@@ -21,6 +21,8 @@ import { MongoSnapshotStore } from "./mongo-snapshot-store";
 
 export class MongoEventStore extends AbstractEventStore {
     private readonly _logger: Logger;
+    private readonly _mongoSnapshotStore: MongoSnapshotStore;
+
     constructor(
         eventEmitter: DomainEventEmitter,
         mongoSnapshotStore: MongoSnapshotStore,
@@ -29,6 +31,7 @@ export class MongoEventStore extends AbstractEventStore {
         private readonly _eventsCollectionName: string
     ) {
         super(eventEmitter, mongoSnapshotStore);
+        this._mongoSnapshotStore = mongoSnapshotStore;
         this._logger = new Logger(MongoEventStore.name);
     }
 
@@ -189,6 +192,26 @@ export class MongoEventStore extends AbstractEventStore {
 
     generateEntityId(): Promise<string> {
         return Promise.resolve(new ObjectId().toHexString());
+    }
+
+    async purgeAggregate(id: string): Promise<void> {
+        const startedAt = Date.now();
+        const session = this._mongoClient.startSession();
+        try {
+            await session.withTransaction(async () => {
+                await this._mongoSnapshotStore.deleteByAggregateId(id, session);
+                await this._mongoClient.db().collection(this._eventsCollectionName).deleteMany({ aggregateRootId: id });
+                await this._mongoClient
+                    .db()
+                    .collection(this._aggregatesCollectionName)
+                    .deleteOne({ _id: new ObjectId(id) });
+            });
+        } finally {
+            await session.endSession();
+        }
+
+        const duration = Date.now() - startedAt;
+        this._logger.debug(`Purging aggregate ${id} took ${duration}ms`);
     }
 
     async save(events: Array<StoredEvent>, aggregate: StoredAggregateRoot): Promise<Array<StoredEvent>> {
