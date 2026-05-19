@@ -1,3 +1,24 @@
+## 6.0.0 (2026-05-19)
+
+### 🚀 Features
+
+- **core,mongodb,postgresql:** Added a `purgeAggregate` method to the event store to remove an aggregate and all its events. ([#53](https://github.com/NickTsitlakidis/event-nest/pull/53))
+
+#### ⚠️ Breaking Changes
+
+- **mongodb**: The peer dependency on `mongodb` has been bumped to 7.x. Consumers must upgrade their `mongodb` dependency.
+- **core,mongodb,postgresql**: Dropped support for Node.js 20.x. The minimum supported version is now 22.x.
+- **core**: The `EventStore` interface has been updated to include a new method `purgeAggregate` for purging an aggregate's events and the aggregate itself.
+
+### 🩹 Fixes
+
+- **mongodb:** Event store's `save` method now uses transactions properly. Edge cases for the update of aggregate root version have also been fixed. ([#55](https://github.com/NickTsitlakidis/event-nest/pull/55))
+- **postgresql:** Event store's `save` method has been updated to fix edge cases when updating aggregate root version. ([#56](https://github.com/NickTsitlakidis/event-nest/pull/56))
+
+### Contributors
+
+- Nick Tsitlakidis
+
 ## 5.0.0 (2026-02-22)
 
 ### 🚀 Features
