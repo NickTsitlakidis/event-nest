@@ -101,6 +101,13 @@ export interface EventStore {
     generateEntityId(): Promise<string>;
 
     /**
+     * Permanently removes the aggregate root and all persisted state associated with it.
+     * Implementations should delete dependent records first and treat missing ids as a no-op.
+     * @param id The unique id of the aggregate root object
+     */
+    purgeAggregate(id: string): Promise<void>;
+
+    /**
      * Saves the provided event and aggregate root object. Before saving the aggregate root object, the method will check
      * if the version of the aggregate root object is the same as the version of the aggregate root object in the database.
      * If there's a version mismatch, the method will throw an exception. Otherwise, the method will increase the version

@@ -10,6 +10,10 @@ export class NoOpSnapshotStore extends AbstractSnapshotStore {
         super(new NoSnapshotStrategy());
     }
 
+    override deleteByAggregateId(): Promise<void> {
+        return Promise.resolve();
+    }
+
     override findLatestSnapshotByAggregateId() {
         return Promise.resolve(void 0);
     }

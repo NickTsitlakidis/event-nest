@@ -107,5 +107,7 @@ export abstract class AbstractEventStore implements EventStore {
 
     abstract generateEntityId(): Promise<string>;
 
+    abstract purgeAggregate(id: string): Promise<void>;
+
     abstract save(events: Array<StoredEvent>, aggregate: StoredAggregateRoot): Promise<Array<StoredEvent>>;
 }

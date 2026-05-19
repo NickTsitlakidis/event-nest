@@ -25,6 +25,8 @@ export abstract class AbstractSnapshotStore implements SnapshotStore {
         return saved;
     }
 
+    abstract deleteByAggregateId(id: string, transaction?: unknown): Promise<void>;
+
     abstract findLatestSnapshotByAggregateId(id: string): Promise<StoredSnapshot | undefined>;
 
     abstract generateEntityId(): Promise<string>;

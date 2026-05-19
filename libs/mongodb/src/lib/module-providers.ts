@@ -52,7 +52,7 @@ export class ModuleProviders {
                 useFactory: (
                     eventEmitter: DomainEventEmitter,
                     mongoClient: MongoClient,
-                    snapshotStore: MongoSnapshotStore
+                    snapshotStore: AbstractSnapshotStore
                 ) => {
                     return new MongoEventStore(
                         eventEmitter,
@@ -117,7 +117,7 @@ export class ModuleProviders {
                 options: MongodbModuleOptions,
                 eventBus: DomainEventEmitter,
                 mongoClient: MongoClient,
-                snapshotStore: MongoSnapshotStore
+                snapshotStore: AbstractSnapshotStore
             ) => {
                 return new MongoEventStore(
                     eventBus,

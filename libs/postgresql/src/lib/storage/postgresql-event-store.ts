@@ -1,5 +1,6 @@
 import {
     AbstractEventStore,
+    AbstractSnapshotStore,
     AggregateClassNotSnapshotAwareException,
     AggregateRoot,
     AggregateRootClass,
@@ -21,7 +22,6 @@ import { randomUUID } from "node:crypto";
 import { SchemaConfiguration } from "../schema-configuration";
 import { AggregateRootRow } from "./aggregate-root-row";
 import { EventRow } from "./event-row";
-import { PostgreSQLSnapshotStore } from "./postgresql-snapshot-store";
 
 export class PostgreSQLEventStore extends AbstractEventStore {
     private readonly _logger: Logger;
@@ -29,7 +29,7 @@ export class PostgreSQLEventStore extends AbstractEventStore {
 
     constructor(
         eventEmitter: DomainEventEmitter,
-        snapshotStore: PostgreSQLSnapshotStore,
+        snapshotStore: AbstractSnapshotStore,
         schemaConfiguration: SchemaConfiguration,
         private readonly _knexConnection: knex.Knex
     ) {
@@ -149,6 +149,29 @@ export class PostgreSQLEventStore extends AbstractEventStore {
 
     generateEntityId(): Promise<string> {
         return Promise.resolve(randomUUID());
+    }
+
+    async purgeAggregate(id: string): Promise<void> {
+        const startedAt = Date.now();
+
+        try {
+            await this._knexConnection.transaction(async (trx) => {
+                await this._snapshotStore.deleteByAggregateId(id, trx);
+
+                await trx<EventRow>(this._schemaConfiguration.schemaAwareEventsTable)
+                    .where("aggregate_root_id", id)
+                    .delete();
+                await trx<AggregateRootRow>(this._schemaConfiguration.schemaAwareAggregatesTable)
+                    .where("id", id)
+                    .delete();
+            });
+        } catch (error) {
+            this._logger.error("Unable to purge aggregate root with id : " + id);
+            throw error;
+        }
+
+        const duration = Date.now() - startedAt;
+        this._logger.debug(`Purging aggregate ${id} took ${duration}ms`);
     }
 
     async save(events: Array<StoredEvent>, aggregate: StoredAggregateRoot): Promise<Array<StoredEvent>> {

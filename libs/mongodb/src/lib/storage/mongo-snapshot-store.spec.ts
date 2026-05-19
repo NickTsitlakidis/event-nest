@@ -134,6 +134,59 @@ describe("findLatestSnapshotByAggregateId tests", () => {
     });
 });
 
+describe("deleteByAggregateId tests", () => {
+    test("deletes all snapshots for the target aggregate id", async () => {
+        const aggregateId = new ObjectId().toHexString();
+        const otherAggregateId = new ObjectId().toHexString();
+
+        await snapshotsCollection.insertMany([
+            {
+                _id: new ObjectId(),
+                aggregateRootId: aggregateId,
+                aggregateRootVersion: 1,
+                payload: { value: 1 },
+                revision: 1
+            },
+            {
+                _id: new ObjectId(),
+                aggregateRootId: aggregateId,
+                aggregateRootVersion: 2,
+                payload: { value: 2 },
+                revision: 1
+            },
+            {
+                _id: new ObjectId(),
+                aggregateRootId: otherAggregateId,
+                aggregateRootVersion: 1,
+                payload: { value: 3 },
+                revision: 1
+            }
+        ]);
+
+        await snapshotStore.deleteByAggregateId(aggregateId);
+
+        expect(await snapshotsCollection.countDocuments({ aggregateRootId: aggregateId })).toBe(0);
+        expect(await snapshotsCollection.countDocuments({ aggregateRootId: otherAggregateId })).toBe(1);
+    });
+
+    test("is a no-op for unknown aggregate id", async () => {
+        const aggregateId = new ObjectId().toHexString();
+        const otherAggregateId = new ObjectId().toHexString();
+
+        await snapshotsCollection.insertOne({
+            _id: new ObjectId(),
+            aggregateRootId: otherAggregateId,
+            aggregateRootVersion: 1,
+            payload: { value: 1 },
+            revision: 1
+        });
+
+        await expect(snapshotStore.deleteByAggregateId(aggregateId)).resolves.toBeUndefined();
+
+        expect(await snapshotsCollection.countDocuments({ aggregateRootId: otherAggregateId })).toBe(1);
+    });
+});
+
 describe("save tests", () => {
     test("saves snapshot successfully", async () => {
         const snapshotId = new ObjectId().toHexString();

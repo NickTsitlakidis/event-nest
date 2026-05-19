@@ -7,6 +7,7 @@ import {
     EventConcurrencyException,
     getAggregateRootName,
     MissingAggregateRootNameException,
+    NoOpSnapshotStore,
     SnapshotAware,
     SnapshotRevisionMismatchException,
     StoredAggregateRoot,
@@ -132,7 +133,7 @@ describe("PostgreSQLEventStore", () => {
         await knexConnection(schema + ".es-aggregates").delete();
     });
 
-    describe("findAggregateRootVersion tests", () => {
+    describe("findAggregateRootVersion", () => {
         test("returns -1 when the aggregate root is not found", async () => {
             await knexConnection(schema + ".es-aggregates").insert({
                 id: randomUUID(),
@@ -153,7 +154,7 @@ describe("PostgreSQLEventStore", () => {
         });
     });
 
-    describe("findByAggregateRootIds tests", () => {
+    describe("findByAggregateRootIds", () => {
         test("returns empty array when no events found", async () => {
             const events = await eventStore.findByAggregateRootIds(DecoratedAggregateRoot, [
                 randomUUID(),
@@ -294,7 +295,7 @@ describe("PostgreSQLEventStore", () => {
         });
     });
 
-    describe("findByAggregateRootId tests", () => {
+    describe("findByAggregateRootId", () => {
         test("returns empty array when no events found", async () => {
             const events = await eventStore.findByAggregateRootId(DecoratedAggregateRoot, randomUUID());
             expect(events).toEqual([]);
@@ -406,7 +407,7 @@ describe("PostgreSQLEventStore", () => {
         });
     });
 
-    describe("save tests", () => {
+    describe("save", () => {
         test("does nothing for empty events array", async () => {
             const ag = new StoredAggregateRoot(randomUUID(), 5);
 
@@ -515,12 +516,133 @@ describe("PostgreSQLEventStore", () => {
         });
     });
 
+    describe("purgeAggregate", () => {
+        test("deletes events and aggregate while keeping unrelated data and delegates snapshot deletion to snapshot store", async () => {
+            snapshotStore.deleteByAggregateId.mockReturnValue(Promise.resolve());
+
+            const aggregateRootId = randomUUID();
+            const otherAggregateRootId = randomUUID();
+
+            await knexConnection<AggregateRootRow>(schema + ".es-aggregates").insert([
+                { id: aggregateRootId, version: 2 },
+                { id: otherAggregateRootId, version: 3 }
+            ]);
+
+            await knexConnection<EventRow>(schema + ".es-events").insert([
+                {
+                    aggregate_root_id: aggregateRootId,
+                    aggregate_root_name: "test-aggregate",
+                    aggregate_root_version: 1,
+                    created_at: new Date(),
+                    event_name: "sql-event-1",
+                    id: randomUUID(),
+                    payload: "{}"
+                },
+                {
+                    aggregate_root_id: otherAggregateRootId,
+                    aggregate_root_name: "test-aggregate",
+                    aggregate_root_version: 1,
+                    created_at: new Date(),
+                    event_name: "sql-event-2",
+                    id: randomUUID(),
+                    payload: "{}"
+                }
+            ]);
+
+            await eventStore.purgeAggregate(aggregateRootId);
+
+            expect(
+                await knexConnection<AggregateRootRow>(schema + ".es-aggregates")
+                    .where("id", aggregateRootId)
+                    .first()
+            ).toBeUndefined();
+            expect(
+                await knexConnection<AggregateRootRow>(schema + ".es-aggregates")
+                    .where("id", otherAggregateRootId)
+                    .first()
+            ).toBeDefined();
+            expect(
+                await knexConnection<EventRow>(schema + ".es-events").where("aggregate_root_id", aggregateRootId)
+            ).toHaveLength(0);
+            expect(
+                await knexConnection<EventRow>(schema + ".es-events").where("aggregate_root_id", otherAggregateRootId)
+            ).toHaveLength(1);
+
+            expect(snapshotStore.deleteByAggregateId).toHaveBeenCalledTimes(1);
+            expect(snapshotStore.deleteByAggregateId).toHaveBeenCalledWith(aggregateRootId, expect.anything());
+        });
+
+        test("is a no-op for unknown aggregate id", async () => {
+            snapshotStore.deleteByAggregateId.mockReturnValue(Promise.resolve());
+
+            const aggregateRootId = randomUUID();
+            const otherAggregateRootId = randomUUID();
+
+            await knexConnection<AggregateRootRow>(schema + ".es-aggregates").insert({
+                id: otherAggregateRootId,
+                version: 1
+            });
+            await knexConnection<EventRow>(schema + ".es-events").insert({
+                aggregate_root_id: otherAggregateRootId,
+                aggregate_root_name: "test-aggregate",
+                aggregate_root_version: 1,
+                created_at: new Date(),
+                event_name: "sql-event-1",
+                id: randomUUID(),
+                payload: "{}"
+            });
+
+            await expect(eventStore.purgeAggregate(aggregateRootId)).resolves.toBeUndefined();
+
+            expect(await knexConnection<AggregateRootRow>(schema + ".es-aggregates").select("*")).toHaveLength(1);
+            expect(await knexConnection<EventRow>(schema + ".es-events").select("*")).toHaveLength(1);
+
+            expect(snapshotStore.deleteByAggregateId).toHaveBeenCalledTimes(1);
+            expect(snapshotStore.deleteByAggregateId).toHaveBeenCalledWith(aggregateRootId, expect.anything());
+        });
+
+        test("succeeds when snapshots are disabled (NoOpSnapshotStore)", async () => {
+            const storeWithoutSnapshots = new PostgreSQLEventStore(
+                createMock<DomainEventEmitter>(),
+                new NoOpSnapshotStore(),
+                new SchemaConfiguration(schema, "es-aggregates", "es-events", "es-snapshots"),
+                knexConnection
+            );
+
+            const aggregateRootId = randomUUID();
+            await knexConnection<AggregateRootRow>(schema + ".es-aggregates").insert({
+                id: aggregateRootId,
+                version: 1
+            });
+            await knexConnection<EventRow>(schema + ".es-events").insert({
+                aggregate_root_id: aggregateRootId,
+                aggregate_root_name: "test-aggregate",
+                aggregate_root_version: 1,
+                created_at: new Date(),
+                event_name: "sql-event-1",
+                id: randomUUID(),
+                payload: "{}"
+            });
+
+            await expect(storeWithoutSnapshots.purgeAggregate(aggregateRootId)).resolves.toBeUndefined();
+
+            expect(
+                await knexConnection<AggregateRootRow>(schema + ".es-aggregates")
+                    .where("id", aggregateRootId)
+                    .first()
+            ).toBeUndefined();
+            expect(
+                await knexConnection<EventRow>(schema + ".es-events").where("aggregate_root_id", aggregateRootId)
+            ).toHaveLength(0);
+        });
+    });
+
     test("generateEntityId - returns string with UUID format", async () => {
         const id = await eventStore.generateEntityId();
         expect(/^[a-z,0-9-]{36}$/.test(id)).toBe(true);
     });
 
-    describe("findWithSnapshot tests", () => {
+    describe("findWithSnapshot", () => {
         test("returns no snapshot and all events when no snapshot exists", async () => {
             const aggregateRootId = randomUUID();
             const aggregate_root_name = getAggregateRootName(SnapshotAwareAggregateRoot);

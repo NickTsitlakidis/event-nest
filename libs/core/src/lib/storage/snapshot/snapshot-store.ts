@@ -13,6 +13,19 @@ export interface SnapshotStore {
      */
     create(aggregateRoot: SnapshotAwareAggregateRoot): Promise<StoredSnapshot | undefined>;
     /**
+     * Removes every snapshot stored for the given aggregate root. Used by {@link EventStore.purgeAggregate}
+     * to keep snapshot deletion atomic with event/aggregate deletion when the storage backend supports it.
+     *
+     * The `transaction` parameter is intentionally typed as `unknown` because core has no knowledge of any
+     * specific database technology: MongoDB passes a `ClientSession`, Postgres passes a `Knex.Transaction`,
+     * and {@link NoOpSnapshotStore} ignores it entirely. Concrete implementations narrow the type on their
+     * own signature; callers in backend-specific event stores pass the matching value.
+     *
+     * @param id The unique identifier of the aggregate root whose snapshots should be deleted
+     * @param transaction Optional backend-specific transactional context to enroll the delete in
+     */
+    deleteByAggregateId(id: string, transaction?: unknown): Promise<void>;
+    /**
      * Finds the most recent snapshot for a given aggregate root by its ID.
      * @param id The unique identifier of the aggregate root
      * @returns Promise that resolves to the latest stored snapshot, or undefined if no snapshot exists
