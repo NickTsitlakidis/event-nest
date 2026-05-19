@@ -180,8 +180,8 @@ export class PostgreSQLEventStore extends AbstractEventStore {
             return [];
         }
 
-        let incrementedVersion = 0;
-        let finalAggregate: StoredAggregateRoot;
+        const expectedVersion = aggregate.version;
+        let committedVersion = expectedVersion;
 
         try {
             await this._knexConnection.transaction(async (trx) => {
@@ -193,34 +193,29 @@ export class PostgreSQLEventStore extends AbstractEventStore {
                     .where("id", aggregate.id)
                     .first();
 
-                let foundAggregate = isNil(aggregateInDatabase)
-                    ? undefined
-                    : new StoredAggregateRoot(aggregateInDatabase.id, aggregateInDatabase.version);
-
-                if (isNil(foundAggregate)) {
-                    aggregate.version = 0;
+                let currentVersion: number;
+                if (isNil(aggregateInDatabase)) {
                     this._logger.debug(`Aggregate ${aggregate.id} does not exist. Will save it`);
                     await trx(this._schemaConfiguration.schemaAwareAggregatesTable).insert({
                         id: aggregate.id,
-                        version: aggregate.version
+                        version: 0
                     });
-                    foundAggregate = aggregate;
-                }
-
-                if (aggregate.isOutdated(foundAggregate)) {
-                    this._logger.error(
-                        `Version conflict detected for aggregate ${aggregate.id}. Expected ${aggregate.version}. Stored ${foundAggregate.version}`
-                    );
-                    throw new EventConcurrencyException(aggregate.id, foundAggregate.version, aggregate.version);
+                    currentVersion = 0;
+                } else {
+                    currentVersion = aggregateInDatabase.version;
+                    if (expectedVersion !== currentVersion) {
+                        this._logger.error(
+                            `Version conflict detected for aggregate ${aggregate.id}. Expected ${expectedVersion}. Stored ${currentVersion}`
+                        );
+                        throw new EventConcurrencyException(aggregate.id, currentVersion, expectedVersion);
+                    }
                 }
 
                 for (const [index, storedEvent] of events.entries()) {
-                    incrementedVersion = aggregate.version + index + 1;
-                    storedEvent.aggregateRootVersion = incrementedVersion;
+                    storedEvent.aggregateRootVersion = currentVersion + index + 1;
                 }
+                const newVersion = currentVersion + events.length;
 
-                aggregate.version = incrementedVersion;
-                finalAggregate = aggregate;
                 this._logger.debug(`Saving ${events.length} events for aggregate ${aggregate.id}`);
 
                 const mapped: Array<EventRow> = events.map((storedEvent) => {
@@ -237,13 +232,16 @@ export class PostgreSQLEventStore extends AbstractEventStore {
 
                 await trx<EventRow>(this._schemaConfiguration.schemaAwareEventsTable).insert(mapped);
                 await trx<AggregateRootRow>(this._schemaConfiguration.schemaAwareAggregatesTable)
-                    .update("version", finalAggregate.version)
-                    .where("id", finalAggregate.id);
+                    .update("version", newVersion)
+                    .where("id", aggregate.id);
+
+                committedVersion = newVersion;
             });
         } catch (error) {
             this._logger.error("Unable to complete transaction for aggregate root with id : " + aggregate.id);
             throw error;
         }
+        aggregate.version = committedVersion;
         const duration = Date.now() - startedAt;
         this._logger.debug(`Saving events for aggregate ${aggregate.id} took ${duration}ms`);
         return events;

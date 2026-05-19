@@ -441,6 +441,8 @@ describe("PostgreSQLEventStore", () => {
                 .where("id", id)
                 .first();
             expect(aggregate!.version).toBe(6);
+
+            expect(root.version).toBe(5);
         });
 
         test("saves new aggregate with its event", async () => {
@@ -513,6 +515,42 @@ describe("PostgreSQLEventStore", () => {
             expect(saved).toEqual(events);
             expect(saved[0].aggregateRootVersion).toBe(39);
             expect(saved[1].aggregateRootVersion).toBe(40);
+
+            expect(root.version).toBe(40);
+        });
+
+        test("two concurrent saves on the same aggregate: one wins, the other throws", async () => {
+            const rootId = randomUUID();
+            await knexConnection<AggregateRootRow>(schema + ".es-aggregates").insert({ id: rootId, version: 5 });
+
+            const ag1 = new StoredAggregateRoot(rootId, 5);
+            const ag2 = new StoredAggregateRoot(rootId, 5);
+
+            const event1 = StoredEvent.fromPublishedEvent(randomUUID(), rootId, "Test", new SqlEvent1(), new Date());
+            const event2 = StoredEvent.fromPublishedEvent(randomUUID(), rootId, "Test", new SqlEvent2(), new Date());
+
+            const results = await Promise.allSettled([eventStore.save([event1], ag1), eventStore.save([event2], ag2)]);
+
+            const fulfilled = results.filter((r) => r.status === "fulfilled");
+            const rejected = results.filter((r) => r.status === "rejected");
+
+            expect(fulfilled).toHaveLength(1);
+            expect(rejected).toHaveLength(1);
+            expect((rejected[0] as PromiseRejectedResult).reason).toBeInstanceOf(EventConcurrencyException);
+
+            const storedAggregate = await knexConnection<AggregateRootRow>(schema + ".es-aggregates")
+                .where("id", rootId)
+                .first();
+            expect(storedAggregate!.version).toBe(6);
+
+            const storedEvents = await knexConnection<EventRow>(schema + ".es-events").where(
+                "aggregate_root_id",
+                rootId
+            );
+            expect(storedEvents).toHaveLength(1);
+            expect(storedEvents[0].aggregate_root_version).toBe(6);
+
+            expect([ag1.version, ag2.version].toSorted()).toEqual([5, 6]);
         });
     });
 
