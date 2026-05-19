@@ -1,4 +1,4 @@
-import { EVENT_STORE, EventStore } from "@event-nest/core";
+import { EVENT_STORE, type EventStore } from "@event-nest/core";
 import { Inject, Injectable } from "@nestjs/common";
 import { ObjectId } from "mongodb";
 

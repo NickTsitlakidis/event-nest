@@ -9,7 +9,7 @@
         "url": "https://github.com/NickTsitlakidis/event-nest.git"
     },
     "engines": {
-        "node": ">= 20"
+        "node": ">= 22"
     },
     "type": "commonjs",
     "keywords": [
@@ -26,6 +26,6 @@
         "@nestjs/core": "^10.0.0 || ^11.0.0",
         "reflect-metadata": "^0.1.12 || ^0.2.0",
         "rxjs": "^7.2.0",
-        "mongodb": "^6.15.0"
+        "mongodb": "^7.0.0"
     }
 }
