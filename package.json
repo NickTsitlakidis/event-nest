@@ -15,7 +15,7 @@
     },
     "packageManager": "pnpm@10.33.4",
     "engines": {
-        "node": ">= 20"
+        "node": ">= 22"
     },
     "pnpm": {
         "onlyBuiltDependencies": [
@@ -45,10 +45,10 @@
         "@shelf/jest-mongodb": "6.0.2",
         "@testcontainers/postgresql": "11.14.0",
         "@types/jest": "30.0.0",
-        "@types/node": "20.19.41",
-        "@typescript-eslint/eslint-plugin": "8.59.3",
-        "@typescript-eslint/parser": "8.59.3",
-        "@typescript-eslint/utils": "8.59.3",
+        "@types/node": "22.19.19",
+        "@typescript-eslint/eslint-plugin": "8.59.4",
+        "@typescript-eslint/parser": "8.59.4",
+        "@typescript-eslint/utils": "8.59.4",
         "eslint": "10.4.0",
         "eslint-config-prettier": "10.1.8",
         "eslint-plugin-perfectionist": "5.9.0",
@@ -63,8 +63,8 @@
         "prettier": "3.8.3",
         "ts-jest": "29.4.9",
         "ts-node": "10.9.2",
-        "typescript": "5.9.3",
-        "typescript-eslint": "8.59.3",
+        "typescript": "6.0.3",
+        "typescript-eslint": "8.59.4",
         "webpack": "5.106.2"
     },
     "dependencies": {
@@ -74,7 +74,7 @@
         "class-transformer": "^0.5.1",
         "es-toolkit": "^1.45.1",
         "knex": "^3.1.0",
-        "mongodb": "^6.21.0",
+        "mongodb": "^7.0.0",
         "pg": "^8.14.1",
         "reflect-metadata": "0.2.2",
         "rxjs": "^7.8.0",

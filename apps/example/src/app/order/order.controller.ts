@@ -7,12 +7,12 @@ export class OrderController {
     constructor(private orderService: OrderService) {}
 
     @Post()
-    createUser(@Body() requestBody) {
-        return this.orderService.createOrder(requestBody.name, requestBody.userId);
+    createOrder(@Body() requestBody: { userId: string }) {
+        return this.orderService.createOrder(requestBody.userId);
     }
 
     @Put(":id")
-    updateUser(@Body() requestBody, @Param("id") id: string) {
+    updateOrder(@Body() requestBody: { newStatus: "paid" | "pending" | "shipping" }, @Param("id") id: string) {
         return this.orderService.updateOrder(id, requestBody.newStatus);
     }
 }

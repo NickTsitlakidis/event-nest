@@ -14,6 +14,8 @@ export class User extends AggregateRoot implements SnapshotAware<UserModel> {
 
     private constructor(id: string) {
         super(id);
+        this._email = "";
+        this._name = "";
     }
 
     public static createNew(id: string, name: string, email: string): User {

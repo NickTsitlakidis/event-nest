@@ -1,4 +1,4 @@
-import { EVENT_STORE, EventStore } from "@event-nest/core";
+import { EVENT_STORE, type EventStore } from "@event-nest/core";
 import { Inject, Injectable } from "@nestjs/common";
 import { ObjectId } from "mongodb";
 
@@ -8,7 +8,7 @@ import { Order, OrderModel } from "./order";
 export class OrderService {
     constructor(@Inject(EVENT_STORE) private _eventStore: EventStore) {}
 
-    async createOrder(name: string, userId: string) {
+    async createOrder(userId: string) {
         const order = Order.create(new ObjectId().toHexString(), userId);
         const userWithPublisher = this._eventStore.addPublisher(order);
         await userWithPublisher.commit();

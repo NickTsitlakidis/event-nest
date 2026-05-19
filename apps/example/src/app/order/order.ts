@@ -9,11 +9,13 @@ export interface OrderModel {
 
 @AggregateRootConfig({ name: "Order", snapshotRevision: 1 })
 export class Order extends AggregateRoot implements SnapshotAware<OrderModel> {
-    private status: OrderModel["status"];
-    private userId: string;
+    private _status: "paid" | "pending" | "shipping";
+    private _userId: string;
 
     constructor(id: string) {
         super(id);
+        this._status = "pending";
+        this._userId = "";
     }
 
     static create(id: string, userId: string) {
@@ -32,14 +34,14 @@ export class Order extends AggregateRoot implements SnapshotAware<OrderModel> {
     }
 
     applySnapshot(snapshot: OrderModel) {
-        this.userId = snapshot.userId;
-        this.status = snapshot.status;
+        this._userId = snapshot.userId;
+        this._status = snapshot.status;
     }
 
     toSnapshot() {
         return {
-            status: this.status,
-            userId: this.userId
+            status: this._status,
+            userId: this._userId
         };
     }
 
@@ -51,11 +53,11 @@ export class Order extends AggregateRoot implements SnapshotAware<OrderModel> {
 
     @ApplyEvent(OrderCreatedEvent)
     private processOrderCreatedEvent(event: OrderCreatedEvent) {
-        this.userId = event.userId;
+        this._userId = event.userId;
     }
 
     @ApplyEvent(OrderStatusChanged)
     private processOrderStatusChanged(event: OrderStatusChanged) {
-        this.status = event.status;
+        this._status = event.status;
     }
 }

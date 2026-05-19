@@ -9,7 +9,7 @@
         "url": "https://github.com/NickTsitlakidis/event-nest.git"
     },
     "engines": {
-        "node": ">= 20"
+        "node": ">= 22"
     },
     "type": "commonjs",
     "keywords": [
