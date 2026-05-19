@@ -220,70 +220,69 @@ export class MongoEventStore extends AbstractEventStore {
             return events;
         }
 
-        let incrementedVersion = 0;
-        let finalAggregate: StoredAggregateRoot;
-
-        const foundAggregateDocument = await this._mongoClient
-            .db()
-            .collection(this._aggregatesCollectionName)
-            .findOne({
-                _id: new ObjectId(aggregate.id)
-            });
-
-        let foundAggregate = isNil(foundAggregateDocument)
-            ? undefined
-            : new StoredAggregateRoot(foundAggregateDocument._id.toHexString(), foundAggregateDocument["version"]);
-
+        const expectedVersion = aggregate.version;
+        let committedVersion = expectedVersion;
         const session = this._mongoClient.startSession();
-        await session.withTransaction(async () => {
-            if (isNil(foundAggregate)) {
-                aggregate.version = 0;
-                this._logger.debug(`Aggregate ${aggregate.id} does not exist. Will save it`);
-                const mapped = { _id: new ObjectId(aggregate.id), version: aggregate.version };
-                await this._mongoClient.db().collection(this._aggregatesCollectionName).insertOne(mapped);
-                foundAggregate = aggregate;
-            }
+        try {
+            await session.withTransaction(async () => {
+                const foundAggregateDocument = await this._mongoClient
+                    .db()
+                    .collection(this._aggregatesCollectionName)
+                    .findOne({ _id: new ObjectId(aggregate.id) }, { session });
 
-            if (aggregate.isOutdated(foundAggregate)) {
-                this._logger.error(
-                    `Version conflict detected for aggregate ${aggregate.id}. Expected ${aggregate.version}. Stored ${foundAggregate.version}`
-                );
-                throw new EventConcurrencyException(aggregate.id, foundAggregate.version, aggregate.version);
-            }
-
-            for (const [index, storedEvent] of events.entries()) {
-                incrementedVersion = aggregate.version + index + 1;
-                storedEvent.aggregateRootVersion = incrementedVersion;
-            }
-
-            aggregate.version = incrementedVersion;
-            finalAggregate = aggregate;
-            this._logger.debug(`Saving ${events.length} events for aggregate ${aggregate.id}`);
-
-            const mapped = events.map((event) => {
-                return {
-                    _id: new ObjectId(event.id),
-                    aggregateRootId: event.aggregateRootId,
-                    aggregateRootName: event.aggregateRootName,
-                    aggregateRootVersion: event.aggregateRootVersion,
-                    createdAt: event.createdAt,
-                    eventName: event.eventName,
-                    payload: event.payload
-                };
-            });
-            await this._mongoClient.db().collection(this._eventsCollectionName).insertMany(mapped);
-            await this._mongoClient
-                .db()
-                .collection(this._aggregatesCollectionName)
-                .findOneAndUpdate(
-                    {
-                        _id: new ObjectId(finalAggregate.id)
-                    },
-                    {
-                        $set: { version: finalAggregate.version }
+                let currentVersion: number;
+                if (isNil(foundAggregateDocument)) {
+                    this._logger.debug(`Aggregate ${aggregate.id} does not exist. Will save it`);
+                    await this._mongoClient
+                        .db()
+                        .collection(this._aggregatesCollectionName)
+                        .insertOne({ _id: new ObjectId(aggregate.id), version: 0 }, { session });
+                    currentVersion = 0;
+                } else {
+                    currentVersion = foundAggregateDocument["version"];
+                    if (expectedVersion !== currentVersion) {
+                        this._logger.error(
+                            `Version conflict detected for aggregate ${aggregate.id}. Expected ${expectedVersion}. Stored ${currentVersion}`
+                        );
+                        throw new EventConcurrencyException(aggregate.id, currentVersion, expectedVersion);
                     }
-                );
-        });
+                }
+
+                for (const [index, storedEvent] of events.entries()) {
+                    storedEvent.aggregateRootVersion = currentVersion + index + 1;
+                }
+                const newVersion = currentVersion + events.length;
+
+                this._logger.debug(`Saving ${events.length} events for aggregate ${aggregate.id}`);
+
+                const mapped = events.map((event) => {
+                    return {
+                        _id: new ObjectId(event.id),
+                        aggregateRootId: event.aggregateRootId,
+                        aggregateRootName: event.aggregateRootName,
+                        aggregateRootVersion: event.aggregateRootVersion,
+                        createdAt: event.createdAt,
+                        eventName: event.eventName,
+                        payload: event.payload
+                    };
+                });
+
+                await this._mongoClient.db().collection(this._eventsCollectionName).insertMany(mapped, { session });
+                await this._mongoClient
+                    .db()
+                    .collection(this._aggregatesCollectionName)
+                    .findOneAndUpdate(
+                        { _id: new ObjectId(aggregate.id) },
+                        { $set: { version: newVersion } },
+                        { session }
+                    );
+
+                committedVersion = newVersion;
+            });
+        } finally {
+            await session.endSession();
+        }
+        aggregate.version = committedVersion;
         const duration = Date.now() - startedAt;
         this._logger.debug(`Saving events for aggregate ${aggregate.id} took ${duration}ms`);
         return events;
