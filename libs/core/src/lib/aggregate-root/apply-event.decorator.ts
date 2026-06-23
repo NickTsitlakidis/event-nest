@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/no-nonstandard-builtin-properties */
 import "reflect-metadata";
 import { isNil } from "es-toolkit";
 

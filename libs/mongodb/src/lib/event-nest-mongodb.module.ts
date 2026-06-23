@@ -1,4 +1,3 @@
-/* eslint-disable unicorn/prevent-abbreviations */
 import { DomainEventEmitter, EVENT_STORE } from "@event-nest/core";
 import { DynamicModule, Module, OnApplicationBootstrap } from "@nestjs/common";
 import { ModulesContainer } from "@nestjs/core";
@@ -22,7 +21,7 @@ export class EventNestMongoDbModule implements OnApplicationBootstrap {
         return {
             exports: [EVENT_STORE],
             global: true,
-            module: EventNestMongoDbModule,
+            module: this,
             providers: ModuleProviders.create(options)
         };
     }
@@ -36,7 +35,7 @@ export class EventNestMongoDbModule implements OnApplicationBootstrap {
         return {
             exports: [EVENT_STORE],
             global: true,
-            module: EventNestMongoDbModule,
+            module: this,
             providers: ModuleProviders.createAsync(options)
         };
     }
@@ -50,7 +49,7 @@ export class EventNestMongoDbModule implements OnApplicationBootstrap {
         return {
             exports: [EVENT_STORE],
             global: false,
-            module: EventNestMongoDbModule,
+            module: this,
             providers: ModuleProviders.create(options)
         };
     }
@@ -64,7 +63,7 @@ export class EventNestMongoDbModule implements OnApplicationBootstrap {
         return {
             exports: [EVENT_STORE],
             global: false,
-            module: EventNestMongoDbModule,
+            module: this,
             providers: ModuleProviders.createAsync(options)
         };
     }

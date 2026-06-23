@@ -4,12 +4,11 @@ import { knex } from "knex";
 import { SchemaConfiguration } from "./schema-configuration";
 import { TableInitializer } from "./table-initializer";
 
-let container: StartedPostgreSqlContainer;
-let connectionUri: string;
-let knexConnection: knex.Knex;
-const schema = "event_nest_tests";
-
 describe("TableInitializer", () => {
+    let container: StartedPostgreSqlContainer;
+    let connectionUri: string;
+    let knexConnection: knex.Knex;
+    const schema = "event_nest_tests";
     beforeAll(async () => {
         container = await new PostgreSqlContainer("postgres:16.2")
             .withDatabase("event-nest-table-initializer-tests")

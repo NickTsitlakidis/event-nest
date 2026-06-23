@@ -122,6 +122,7 @@ export abstract class AggregateRoot {
         const startedAt = Date.now();
         if (!isNil(snapshot)) {
             assertIsSnapshotAwareAggregateRoot(this);
+            // eslint-disable-next-line unicorn/no-undeclared-class-members
             this.applySnapshot(snapshot);
         }
 

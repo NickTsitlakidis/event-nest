@@ -25,13 +25,6 @@ import { EventRow } from "./event-row";
 import { PostgreSQLEventStore } from "./postgresql-event-store";
 import { PostgreSQLSnapshotStore } from "./postgresql-snapshot-store";
 
-let eventStore: PostgreSQLEventStore;
-let container: StartedPostgreSqlContainer;
-let connectionUri: string;
-let knexConnection: knex.Knex;
-const schema = "event_nest_tests";
-const snapshotStore = createMock<PostgreSQLSnapshotStore>();
-
 interface TestSnapshot {
     someData: string;
 }
@@ -76,6 +69,13 @@ class UndecoratedAggregateRoot extends AggregateRoot {
 }
 
 describe("PostgreSQLEventStore", () => {
+    let eventStore: PostgreSQLEventStore;
+    let container: StartedPostgreSqlContainer;
+    let connectionUri: string;
+    let knexConnection: knex.Knex;
+    const schema = "event_nest_tests";
+    const snapshotStore = createMock<PostgreSQLSnapshotStore>();
+
     beforeAll(async () => {
         container = await new PostgreSqlContainer("postgres:16.2").withDatabase("event-nest-tests").start();
         connectionUri = container.getConnectionUri();
@@ -550,7 +550,7 @@ describe("PostgreSQLEventStore", () => {
             expect(storedEvents).toHaveLength(1);
             expect(storedEvents[0].aggregate_root_version).toBe(6);
 
-            expect([ag1.version, ag2.version].toSorted()).toEqual([5, 6]);
+            expect([ag1.version, ag2.version].toSorted((a, b) => a - b)).toEqual([5, 6]);
         });
     });
 

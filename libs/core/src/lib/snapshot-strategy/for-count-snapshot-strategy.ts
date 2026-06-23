@@ -39,6 +39,6 @@ export class ForCountSnapshotStrategy extends SnapshotStrategy {
         const currentBlock = Math.floor(currentVersion / this.config.count);
         const projectedBlock = Math.floor(projectedVersion / this.config.count);
 
-        return projectedBlock - currentBlock > 0;
+        return projectedBlock > currentBlock;
     }
 }

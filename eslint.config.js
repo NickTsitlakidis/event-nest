@@ -37,7 +37,9 @@ module.exports = [
                         "static-property",
                         "property",
                         "private-property",
-                        "constructor",
+                        "private-constructor",
+                        "protected-constructor",
+                        "public-constructor",
                         "static-method",
                         ["get-method", "set-method"],
                         "method",
@@ -48,10 +50,13 @@ module.exports = [
                 }
             ],
             "prettier/prettier": "error",
+            "unicorn/consistent-class-member-order": "off",
+            "unicorn/name-replacements": "off",
             "unicorn/no-abusive-eslint-disable": "off",
-            "unicorn/no-array-for-each": "off",
+            "unicorn/no-for-each": "off",
             "unicorn/no-for-loop": "warn",
             "unicorn/no-static-only-class": "off",
+            "unicorn/prefer-ternary": "warn",
             "unicorn/prefer-top-level-await": "warn",
             "unicorn/prevent-abbreviations": "warn"
         }
@@ -62,6 +67,7 @@ module.exports = [
             "@typescript-eslint/no-empty-function": "off",
             "@typescript-eslint/no-explicit-any": "off",
             "@typescript-eslint/no-non-null-assertion": "off",
+            "unicorn/max-nested-calls": "off",
             "unicorn/prevent-abbreviations": "off"
         }
     },

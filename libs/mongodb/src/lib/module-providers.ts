@@ -8,7 +8,6 @@ import {
 import { Provider } from "@nestjs/common";
 import { MongoClient } from "mongodb";
 
-// eslint-disable-next-line unicorn/prevent-abbreviations
 import { MongoDbModuleAsyncOptions, MongodbModuleOptions } from "./mongodb-module-options";
 import { MongoEventStore } from "./storage/mongo-event-store";
 import { MongoSnapshotStore } from "./storage/mongo-snapshot-store";

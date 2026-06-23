@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/no-nonstandard-builtin-properties */
 import "reflect-metadata";
 const randomUUID = jest.fn();
 jest.mock("node:crypto", () => {
@@ -27,21 +28,21 @@ class NoInterfaceSubscription {}
 class UnusedEvent {}
 
 @DomainEventSubscription({ eventClasses: [DomainEvent1], isAsync: false })
-class WithAsyncConfigurationFalse {
+class WithAsyncConfigFalse {
     onDomainEvent(): Promise<unknown> {
         return Promise.resolve();
     }
 }
 
 @DomainEventSubscription({ eventClasses: [DomainEvent1] })
-class WithAsyncConfigurationMissing {
+class WithAsyncConfigMissing {
     onDomainEvent(): Promise<unknown> {
         return Promise.resolve();
     }
 }
 
 @DomainEventSubscription({ eventClasses: [DomainEvent1], isAsync: true })
-class WithAsyncConfigurationTrue {
+class WithAsyncConfigTrue {
     onDomainEvent(): Promise<unknown> {
         return Promise.resolve();
     }
@@ -116,10 +117,7 @@ describe("DomainEventSubscription", () => {
     });
 
     test("adds metadata to handler and event when using configuration without async", () => {
-        const metadata = Reflect.getMetadata(
-            DOMAIN_EVENT_SUBSCRIPTION_KEY,
-            new WithAsyncConfigurationMissing().constructor
-        );
+        const metadata = Reflect.getMetadata(DOMAIN_EVENT_SUBSCRIPTION_KEY, new WithAsyncConfigMissing().constructor);
         expect(metadata).toBeDefined();
         expect(metadata.events).toEqual([DomainEvent1]);
         expect(metadata.isAsync).toBe(true);
@@ -130,10 +128,7 @@ describe("DomainEventSubscription", () => {
     });
 
     test("adds metadata to handler and event when using configuration with async false", () => {
-        const metadata = Reflect.getMetadata(
-            DOMAIN_EVENT_SUBSCRIPTION_KEY,
-            new WithAsyncConfigurationFalse().constructor
-        );
+        const metadata = Reflect.getMetadata(DOMAIN_EVENT_SUBSCRIPTION_KEY, new WithAsyncConfigFalse().constructor);
         expect(metadata).toBeDefined();
         expect(metadata.events).toEqual([DomainEvent1]);
         expect(metadata.isAsync).toBe(false);
@@ -144,10 +139,7 @@ describe("DomainEventSubscription", () => {
     });
 
     test("adds metadata to handler and event when using configuration with async true", () => {
-        const metadata = Reflect.getMetadata(
-            DOMAIN_EVENT_SUBSCRIPTION_KEY,
-            new WithAsyncConfigurationTrue().constructor
-        );
+        const metadata = Reflect.getMetadata(DOMAIN_EVENT_SUBSCRIPTION_KEY, new WithAsyncConfigTrue().constructor);
         expect(metadata).toBeDefined();
         expect(metadata.events).toEqual([DomainEvent1]);
         expect(metadata.isAsync).toBe(true);
@@ -212,14 +204,14 @@ describe("getSubscriptionAsyncType", () => {
     });
 
     test("returns true if metadata is missing", () => {
-        expect(getSubscriptionAsyncType(new WithAsyncConfigurationMissing())).toBe(true);
+        expect(getSubscriptionAsyncType(new WithAsyncConfigMissing())).toBe(true);
     });
 
     test("returns false if metadata is false", () => {
-        expect(getSubscriptionAsyncType(new WithAsyncConfigurationFalse())).toBe(false);
+        expect(getSubscriptionAsyncType(new WithAsyncConfigFalse())).toBe(false);
     });
 
     test("returns true if metadata is true", () => {
-        expect(getSubscriptionAsyncType(new WithAsyncConfigurationTrue())).toBe(true);
+        expect(getSubscriptionAsyncType(new WithAsyncConfigTrue())).toBe(true);
     });
 });

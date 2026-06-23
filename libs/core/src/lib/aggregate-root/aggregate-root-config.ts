@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/no-nonstandard-builtin-properties */
 import { AGGREGATE_ROOT_NAME_KEY, AGGREGATE_ROOT_SNAPSHOT_REVISION_KEY } from "../metadata-keys";
 import { AggregateRootClass, SnapshotAwareAggregateRoot } from "../storage/event-store";
 

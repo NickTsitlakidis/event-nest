@@ -21,7 +21,7 @@ export class EventNestPostgreSQLModule implements OnApplicationBootstrap {
         return {
             exports: [EVENT_STORE],
             global: true,
-            module: EventNestPostgreSQLModule,
+            module: this,
             providers: ModuleProviders.create(options)
         };
     }
@@ -35,7 +35,7 @@ export class EventNestPostgreSQLModule implements OnApplicationBootstrap {
         return {
             exports: [EVENT_STORE],
             global: true,
-            module: EventNestPostgreSQLModule,
+            module: this,
             providers: ModuleProviders.createAsync(options)
         };
     }
@@ -49,7 +49,7 @@ export class EventNestPostgreSQLModule implements OnApplicationBootstrap {
         return {
             exports: [EVENT_STORE],
             global: false,
-            module: EventNestPostgreSQLModule,
+            module: this,
             providers: ModuleProviders.create(options)
         };
     }
@@ -63,7 +63,7 @@ export class EventNestPostgreSQLModule implements OnApplicationBootstrap {
         return {
             exports: [EVENT_STORE],
             global: false,
-            module: EventNestPostgreSQLModule,
+            module: this,
             providers: ModuleProviders.createAsync(options)
         };
     }

@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/consistent-boolean-name */
 import { Logger, OnModuleDestroy } from "@nestjs/common";
 import { Module } from "@nestjs/core/injector/module";
 import { isNil } from "es-toolkit";
@@ -87,6 +88,7 @@ export class DomainEventEmitter implements OnModuleDestroy {
         rethrow = false
     ): (event: PublishedDomainEvent<object>) => Promise<unknown> {
         return (event: PublishedDomainEvent<object>) => {
+            // eslint-disable-next-line unicorn/prefer-await
             return handler.onDomainEvent(event).catch((error) => {
                 this._logger.error(
                     `Error while emitting event ${event.payload.constructor.name} : ${(error as any).message}`
@@ -165,15 +167,14 @@ export class DomainEventEmitter implements OnModuleDestroy {
                     toArray()
                 )
             );
-        } else {
-            from(promisesPerEvent)
-                .pipe(
-                    concatMap((perEvent) => from(perEvent.promise())),
-                    toArray()
-                )
-                .subscribe({});
-            return Promise.resolve();
         }
+        from(promisesPerEvent)
+            .pipe(
+                concatMap((perEvent) => from(perEvent.promise())),
+                toArray()
+            )
+            .subscribe({});
+        return Promise.resolve();
     }
 
     private splitEventsBySubscriptionType(

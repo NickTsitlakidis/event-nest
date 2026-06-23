@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/no-nonstandard-builtin-properties */
 import { MissingEventClassException } from "../exceptions/missing-event-class-exception";
 import { AggregateRoot } from "./aggregate-root";
 import { ApplyEvent } from "./apply-event.decorator";

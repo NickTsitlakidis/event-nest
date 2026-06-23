@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/no-nonstandard-builtin-properties */
 import "reflect-metadata";
 
 import { AGGREGATE_ROOT_NAME_KEY } from "../metadata-keys";

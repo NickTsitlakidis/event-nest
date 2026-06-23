@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/consistent-boolean-name */
 import { Injectable, Logger, OnApplicationBootstrap } from "@nestjs/common";
 import { knex } from "knex";
 

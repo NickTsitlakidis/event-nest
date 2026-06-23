@@ -215,10 +215,11 @@ export class MongoEventStore extends AbstractEventStore {
     }
 
     async save(events: Array<StoredEvent>, aggregate: StoredAggregateRoot): Promise<Array<StoredEvent>> {
-        const startedAt = Date.now();
         if (events.length === 0) {
             return events;
         }
+
+        const startedAt = Date.now();
 
         const expectedVersion = aggregate.version;
         let committedVersion = expectedVersion;

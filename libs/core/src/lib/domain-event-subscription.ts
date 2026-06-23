@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/no-nonstandard-builtin-properties */
 import { isNil, isPlainObject, uniq } from "es-toolkit";
 import { randomUUID } from "node:crypto";
 
@@ -58,6 +59,7 @@ export function getEventsFromDomainEventSubscription(subscriptionInstance: OnDom
     return isNil(metadata) ? [] : metadata.events;
 }
 
+// eslint-disable-next-line unicorn/consistent-boolean-name
 export function getSubscriptionAsyncType(subscriptionInstance: OnDomainEvent<unknown>): boolean {
     const metadata = Reflect.getMetadata(DOMAIN_EVENT_SUBSCRIPTION_KEY, subscriptionInstance.constructor);
     return isNil(metadata) ? true : metadata.isAsync;

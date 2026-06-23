@@ -20,12 +20,6 @@ import { ClientSession, Collection, MongoClient, ObjectId } from "mongodb";
 import { MongoEventStore } from "./mongo-event-store";
 import { MongoSnapshotStore } from "./mongo-snapshot-store";
 
-let eventStore: MongoEventStore;
-let eventsCollection: Collection<any>;
-let aggregatesCollection: Collection<any>;
-let mongoClient: MongoClient;
-const snapshotStore = createMock<MongoSnapshotStore>();
-
 interface TestSnapshot {
     someData: string;
 }
@@ -69,6 +63,12 @@ class UndecoratedAggregateRoot extends AggregateRoot {
     }
 }
 describe("MongoEventStore", () => {
+    let eventStore: MongoEventStore;
+    let eventsCollection: Collection<any>;
+    let aggregatesCollection: Collection<any>;
+    let mongoClient: MongoClient;
+    const snapshotStore = createMock<MongoSnapshotStore>();
+
     beforeEach(async () => {
         mongoClient = new MongoClient(process.env["MONGO_URL"] as string);
         eventsCollection = mongoClient.db().collection("events");
@@ -98,20 +98,14 @@ describe("MongoEventStore", () => {
                 version: 6
             });
 
-            await expect(
-                eventStore.save(
-                    [
-                        StoredEvent.fromPublishedEvent(
-                            ag.id,
-                            new ObjectId().toHexString(),
-                            "Test",
-                            new TestEvent1(),
-                            new Date()
-                        )
-                    ],
-                    ag
-                )
-            ).rejects.toThrow(EventConcurrencyException);
+            const stored = StoredEvent.fromPublishedEvent(
+                ag.id,
+                new ObjectId().toHexString(),
+                "Test",
+                new TestEvent1(),
+                new Date()
+            );
+            await expect(eventStore.save([stored], ag)).rejects.toThrow(EventConcurrencyException);
 
             const eventsCount = await eventsCollection.countDocuments();
             expect(eventsCount).toBe(0);
@@ -257,7 +251,7 @@ describe("MongoEventStore", () => {
             const storedAggregate = await aggregatesCollection.findOne({ _id: new ObjectId(aggregateId) });
             expect(storedAggregate?.version).toBe(6);
 
-            expect([ag1.version, ag2.version].toSorted()).toEqual([5, 6]);
+            expect([ag1.version, ag2.version].toSorted((a, b) => a - b)).toEqual([5, 6]);
 
             const storedEvents = await eventsCollection.find({ aggregateRootId: aggregateId }).toArray();
             expect(storedEvents).toHaveLength(1);
@@ -279,52 +273,52 @@ describe("MongoEventStore", () => {
             const aggregateRootId1 = new ObjectId().toHexString();
             const aggregateRootId2 = new ObjectId().toHexString();
             const aggregateRootId3 = new ObjectId().toHexString();
-            const ev1Id = new ObjectId().toHexString();
-            const ev2Id = new ObjectId().toHexString();
-            const ev3Id = new ObjectId().toHexString();
-            const ev4Id = new ObjectId().toHexString();
+            const event1Id = new ObjectId().toHexString();
+            const event2Id = new ObjectId().toHexString();
+            const event3Id = new ObjectId().toHexString();
+            const event4Id = new ObjectId().toHexString();
 
-            const ev1Date = new Date();
-            const ev2Date = new Date();
-            const ev3Date = new Date();
-            const ev4Date = new Date();
+            const event1Date = new Date();
+            const event2Date = new Date();
+            const event3Date = new Date();
+            const event4Date = new Date();
 
             await eventsCollection.insertOne({
-                _id: new ObjectId(ev1Id),
+                _id: new ObjectId(event1Id),
                 aggregateRootId: aggregateRootId1,
                 aggregateRootName: "test-aggregate",
                 aggregateRootVersion: 1,
-                createdAt: ev1Date,
+                createdAt: event1Date,
                 eventName: "test-event-1",
                 payload: {}
             });
 
             await eventsCollection.insertOne({
-                _id: new ObjectId(ev2Id),
+                _id: new ObjectId(event2Id),
                 aggregateRootId: aggregateRootId2,
                 aggregateRootName: "test-aggregate",
                 aggregateRootVersion: 2,
-                createdAt: ev2Date,
+                createdAt: event2Date,
                 eventName: "test-event-2",
                 payload: {}
             });
 
             await eventsCollection.insertOne({
-                _id: new ObjectId(ev3Id),
+                _id: new ObjectId(event3Id),
                 aggregateRootId: aggregateRootId2,
                 aggregateRootName: "test-aggregate",
                 aggregateRootVersion: 2,
-                createdAt: ev3Date,
+                createdAt: event3Date,
                 eventName: "test-event-2-2",
                 payload: {}
             });
 
             await eventsCollection.insertOne({
-                _id: new ObjectId(ev4Id),
+                _id: new ObjectId(event4Id),
                 aggregateRootId: aggregateRootId3,
                 aggregateRootName: "test-aggregate",
                 aggregateRootVersion: 2,
-                createdAt: ev4Date,
+                createdAt: event4Date,
                 eventName: "test-event-3",
                 payload: {}
             });
@@ -334,7 +328,7 @@ describe("MongoEventStore", () => {
                 aggregateRootId: "other",
                 aggregateRootName: "other",
                 aggregateRootVersion: 2,
-                createdAt: ev4Date,
+                createdAt: event4Date,
                 eventName: "other-event",
                 payload: {}
             });
@@ -347,39 +341,39 @@ describe("MongoEventStore", () => {
             expect(Object.keys(events).length).toBe(3);
 
             expect(events[aggregateRootId1].length).toBe(1);
-            expect(events[aggregateRootId1][0].id).toBe(ev1Id);
+            expect(events[aggregateRootId1][0].id).toBe(event1Id);
             expect(events[aggregateRootId1][0].aggregateRootVersion).toBe(1);
             expect(events[aggregateRootId1][0].eventName).toBe("test-event-1");
             expect(events[aggregateRootId1][0].aggregateRootId).toBe(aggregateRootId1);
             expect(events[aggregateRootId1][0].aggregateRootName).toBe("test-aggregate");
             expect(events[aggregateRootId1][0].payload).toEqual({});
-            expect(events[aggregateRootId1][0].createdAt).toEqual(ev1Date);
+            expect(events[aggregateRootId1][0].createdAt).toEqual(event1Date);
 
             expect(events[aggregateRootId2].length).toBe(2);
-            expect(events[aggregateRootId2][0].id).toBe(ev2Id);
+            expect(events[aggregateRootId2][0].id).toBe(event2Id);
             expect(events[aggregateRootId2][0].aggregateRootVersion).toBe(2);
             expect(events[aggregateRootId2][0].eventName).toBe("test-event-2");
             expect(events[aggregateRootId2][0].aggregateRootId).toBe(aggregateRootId2);
             expect(events[aggregateRootId2][0].aggregateRootName).toBe("test-aggregate");
             expect(events[aggregateRootId2][0].payload).toEqual({});
-            expect(events[aggregateRootId2][0].createdAt).toEqual(ev2Date);
+            expect(events[aggregateRootId2][0].createdAt).toEqual(event2Date);
 
-            expect(events[aggregateRootId2][1].id).toBe(ev3Id);
+            expect(events[aggregateRootId2][1].id).toBe(event3Id);
             expect(events[aggregateRootId2][1].aggregateRootVersion).toBe(2);
             expect(events[aggregateRootId2][1].eventName).toBe("test-event-2-2");
             expect(events[aggregateRootId2][1].aggregateRootId).toBe(aggregateRootId2);
             expect(events[aggregateRootId2][1].aggregateRootName).toBe("test-aggregate");
             expect(events[aggregateRootId2][1].payload).toEqual({});
-            expect(events[aggregateRootId2][1].createdAt).toEqual(ev3Date);
+            expect(events[aggregateRootId2][1].createdAt).toEqual(event3Date);
 
             expect(events[aggregateRootId3].length).toBe(1);
-            expect(events[aggregateRootId3][0].id).toBe(ev4Id);
+            expect(events[aggregateRootId3][0].id).toBe(event4Id);
             expect(events[aggregateRootId3][0].aggregateRootVersion).toBe(2);
             expect(events[aggregateRootId3][0].eventName).toBe("test-event-3");
             expect(events[aggregateRootId3][0].aggregateRootId).toBe(aggregateRootId3);
             expect(events[aggregateRootId3][0].aggregateRootName).toBe("test-aggregate");
             expect(events[aggregateRootId3][0].payload).toEqual({});
-            expect(events[aggregateRootId3][0].createdAt).toEqual(ev4Date);
+            expect(events[aggregateRootId3][0].createdAt).toEqual(event4Date);
         });
     });
 
@@ -391,49 +385,49 @@ describe("MongoEventStore", () => {
 
         test("returns mapped events when they are found and matched", async () => {
             const id = new ObjectId().toHexString();
-            const ev1Id = new ObjectId().toHexString();
-            const ev2Id = new ObjectId().toHexString();
+            const event1Id = new ObjectId().toHexString();
+            const event2Id = new ObjectId().toHexString();
 
-            const ev1Date = new Date();
-            const ev2Date = new Date();
+            const event1Date = new Date();
+            const event2Date = new Date();
 
             await eventsCollection.insertOne({
-                _id: new ObjectId(ev1Id),
+                _id: new ObjectId(event1Id),
                 aggregateRootId: id,
                 aggregateRootName: "test-aggregate",
                 aggregateRootVersion: 1,
-                createdAt: ev1Date,
+                createdAt: event1Date,
                 eventName: "test-event-1",
                 payload: {}
             });
 
             await eventsCollection.insertOne({
-                _id: new ObjectId(ev2Id),
+                _id: new ObjectId(event2Id),
                 aggregateRootId: id,
                 aggregateRootName: "test-aggregate",
                 aggregateRootVersion: 2,
-                createdAt: ev2Date,
+                createdAt: event2Date,
                 eventName: "test-event-2",
                 payload: {}
             });
 
             const events = await eventStore.findByAggregateRootId(DecoratedAggregateRoot, id);
             expect(events.length).toBe(2);
-            expect(events[0].id).toBe(ev1Id);
+            expect(events[0].id).toBe(event1Id);
             expect(events[0].aggregateRootVersion).toBe(1);
             expect(events[0].eventName).toBe("test-event-1");
             expect(events[0].aggregateRootId).toBe(id);
             expect(events[0].aggregateRootName).toBe("test-aggregate");
             expect(events[0].payload).toEqual({});
-            expect(events[0].createdAt).toEqual(ev1Date);
+            expect(events[0].createdAt).toEqual(event1Date);
 
-            expect(events[1].id).toBe(ev2Id);
+            expect(events[1].id).toBe(event2Id);
             expect(events[1].aggregateRootVersion).toBe(2);
             expect(events[1].eventName).toBe("test-event-2");
             expect(events[1].aggregateRootId).toBe(id);
             expect(events[1].aggregateRootName).toBe("test-aggregate");
             expect(events[1].payload).toEqual({});
-            expect(events[1].createdAt).toEqual(ev2Date);
+            expect(events[1].createdAt).toEqual(event2Date);
         });
 
         test("returns empty array when events don't match the aggregate", async () => {
@@ -621,28 +615,28 @@ describe("MongoEventStore", () => {
                 _id: new ObjectId(aggregateRootId),
                 version: 10
             });
-            const ev0Id = new ObjectId().toHexString();
-            const ev1Id = new ObjectId().toHexString();
+            const event0Id = new ObjectId().toHexString();
+            const event1Id = new ObjectId().toHexString();
 
-            const ev0Date = new Date();
-            const ev1Date = new Date();
+            const event0Date = new Date();
+            const event1Date = new Date();
 
             const aggregateRootName = getAggregateRootName(SnapshotAwareAggregateRoot);
             await eventsCollection.insertOne({
-                _id: new ObjectId(ev0Id),
+                _id: new ObjectId(event0Id),
                 aggregateRootId: aggregateRootId,
                 aggregateRootName,
                 aggregateRootVersion: 3,
-                createdAt: ev0Date,
+                createdAt: event0Date,
                 eventName: "test-event-0",
                 payload: { data: "event0" }
             });
             await eventsCollection.insertOne({
-                _id: new ObjectId(ev1Id),
+                _id: new ObjectId(event1Id),
                 aggregateRootId: aggregateRootId,
                 aggregateRootName,
                 aggregateRootVersion: 5,
-                createdAt: ev1Date,
+                createdAt: event1Date,
                 eventName: "test-event-1",
                 payload: { data: "event1" }
             });
@@ -653,21 +647,21 @@ describe("MongoEventStore", () => {
             const res = await eventStore.findWithSnapshot(SnapshotAwareAggregateRoot, aggregateRootId);
             expect(res.snapshot).toBeUndefined();
             expect(res.events.length).toEqual(2);
-            expect(res.events[0].id).toBe(ev0Id);
+            expect(res.events[0].id).toBe(event0Id);
             expect(res.events[0].aggregateRootVersion).toBe(3);
             expect(res.events[0].eventName).toBe("test-event-0");
             expect(res.events[0].aggregateRootId).toBe(aggregateRootId);
             expect(res.events[0].aggregateRootName).toBe(aggregateRootName);
             expect(res.events[0].payload).toEqual({ data: "event0" });
-            expect(res.events[0].createdAt).toEqual(ev0Date);
+            expect(res.events[0].createdAt).toEqual(event0Date);
 
-            expect(res.events[1].id).toBe(ev1Id);
+            expect(res.events[1].id).toBe(event1Id);
             expect(res.events[1].aggregateRootVersion).toBe(5);
             expect(res.events[1].eventName).toBe("test-event-1");
             expect(res.events[1].aggregateRootId).toBe(aggregateRootId);
             expect(res.events[1].aggregateRootName).toBe(aggregateRootName);
             expect(res.events[1].payload).toEqual({ data: "event1" });
-            expect(res.events[1].createdAt).toEqual(ev1Date);
+            expect(res.events[1].createdAt).toEqual(event1Date);
         });
 
         test("throws SnapshotRevisionMismatchException when snapshot revision doesn't match", async () => {
@@ -704,17 +698,17 @@ describe("MongoEventStore", () => {
 
         test("returns snapshot and empty events array when no events exist after snapshot", async () => {
             const aggregateRootId = new ObjectId().toHexString();
-            const ev0Id = new ObjectId().toHexString();
-            const ev1Id = new ObjectId().toHexString();
-            const ev2Id = new ObjectId().toHexString();
-            const ev3Id = new ObjectId().toHexString();
-            const ev4Id = new ObjectId().toHexString();
+            const event0Id = new ObjectId().toHexString();
+            const event1Id = new ObjectId().toHexString();
+            const event2Id = new ObjectId().toHexString();
+            const event3Id = new ObjectId().toHexString();
+            const event4Id = new ObjectId().toHexString();
 
-            const ev0Date = new Date();
-            const ev1Date = new Date();
-            const ev2Date = new Date();
-            const ev3Date = new Date();
-            const ev4Date = new Date();
+            const event0Date = new Date();
+            const event1Date = new Date();
+            const event2Date = new Date();
+            const event3Date = new Date();
+            const event4Date = new Date();
 
             await aggregatesCollection.insertOne({
                 _id: new ObjectId(aggregateRootId),
@@ -722,48 +716,48 @@ describe("MongoEventStore", () => {
             });
 
             await eventsCollection.insertOne({
-                _id: new ObjectId(ev0Id),
+                _id: new ObjectId(event0Id),
                 aggregateRootId: aggregateRootId,
                 aggregateRootName: "snapshot-aggregate",
                 aggregateRootVersion: 3,
-                createdAt: ev0Date,
+                createdAt: event0Date,
                 eventName: "test-event-0",
                 payload: { data: "event0" }
             });
             await eventsCollection.insertOne({
-                _id: new ObjectId(ev1Id),
+                _id: new ObjectId(event1Id),
                 aggregateRootId: aggregateRootId,
                 aggregateRootName: "snapshot-aggregate",
                 aggregateRootVersion: 5,
-                createdAt: ev1Date,
+                createdAt: event1Date,
                 eventName: "test-event-1",
                 payload: { data: "event1" }
             });
             await eventsCollection.insertOne({
-                _id: new ObjectId(ev2Id),
+                _id: new ObjectId(event2Id),
                 aggregateRootId: aggregateRootId,
                 aggregateRootName: "snapshot-aggregate",
                 aggregateRootVersion: 10,
-                createdAt: ev2Date,
+                createdAt: event2Date,
                 eventName: "test-event-2",
                 payload: { data: "event2" }
             });
 
             await eventsCollection.insertOne({
-                _id: new ObjectId(ev3Id),
+                _id: new ObjectId(event3Id),
                 aggregateRootId: aggregateRootId,
                 aggregateRootName: "snapshot-aggregate",
                 aggregateRootVersion: 11,
-                createdAt: ev3Date,
+                createdAt: event3Date,
                 eventName: "test-event-3",
                 payload: { data: "event3" }
             });
             await eventsCollection.insertOne({
-                _id: new ObjectId(ev4Id),
+                _id: new ObjectId(event4Id),
                 aggregateRootId: aggregateRootId,
                 aggregateRootName: "snapshot-aggregate",
                 aggregateRootVersion: 15,
-                createdAt: ev4Date,
+                createdAt: event4Date,
                 eventName: "test-event-4",
                 payload: { data: "event4" }
             });
@@ -797,17 +791,17 @@ describe("MongoEventStore", () => {
         test("returns snapshot and events that occurred after the snapshot version", async () => {
             const aggregateRootId = new ObjectId().toHexString();
             const snapshotId = new ObjectId().toHexString();
-            const ev0Id = new ObjectId().toHexString();
-            const ev1Id = new ObjectId().toHexString();
-            const ev2Id = new ObjectId().toHexString();
-            const ev3Id = new ObjectId().toHexString();
-            const ev4Id = new ObjectId().toHexString();
+            const event0Id = new ObjectId().toHexString();
+            const event1Id = new ObjectId().toHexString();
+            const event2Id = new ObjectId().toHexString();
+            const event3Id = new ObjectId().toHexString();
+            const event4Id = new ObjectId().toHexString();
 
-            const ev0Date = new Date();
-            const ev1Date = new Date();
-            const ev2Date = new Date();
-            const ev3Date = new Date();
-            const ev4Date = new Date();
+            const event0Date = new Date();
+            const event1Date = new Date();
+            const event2Date = new Date();
+            const event3Date = new Date();
+            const event4Date = new Date();
 
             await aggregatesCollection.insertOne({
                 _id: new ObjectId(aggregateRootId),
@@ -815,48 +809,48 @@ describe("MongoEventStore", () => {
             });
 
             await eventsCollection.insertOne({
-                _id: new ObjectId(ev0Id),
+                _id: new ObjectId(event0Id),
                 aggregateRootId: aggregateRootId,
                 aggregateRootName: "snapshot-aggregate",
                 aggregateRootVersion: 3,
-                createdAt: ev0Date,
+                createdAt: event0Date,
                 eventName: "test-event-0",
                 payload: { data: "event0" }
             });
             await eventsCollection.insertOne({
-                _id: new ObjectId(ev1Id),
+                _id: new ObjectId(event1Id),
                 aggregateRootId: aggregateRootId,
                 aggregateRootName: "snapshot-aggregate",
                 aggregateRootVersion: 5,
-                createdAt: ev1Date,
+                createdAt: event1Date,
                 eventName: "test-event-1",
                 payload: { data: "event1" }
             });
             await eventsCollection.insertOne({
-                _id: new ObjectId(ev2Id),
+                _id: new ObjectId(event2Id),
                 aggregateRootId: aggregateRootId,
                 aggregateRootName: "snapshot-aggregate",
                 aggregateRootVersion: 10,
-                createdAt: ev2Date,
+                createdAt: event2Date,
                 eventName: "test-event-2",
                 payload: { data: "event2" }
             });
 
             await eventsCollection.insertOne({
-                _id: new ObjectId(ev3Id),
+                _id: new ObjectId(event3Id),
                 aggregateRootId: aggregateRootId,
                 aggregateRootName: "snapshot-aggregate",
                 aggregateRootVersion: 11,
-                createdAt: ev3Date,
+                createdAt: event3Date,
                 eventName: "test-event-3",
                 payload: { data: "event3" }
             });
             await eventsCollection.insertOne({
-                _id: new ObjectId(ev4Id),
+                _id: new ObjectId(event4Id),
                 aggregateRootId: aggregateRootId,
                 aggregateRootName: "snapshot-aggregate",
                 aggregateRootVersion: 15,
-                createdAt: ev4Date,
+                createdAt: event4Date,
                 eventName: "test-event-4",
                 payload: { data: "event4" }
             });
@@ -871,31 +865,31 @@ describe("MongoEventStore", () => {
             expect(result.snapshot).toEqual(snapshotPayload);
             expect(result.events.length).toBe(2);
 
-            expect(result.events[0].id).toBe(ev3Id);
+            expect(result.events[0].id).toBe(event3Id);
             expect(result.events[0].aggregateRootVersion).toBe(11);
             expect(result.events[0].eventName).toBe("test-event-3");
             expect(result.events[0].aggregateRootId).toBe(aggregateRootId);
             expect(result.events[0].aggregateRootName).toBe("snapshot-aggregate");
             expect(result.events[0].payload).toEqual({ data: "event3" });
-            expect(result.events[0].createdAt).toEqual(ev3Date);
+            expect(result.events[0].createdAt).toEqual(event3Date);
 
-            expect(result.events[1].id).toBe(ev4Id);
+            expect(result.events[1].id).toBe(event4Id);
             expect(result.events[1].aggregateRootVersion).toBe(15);
             expect(result.events[1].eventName).toBe("test-event-4");
             expect(result.events[1].aggregateRootId).toBe(aggregateRootId);
             expect(result.events[1].aggregateRootName).toBe("snapshot-aggregate");
             expect(result.events[1].payload).toEqual({ data: "event4" });
-            expect(result.events[1].createdAt).toEqual(ev4Date);
+            expect(result.events[1].createdAt).toEqual(event4Date);
         });
 
         test("returns snapshot and all events when snapshot version is at the beginning", async () => {
             const aggregateRootId = new ObjectId().toHexString();
             const snapshotId = new ObjectId().toHexString();
-            const ev1Id = new ObjectId().toHexString();
-            const ev2Id = new ObjectId().toHexString();
+            const event1Id = new ObjectId().toHexString();
+            const event2Id = new ObjectId().toHexString();
 
-            const ev1Date = new Date();
-            const ev2Date = new Date();
+            const event1Date = new Date();
+            const event2Date = new Date();
 
             await aggregatesCollection.insertOne({
                 _id: new ObjectId(aggregateRootId),
@@ -903,21 +897,21 @@ describe("MongoEventStore", () => {
             });
 
             await eventsCollection.insertOne({
-                _id: new ObjectId(ev1Id),
+                _id: new ObjectId(event1Id),
                 aggregateRootId: aggregateRootId,
                 aggregateRootName: "snapshot-aggregate",
                 aggregateRootVersion: 5,
-                createdAt: ev1Date,
+                createdAt: event1Date,
                 eventName: "test-event-1",
                 payload: { data: "event1" }
             });
 
             await eventsCollection.insertOne({
-                _id: new ObjectId(ev2Id),
+                _id: new ObjectId(event2Id),
                 aggregateRootId: aggregateRootId,
                 aggregateRootName: "snapshot-aggregate",
                 aggregateRootVersion: 10,
-                createdAt: ev2Date,
+                createdAt: event2Date,
                 eventName: "test-event-2",
                 payload: { data: "event2" }
             });

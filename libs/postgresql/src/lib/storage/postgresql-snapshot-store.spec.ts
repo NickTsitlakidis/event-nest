@@ -9,14 +9,13 @@ import { AggregateRootRow } from "./aggregate-root-row";
 import { PostgreSQLSnapshotStore } from "./postgresql-snapshot-store";
 import { SnapshotRow } from "./snapshot-row";
 
-let store: PostgreSQLSnapshotStore;
-let container: StartedPostgreSqlContainer;
-let connectionUri: string;
-let knexConnection: knex.Knex;
-const schema = "event_nest_tests";
-const snapshotStrategy = createMock<SnapshotStrategy>();
-
 describe("PostgreSQLSnapshotStore", () => {
+    let store: PostgreSQLSnapshotStore;
+    let container: StartedPostgreSqlContainer;
+    let connectionUri: string;
+    let knexConnection: knex.Knex;
+    const schema = "event_nest_tests";
+    const snapshotStrategy = createMock<SnapshotStrategy>();
     beforeAll(async () => {
         container = await new PostgreSqlContainer("postgres:16.2").withDatabase("event-nest-tests").start();
         connectionUri = container.getConnectionUri();
