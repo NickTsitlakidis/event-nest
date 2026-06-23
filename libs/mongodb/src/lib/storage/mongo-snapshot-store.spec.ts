@@ -22,7 +22,7 @@ describe("MongoSnapshotStore", () => {
         await mongoClient.close(true);
     });
 
-    describe("findLatestSnapshotByAggregateId tests", () => {
+    describe("findLatestSnapshotByAggregateId", () => {
         test("returns undefined when no snapshot is found", async () => {
             const aggregateId = new ObjectId().toHexString();
             const result = await snapshotStore.findLatestSnapshotByAggregateId(aggregateId);
@@ -134,7 +134,7 @@ describe("MongoSnapshotStore", () => {
         });
     });
 
-    describe("deleteByAggregateId tests", () => {
+    describe("deleteByAggregateId", () => {
         test("deletes all snapshots for the target aggregate id", async () => {
             const aggregateId = new ObjectId().toHexString();
             const otherAggregateId = new ObjectId().toHexString();
@@ -187,7 +187,7 @@ describe("MongoSnapshotStore", () => {
         });
     });
 
-    describe("save tests", () => {
+    describe("save", () => {
         test("saves snapshot successfully", async () => {
             const snapshotId = new ObjectId().toHexString();
             const aggregateId = new ObjectId().toHexString();
@@ -293,7 +293,7 @@ describe("MongoSnapshotStore", () => {
         });
     });
 
-    describe("generateEntityId tests", () => {
+    describe("generateEntityId", () => {
         test("returns string with ObjectId format", async () => {
             const id = await snapshotStore.generateEntityId();
 

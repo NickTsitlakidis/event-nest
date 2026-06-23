@@ -25,34 +25,36 @@ class UndecoratedEntity extends AggregateRoot {
     }
 }
 
-describe("ApplyEvent", () => {
-    test("adds metadata", () => {
-        const metadata = Reflect.getMetadata("event-nest-process-event-meta-processTestEvent", new TestEntity());
-        expect(metadata).toBeDefined();
-        expect(metadata.eventClass).toBe(Event1);
-        expect(metadata.key).toBe("processTestEvent");
+describe("apply-event.decorator", () => {
+    describe("ApplyEvent", () => {
+        test("adds metadata", () => {
+            const metadata = Reflect.getMetadata("event-nest-process-event-meta-processTestEvent", new TestEntity());
+            expect(metadata).toBeDefined();
+            expect(metadata.eventClass).toBe(Event1);
+            expect(metadata.key).toBe("processTestEvent");
+        });
+
+        test("throws exception if event class is undefined", () => {
+            expect(() => {
+                ApplyEvent(undefined as any)(new TestEntity(), "processTestEvent");
+            }).toThrow(MissingEventClassException);
+        });
     });
 
-    test("throws exception if event class is undefined", () => {
-        expect(() => {
-            ApplyEvent(undefined as any)(new TestEntity(), "processTestEvent");
-        }).toThrow(MissingEventClassException);
-    });
-});
+    describe("getDecoratedPropertyKey", () => {
+        test("returns undefined if no metadata", () => {
+            const key = getDecoratedPropertyKey(new UndecoratedEntity(), Event1);
+            expect(key).toBeUndefined();
+        });
 
-describe("getDecoratedPropertyKey tests", () => {
-    test("returns undefined if no metadata", () => {
-        const key = getDecoratedPropertyKey(new UndecoratedEntity(), Event1);
-        expect(key).toBeUndefined();
-    });
+        test("returns undefined if event class is not matched", () => {
+            const key = getDecoratedPropertyKey(new TestEntity(), Event2);
+            expect(key).toBeUndefined();
+        });
 
-    test("returns undefined if event class is not matched", () => {
-        const key = getDecoratedPropertyKey(new TestEntity(), Event2);
-        expect(key).toBeUndefined();
-    });
-
-    test("returns key if event class is matched", () => {
-        const key = getDecoratedPropertyKey(new TestEntity(), Event1);
-        expect(key).toBe("processTestEvent");
+        test("returns key if event class is matched", () => {
+            const key = getDecoratedPropertyKey(new TestEntity(), Event1);
+            expect(key).toBe("processTestEvent");
+        });
     });
 });

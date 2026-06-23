@@ -20,56 +20,58 @@ class TestEvent2 {}
 class TestEvent3 {}
 
 describe("ForEventsSnapshotStrategy", () => {
-    describe("shouldCreateSnapshot=true", () => {
-        test("when a matching event is present", () => {
-            const event1 = new TestEvent1();
-            const aggregateRoot = new TestAggregateRoot("test-id");
-            aggregateRoot.append(event1);
-            const strategy = new ForEventsSnapshotStrategy({ eventClasses: [TestEvent1] });
+    describe("shouldCreateSnapshot", () => {
+        describe("when it returns true", () => {
+            test("when a matching event is present", () => {
+                const event1 = new TestEvent1();
+                const aggregateRoot = new TestAggregateRoot("test-id");
+                aggregateRoot.append(event1);
+                const strategy = new ForEventsSnapshotStrategy({ eventClasses: [TestEvent1] });
 
-            expect(strategy.shouldCreateSnapshot(aggregateRoot)).toBe(true);
-        });
-
-        test("when any of multiple event classes match", () => {
-            const event2 = new TestEvent2();
-            const aggregateRoot = new TestAggregateRoot("test-id");
-            aggregateRoot.append(event2);
-
-            const strategy = new ForEventsSnapshotStrategy({
-                eventClasses: [TestEvent1, TestEvent2, TestEvent3]
+                expect(strategy.shouldCreateSnapshot(aggregateRoot)).toBe(true);
             });
 
-            expect(strategy.shouldCreateSnapshot(aggregateRoot)).toBe(true);
-        });
+            test("when any of multiple event classes match", () => {
+                const event2 = new TestEvent2();
+                const aggregateRoot = new TestAggregateRoot("test-id");
+                aggregateRoot.append(event2);
 
-        test("when multiple events are present and one matches", () => {
-            const event1 = new TestEvent1();
-            const event2 = new TestEvent2();
-            const aggregateRoot = new TestAggregateRoot("test-id");
-            aggregateRoot.append(event1);
-            aggregateRoot.append(event2);
+                const strategy = new ForEventsSnapshotStrategy({
+                    eventClasses: [TestEvent1, TestEvent2, TestEvent3]
+                });
 
-            const strategy = new ForEventsSnapshotStrategy({ eventClasses: [TestEvent1] });
-
-            expect(strategy.shouldCreateSnapshot(aggregateRoot)).toBe(true);
-        });
-
-        test("when multiple events are present and multiple match", () => {
-            const event1 = new TestEvent1();
-            const event2 = new TestEvent2();
-            const aggregateRoot = new TestAggregateRoot("test-id");
-            aggregateRoot.append(event1);
-            aggregateRoot.append(event2);
-
-            const strategy = new ForEventsSnapshotStrategy({
-                eventClasses: [TestEvent1, TestEvent2]
+                expect(strategy.shouldCreateSnapshot(aggregateRoot)).toBe(true);
             });
 
-            expect(strategy.shouldCreateSnapshot(aggregateRoot)).toBe(true);
+            test("when multiple events are present and one matches", () => {
+                const event1 = new TestEvent1();
+                const event2 = new TestEvent2();
+                const aggregateRoot = new TestAggregateRoot("test-id");
+                aggregateRoot.append(event1);
+                aggregateRoot.append(event2);
+
+                const strategy = new ForEventsSnapshotStrategy({ eventClasses: [TestEvent1] });
+
+                expect(strategy.shouldCreateSnapshot(aggregateRoot)).toBe(true);
+            });
+
+            test("when multiple events are present and multiple match", () => {
+                const event1 = new TestEvent1();
+                const event2 = new TestEvent2();
+                const aggregateRoot = new TestAggregateRoot("test-id");
+                aggregateRoot.append(event1);
+                aggregateRoot.append(event2);
+
+                const strategy = new ForEventsSnapshotStrategy({
+                    eventClasses: [TestEvent1, TestEvent2]
+                });
+
+                expect(strategy.shouldCreateSnapshot(aggregateRoot)).toBe(true);
+            });
         });
     });
 
-    describe("shouldCreateSnapshot=false", () => {
+    describe("when it returns false", () => {
         test("when no matching events are present", () => {
             const event1 = new TestEvent1();
             const aggregateRoot = new TestAggregateRoot("test-id");

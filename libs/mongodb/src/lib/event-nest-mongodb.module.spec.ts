@@ -11,8 +11,8 @@ import { MongoEventStore } from "./storage/mongo-event-store";
 import { MongoSnapshotStore } from "./storage/mongo-snapshot-store";
 
 describe("EventNestMongoDbModule", () => {
-    describe("global factories", () => {
-        test("forRoot returns configured global module", () => {
+    describe("forRoot", () => {
+        test("returns configured global module", () => {
             const options = {
                 aggregatesCollection: "aggregates",
                 connectionUri: "mongodb://localhost:27017/event-nest",
@@ -39,8 +39,10 @@ describe("EventNestMongoDbModule", () => {
             expect(module.exports).toEqual([EVENT_STORE]);
             expect(module.providers).toEqual(mockedProviders);
         });
+    });
 
-        test("forRootAsync returns configured global module", () => {
+    describe("forRootAsync", () => {
+        test("returns configured global module", () => {
             const options = {
                 useFactory: () => ({
                     aggregatesCollection: "aggregates",
@@ -83,8 +85,8 @@ describe("EventNestMongoDbModule", () => {
         });
     });
 
-    describe("scoped factories", () => {
-        test("register returns configured module", () => {
+    describe("register", () => {
+        test("returns configured module", () => {
             const options = {
                 aggregatesCollection: "aggregates",
                 connectionUri: "mongodb://localhost:27017/event-nest",
@@ -123,8 +125,10 @@ describe("EventNestMongoDbModule", () => {
             expect(module.exports).toEqual([EVENT_STORE]);
             expect(module.providers).toEqual(mockedProviders);
         });
+    });
 
-        test("registerAsync returns configured module", () => {
+    describe("registerAsync", () => {
+        test("returns configured module", () => {
             const options = {
                 useFactory: () => ({
                     aggregatesCollection: "aggregates",

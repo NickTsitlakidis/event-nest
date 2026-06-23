@@ -48,64 +48,66 @@ describe("AllOfSnapshotStrategy", () => {
         });
     });
 
-    describe("shouldCreateSnapshot=true", () => {
-        test("returns true when single strategy returns true", () => {
-            const aggregateRoot = new TestAggregateRoot("test-id");
-            const strategy = new AllOfSnapshotStrategy([new AlwaysTrueStrategy()]);
+    describe("shouldCreateSnapshot", () => {
+        describe("when it returns true", () => {
+            test("returns true when single strategy returns true", () => {
+                const aggregateRoot = new TestAggregateRoot("test-id");
+                const strategy = new AllOfSnapshotStrategy([new AlwaysTrueStrategy()]);
 
-            expect(strategy.shouldCreateSnapshot(aggregateRoot)).toBe(true);
-        });
-
-        test("returns true when multiple strategies return true", () => {
-            const aggregateRoot = new TestAggregateRoot("test-id");
-            const strategy = new AllOfSnapshotStrategy([
-                new AlwaysTrueStrategy(),
-                new AlwaysTrueStrategy(),
-                new AlwaysTrueStrategy()
-            ]);
-
-            expect(strategy.shouldCreateSnapshot(aggregateRoot)).toBe(true);
-        });
-
-        test("returns true when all real strategies match", () => {
-            const aggregateRoot = createMock<AggregateRoot>({
-                uncommittedEvents: [
-                    {
-                        payload: new TestEvent1()
-                    }
-                ],
-                version: 9
+                expect(strategy.shouldCreateSnapshot(aggregateRoot)).toBe(true);
             });
 
-            const strategy = new AllOfSnapshotStrategy([
-                new ForCountSnapshotStrategy({ count: 10 }),
-                new ForEventsSnapshotStrategy({ eventClasses: [TestEvent1] })
-            ]);
+            test("returns true when multiple strategies return true", () => {
+                const aggregateRoot = new TestAggregateRoot("test-id");
+                const strategy = new AllOfSnapshotStrategy([
+                    new AlwaysTrueStrategy(),
+                    new AlwaysTrueStrategy(),
+                    new AlwaysTrueStrategy()
+                ]);
 
-            expect(strategy.shouldCreateSnapshot(aggregateRoot)).toBe(true);
-        });
-
-        test("returns true when multiple count and event strategies all match", () => {
-            const aggregateRoot = createMock<AggregateRoot>({
-                uncommittedEvents: [
-                    {
-                        payload: new TestEvent1()
-                    }
-                ],
-                version: 9
+                expect(strategy.shouldCreateSnapshot(aggregateRoot)).toBe(true);
             });
 
-            const strategy = new AllOfSnapshotStrategy([
-                new ForCountSnapshotStrategy({ count: 10 }),
-                new ForEventsSnapshotStrategy({ eventClasses: [TestEvent1] }),
-                new AlwaysTrueStrategy()
-            ]);
+            test("returns true when all real strategies match", () => {
+                const aggregateRoot = createMock<AggregateRoot>({
+                    uncommittedEvents: [
+                        {
+                            payload: new TestEvent1()
+                        }
+                    ],
+                    version: 9
+                });
 
-            expect(strategy.shouldCreateSnapshot(aggregateRoot)).toBe(true);
+                const strategy = new AllOfSnapshotStrategy([
+                    new ForCountSnapshotStrategy({ count: 10 }),
+                    new ForEventsSnapshotStrategy({ eventClasses: [TestEvent1] })
+                ]);
+
+                expect(strategy.shouldCreateSnapshot(aggregateRoot)).toBe(true);
+            });
+
+            test("returns true when multiple count and event strategies all match", () => {
+                const aggregateRoot = createMock<AggregateRoot>({
+                    uncommittedEvents: [
+                        {
+                            payload: new TestEvent1()
+                        }
+                    ],
+                    version: 9
+                });
+
+                const strategy = new AllOfSnapshotStrategy([
+                    new ForCountSnapshotStrategy({ count: 10 }),
+                    new ForEventsSnapshotStrategy({ eventClasses: [TestEvent1] }),
+                    new AlwaysTrueStrategy()
+                ]);
+
+                expect(strategy.shouldCreateSnapshot(aggregateRoot)).toBe(true);
+            });
         });
     });
 
-    describe("shouldCreateSnapshot=false", () => {
+    describe("when it returns false", () => {
         test("returns false when single strategy returns false", () => {
             const aggregateRoot = new TestAggregateRoot("test-id");
             const strategy = new AllOfSnapshotStrategy([new AlwaysFalseStrategy()]);
