@@ -353,28 +353,32 @@ describe("AggregateRoot", () => {
         });
     });
 
-    test("sortEvents - sorts multiple events by version", () => {
-        const event1 = StoredEvent.fromPublishedEvent("ev1", "id1", "ag-name", new TestEvent1(), new Date());
-        event1.aggregateRootVersion = 5;
-        const event2 = StoredEvent.fromPublishedEvent("ev2", "id1", "ag-name", new TestEvent1(), new Date());
-        event2.aggregateRootVersion = 1;
-        const event3 = StoredEvent.fromPublishedEvent("ev3", "id1", "ag-name", new TestEvent1(), new Date());
-        event3.aggregateRootVersion = 41;
+    describe("sortEvents", () => {
+        test("sorts multiple events by version", () => {
+            const event1 = StoredEvent.fromPublishedEvent("ev1", "id1", "ag-name", new TestEvent1(), new Date());
+            event1.aggregateRootVersion = 5;
+            const event2 = StoredEvent.fromPublishedEvent("ev2", "id1", "ag-name", new TestEvent1(), new Date());
+            event2.aggregateRootVersion = 1;
+            const event3 = StoredEvent.fromPublishedEvent("ev3", "id1", "ag-name", new TestEvent1(), new Date());
+            event3.aggregateRootVersion = 41;
 
-        const sorted = new TestRoot("id").sortEvents([event1, event2, event3]);
-        expect(sorted).toEqual([event2, event1, event3]);
+            const sorted = new TestRoot("id").sortEvents([event1, event2, event3]);
+            expect(sorted).toEqual([event2, event1, event3]);
+        });
     });
 
-    test("resolveVersion - finds greatest version for multiple events", () => {
-        const event1 = StoredEvent.fromPublishedEvent("ev1", "id1", "ag-name", new TestEvent1(), new Date());
-        event1.aggregateRootVersion = 10;
-        const event2 = StoredEvent.fromPublishedEvent("ev2", "id1", "ag-name", new TestEvent1(), new Date());
-        event2.aggregateRootVersion = 5;
-        const event3 = StoredEvent.fromPublishedEvent("ev3", "id1", "ag-name", new TestEvent1(), new Date());
-        event3.aggregateRootVersion = 30;
+    describe("resolveVersion", () => {
+        test("finds greatest version for multiple events", () => {
+            const event1 = StoredEvent.fromPublishedEvent("ev1", "id1", "ag-name", new TestEvent1(), new Date());
+            event1.aggregateRootVersion = 10;
+            const event2 = StoredEvent.fromPublishedEvent("ev2", "id1", "ag-name", new TestEvent1(), new Date());
+            event2.aggregateRootVersion = 5;
+            const event3 = StoredEvent.fromPublishedEvent("ev3", "id1", "ag-name", new TestEvent1(), new Date());
+            event3.aggregateRootVersion = 30;
 
-        const entity = new TestRoot("id");
-        entity.resolveVersion([event1, event2, event3]);
-        expect(entity.version).toBe(30);
+            const entity = new TestRoot("id");
+            entity.resolveVersion([event1, event2, event3]);
+            expect(entity.version).toBe(30);
+        });
     });
 });

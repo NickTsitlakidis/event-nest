@@ -93,27 +93,29 @@ describe("ForAggregateRootsStrategy", () => {
         });
     });
 
-    describe("shouldCreateSnapshot=true", () => {
-        test("returns true for single matching aggregate root", () => {
-            const strategy = new ForAggregateRootsStrategy({
-                aggregates: [TestAggregateRoot1]
+    describe("shouldCreateSnapshot", () => {
+        describe("when it returns true", () => {
+            test("returns true for single matching aggregate root", () => {
+                const strategy = new ForAggregateRootsStrategy({
+                    aggregates: [TestAggregateRoot1]
+                });
+
+                expect(strategy.shouldCreateSnapshot(aggregateRoot1)).toBe(true);
             });
 
-            expect(strategy.shouldCreateSnapshot(aggregateRoot1)).toBe(true);
-        });
+            test("returns true for any matching aggregate root in list", () => {
+                const strategy = new ForAggregateRootsStrategy({
+                    aggregates: [TestAggregateRoot1, TestAggregateRoot2, TestAggregateRoot3]
+                });
 
-        test("returns true for any matching aggregate root in list", () => {
-            const strategy = new ForAggregateRootsStrategy({
-                aggregates: [TestAggregateRoot1, TestAggregateRoot2, TestAggregateRoot3]
+                expect(strategy.shouldCreateSnapshot(aggregateRoot1)).toBe(true);
+                expect(strategy.shouldCreateSnapshot(aggregateRoot2)).toBe(true);
+                expect(strategy.shouldCreateSnapshot(aggregateRoot3)).toBe(true);
             });
-
-            expect(strategy.shouldCreateSnapshot(aggregateRoot1)).toBe(true);
-            expect(strategy.shouldCreateSnapshot(aggregateRoot2)).toBe(true);
-            expect(strategy.shouldCreateSnapshot(aggregateRoot3)).toBe(true);
         });
     });
 
-    describe("shouldCreateSnapshot=false", () => {
+    describe("when it returns false", () => {
         test("returns false for non-matching aggregate root", () => {
             const strategy = new ForAggregateRootsStrategy({
                 aggregates: [TestAggregateRoot1]

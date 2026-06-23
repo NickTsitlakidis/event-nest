@@ -15,52 +15,54 @@ describe("ForCountSnapshotStrategy", () => {
         });
     });
 
-    describe("shouldCreateSnapshot=true", () => {
-        test("returns true when one event reach threshold", () => {
-            const aggregateRoot = createMock<AggregateRoot>({
-                uncommittedEvents: [
-                    {
+    describe("shouldCreateSnapshot", () => {
+        describe("when it returns true", () => {
+            test("returns true when one event reach threshold", () => {
+                const aggregateRoot = createMock<AggregateRoot>({
+                    uncommittedEvents: [
+                        {
+                            payload: new TestEvent()
+                        }
+                    ],
+                    version: 9
+                });
+
+                const strategy = new ForCountSnapshotStrategy({ count: 10 });
+
+                expect(strategy.shouldCreateSnapshot(aggregateRoot)).toBe(true);
+            });
+
+            test("returns true when multiple events reach exact treshold", () => {
+                const count = 5;
+                const aggregateRoot = createMock<AggregateRoot>({
+                    uncommittedEvents: Array.from({ length: count }, () => ({
                         payload: new TestEvent()
-                    }
-                ],
-                version: 9
+                    })),
+                    version: 5
+                });
+
+                const strategy = new ForCountSnapshotStrategy({ count });
+
+                expect(strategy.shouldCreateSnapshot(aggregateRoot)).toBe(true);
             });
 
-            const strategy = new ForCountSnapshotStrategy({ count: 10 });
+            test("returns true when crossing threshold with multiple events", () => {
+                const count = 5;
+                const aggregateRoot = createMock<AggregateRoot>({
+                    uncommittedEvents: Array.from({ length: count * 2 }, () => ({
+                        payload: new TestEvent()
+                    })),
+                    version: 5
+                });
 
-            expect(strategy.shouldCreateSnapshot(aggregateRoot)).toBe(true);
-        });
+                const strategy = new ForCountSnapshotStrategy({ count });
 
-        test("returns true when multiple events reach exact treshold", () => {
-            const count = 5;
-            const aggregateRoot = createMock<AggregateRoot>({
-                uncommittedEvents: Array.from({ length: count }, () => ({
-                    payload: new TestEvent()
-                })),
-                version: 5
+                expect(strategy.shouldCreateSnapshot(aggregateRoot)).toBe(true);
             });
-
-            const strategy = new ForCountSnapshotStrategy({ count });
-
-            expect(strategy.shouldCreateSnapshot(aggregateRoot)).toBe(true);
-        });
-
-        test("returns true when crossing threshold with multiple events", () => {
-            const count = 5;
-            const aggregateRoot = createMock<AggregateRoot>({
-                uncommittedEvents: Array.from({ length: count * 2 }, () => ({
-                    payload: new TestEvent()
-                })),
-                version: 5
-            });
-
-            const strategy = new ForCountSnapshotStrategy({ count });
-
-            expect(strategy.shouldCreateSnapshot(aggregateRoot)).toBe(true);
         });
     });
 
-    describe("shouldCreateSnapshot=false", () => {
+    describe("when it returns false", () => {
         test("returns false when no uncommitted events", () => {
             const aggregateRoot = createMock<AggregateRoot>({
                 uncommittedEvents: [],

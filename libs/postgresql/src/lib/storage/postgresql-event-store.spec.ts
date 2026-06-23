@@ -675,9 +675,11 @@ describe("PostgreSQLEventStore", () => {
         });
     });
 
-    test("generateEntityId - returns string with UUID format", async () => {
-        const id = await eventStore.generateEntityId();
-        expect(/^[a-z,0-9-]{36}$/.test(id)).toBe(true);
+    describe("generateEntityId", () => {
+        test("returns string with UUID format", async () => {
+            const id = await eventStore.generateEntityId();
+            expect(/^[a-z,0-9-]{36}$/.test(id)).toBe(true);
+        });
     });
 
     describe("findWithSnapshot", () => {

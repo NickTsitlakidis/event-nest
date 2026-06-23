@@ -9,8 +9,8 @@ import { ModuleProviders } from "./module-providers";
 import { PostgreSQLEventStore } from "./storage/postgresql-event-store";
 
 describe("EventNestPostgreSQLModule", () => {
-    describe("global factories", () => {
-        test("forRoot returns configured global module", () => {
+    describe("forRoot", () => {
+        test("returns configured global module", () => {
             const options = {
                 aggregatesTableName: "aggregates",
                 connectionUri: "postgres://test:test@docker:32770/event-nest",
@@ -38,8 +38,10 @@ describe("EventNestPostgreSQLModule", () => {
             expect(module.exports).toEqual([EVENT_STORE]);
             expect(module.providers).toEqual(mockedProviders);
         });
+    });
 
-        test("forRootAsync returns configured global module", () => {
+    describe("forRootAsync", () => {
+        test("returns configured global module", () => {
             const options = {
                 useFactory: () => ({
                     aggregatesTableName: "aggregates",
@@ -71,8 +73,8 @@ describe("EventNestPostgreSQLModule", () => {
         });
     });
 
-    describe("scoped factories", () => {
-        test("register returns configured module", () => {
+    describe("register", () => {
+        test("returns configured module", () => {
             const options = {
                 aggregatesTableName: "aggregates",
                 connectionUri: "postgres://test:test@docker:32770/event-nest",
@@ -100,8 +102,10 @@ describe("EventNestPostgreSQLModule", () => {
             expect(module.exports).toEqual([EVENT_STORE]);
             expect(module.providers).toEqual(mockedProviders);
         });
+    });
 
-        test("registerAsync returns configured module", () => {
+    describe("registerAsync", () => {
+        test("returns configured module", () => {
             const options = {
                 useFactory: () => ({
                     aggregatesTableName: "aggregates",

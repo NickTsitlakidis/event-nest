@@ -603,9 +603,11 @@ describe("MongoEventStore", () => {
         });
     });
 
-    test("generateEntityId - returns string with ObjectId format", async () => {
-        const id = await eventStore.generateEntityId();
-        expect(ObjectId.isValid(id)).toBe(true);
+    describe("generateEntityId", () => {
+        test("returns string with ObjectId format", async () => {
+            const id = await eventStore.generateEntityId();
+            expect(ObjectId.isValid(id)).toBe(true);
+        });
     });
 
     describe("findWithSnapshot", () => {

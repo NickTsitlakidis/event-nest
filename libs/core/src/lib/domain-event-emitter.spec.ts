@@ -54,46 +54,50 @@ class WithMultiple implements OnDomainEvent<Event1 | Event2> {
     }
 }
 describe("DomainEventEmitter", () => {
-    test("onModuleDestroy - stops calling subscriptions", () => {
-        const emitter = new DomainEventEmitter();
+    describe("onModuleDestroy", () => {
+        test("stops calling subscriptions", () => {
+            const emitter = new DomainEventEmitter();
 
-        const asyncSubscription = new TestEvent2Subscription();
-        const syncSubscription = new TestEvent2SyncSubscription();
-        const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>([
-            [TestEvent2Subscription, createMock<InstanceWrapper<Injectable>>({ instance: asyncSubscription })],
-            [TestEvent2SyncSubscription, createMock<InstanceWrapper<Injectable>>({ instance: syncSubscription })]
-        ]);
-        const injectorModules = new Map<string, Module>([["test", createMock<Module>({ providers: providersMap })]]);
+            const asyncSubscription = new TestEvent2Subscription();
+            const syncSubscription = new TestEvent2SyncSubscription();
+            const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>([
+                [TestEvent2Subscription, createMock<InstanceWrapper<Injectable>>({ instance: asyncSubscription })],
+                [TestEvent2SyncSubscription, createMock<InstanceWrapper<Injectable>>({ instance: syncSubscription })]
+            ]);
+            const injectorModules = new Map<string, Module>([
+                ["test", createMock<Module>({ providers: providersMap })]
+            ]);
 
-        const asyncSpy = jest.spyOn(asyncSubscription, "onDomainEvent");
-        const syncSpy = jest.spyOn(syncSubscription, "onDomainEvent");
+            const asyncSpy = jest.spyOn(asyncSubscription, "onDomainEvent");
+            const syncSpy = jest.spyOn(syncSubscription, "onDomainEvent");
 
-        const creationDate = new Date();
-        emitter.bindSubscriptions(injectorModules);
+            const creationDate = new Date();
+            emitter.bindSubscriptions(injectorModules);
 
-        emitter.emitMultiple([
-            {
-                aggregateRootId: "test",
-                eventId: "ev-id",
-                occurredAt: creationDate,
-                payload: new Event2(),
-                version: 1
-            }
-        ]);
-        emitter.onModuleDestroy();
+            emitter.emitMultiple([
+                {
+                    aggregateRootId: "test",
+                    eventId: "ev-id",
+                    occurredAt: creationDate,
+                    payload: new Event2(),
+                    version: 1
+                }
+            ]);
+            emitter.onModuleDestroy();
 
-        emitter.emitMultiple([
-            {
-                aggregateRootId: "test",
-                eventId: "ev-id2",
-                occurredAt: creationDate,
-                payload: new Event2(),
-                version: 2
-            }
-        ]);
+            emitter.emitMultiple([
+                {
+                    aggregateRootId: "test",
+                    eventId: "ev-id2",
+                    occurredAt: creationDate,
+                    payload: new Event2(),
+                    version: 2
+                }
+            ]);
 
-        expect(asyncSpy).toHaveBeenCalledTimes(1);
-        expect(syncSpy).toHaveBeenCalledTimes(1);
+            expect(asyncSpy).toHaveBeenCalledTimes(1);
+            expect(syncSpy).toHaveBeenCalledTimes(1);
+        });
     });
 
     describe("emitMultiple", () => {
