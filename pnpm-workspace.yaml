@@ -1,0 +1,20 @@
+allowBuilds:
+  '@nestjs/core': true
+  '@parcel/watcher': false
+  '@swc/core': false
+  cpu-features: true
+  less: true
+  mongodb-memory-server: true
+  nx: true
+  protobufjs: true
+  ssh2: true
+  unrs-resolver: true
+
+# These exact versions were pinned before the pnpm 11 minimumReleaseAge guard
+# existed; the entries become no-ops once the versions are >24h old and can be removed.
+minimumReleaseAgeExclude:
+  - "@nestjs/common@11.1.28"
+  - "@nestjs/core@11.1.28"
+  - "@nestjs/platform-express@11.1.28"
+  - "@nestjs/testing@11.1.28"
+  - "@types/node@22.20.1"

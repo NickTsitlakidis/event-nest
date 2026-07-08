@@ -13,21 +13,9 @@
         "type": "git",
         "url": "https://github.com/NickTsitlakidis/event-nest.git"
     },
-    "packageManager": "pnpm@10.33.4",
+    "packageManager": "pnpm@11.10.0",
     "engines": {
-        "node": ">= 22"
-    },
-    "pnpm": {
-        "onlyBuiltDependencies": [
-            "@nestjs/core",
-            "cpu-features",
-            "less",
-            "mongodb-memory-server",
-            "nx",
-            "protobufjs",
-            "ssh2",
-            "unrs-resolver"
-        ]
+        "node": ">=22.13"
     },
     "devDependencies": {
         "@eslint/js": "10.0.1",
