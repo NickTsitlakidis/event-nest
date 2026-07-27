@@ -18,7 +18,12 @@
             "@event-nest/core": ["./libs/core/src/index.ts"],
             "@event-nest/mongodb": ["./libs/mongodb/src/index.ts"],
             "@event-nest/postgresql": ["./libs/postgresql/src/index.ts"]
-        }
+        },
+        "strict": false,
+        "noUncheckedSideEffectImports": false,
+        "types": ["*"],
+        "esModuleInterop": false,
+        "ignoreDeprecations": "6.0"
     },
     "exclude": ["node_modules", "tmp"]
 }
