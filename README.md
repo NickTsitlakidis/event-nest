@@ -24,6 +24,7 @@ What Event Nest is Not:
         - [Manual creation of PostgreSQL tables](#manual-creation-of-postgresql-tables)
 - [Concepts](#concepts)
     - [Event](#event)
+        - [Renaming an event](#renaming-an-event)
     - [Aggregate Root](#aggregate-root)
     - [Snapshots](#snapshots)
         - [Making an aggregate root snapshot-aware](#making-an-aggregate-root-snapshot-aware)
@@ -192,6 +193,29 @@ Each event serves three purposes :
 There is no specific requirement for the structure of an event, but it is recommended to keep it simple and immutable. The [class-transformer](https://github.com/typestack/class-transformer) library is utilized under the hood to save and read the events from the database. Therefore, your event classes should adhere to the rules of class-transformer to be properly serialized and deserialized.
 
 To register a class as an event, use the `@DomainEvent` decorator. The decorator accepts a string parameter which is the unique name of the event.
+
+#### Renaming an event
+Since the event name is persisted with every stored event, renaming an event would normally orphan the rows that were saved under the old name, making it impossible to reconstruct the affected aggregates.
+To rename an event without migrating your stored data, pass the old name as an alias :
+
+```typescript
+import { DomainEvent } from "@event-nest/core";
+
+@DomainEvent("user-registered", { aliases: ["user-created-event"] })
+export class UserRegisteredEvent {
+    constructor(public name: string, public email: string) {}
+}
+```
+
+Events that were stored under any of the aliases will be resolved to the class as if they were stored under the current name. New events are always persisted with the current name, never with an alias.
+
+Keep in mind that aliases follow the same uniqueness rules as event names, and that they are effectively permanent: an alias can only be removed once no stored events use the old name. Also note that consumers reading the events directly from the database will see both the old and the new name in historical data.
+
+If you rename an event multiple times, the aliases accumulate :
+
+```typescript
+@DomainEvent("current-name", { aliases: ["first-name", "second-name"] })
+```
 
 
 ### Aggregate Root
