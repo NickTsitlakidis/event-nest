@@ -24,6 +24,7 @@ What Event Nest is Not:
         - [Manual creation of PostgreSQL tables](#manual-creation-of-postgresql-tables)
 - [Concepts](#concepts)
     - [Event](#event)
+        - [Renaming an event](#renaming-an-event)
     - [Aggregate Root](#aggregate-root)
     - [Snapshots](#snapshots)
         - [Making an aggregate root snapshot-aware](#making-an-aggregate-root-snapshot-aware)
@@ -193,6 +194,29 @@ There is no specific requirement for the structure of an event, but it is recomm
 
 To register a class as an event, use the `@DomainEvent` decorator. The decorator accepts a string parameter which is the unique name of the event.
 
+#### Renaming an event
+Since the event name is persisted with every stored event, renaming an event would normally orphan the rows that were saved under the old name, making it impossible to reconstruct the affected aggregates.
+To rename an event without migrating your stored data, pass the old name as an alias :
+
+```typescript
+import { DomainEvent } from "@event-nest/core";
+
+@DomainEvent("user-registered", { aliases: ["user-created-event"] })
+export class UserRegisteredEvent {
+    constructor(public name: string, public email: string) {}
+}
+```
+
+Events that were stored under any of the aliases will be resolved to the class as if they were stored under the current name. New events are always persisted with the current name, never with an alias.
+
+Keep in mind that aliases follow the same uniqueness rules as event names, and that they are effectively permanent: an alias can only be removed once no stored events use the old name. Also note that consumers reading the events directly from the database will see both the old and the new name in historical data.
+
+If you rename an event multiple times, the aliases accumulate :
+
+```typescript
+@DomainEvent("current-name", { aliases: ["first-name", "second-name"] })
+```
+
 
 ### Aggregate Root
 An [aggregate root](https://stackoverflow.com/questions/1958621/whats-an-aggregate-root) is a fundamental concept in Domain-Driven Design (DDD).
@@ -267,7 +291,7 @@ export class User extends AggregateRoot {
     private constructor(id: string) {
         super(id);
     }
-    
+
     public static createNew(id: string, name: string, email: string): User {
         const user = new User(id);
         const event = new UserCreatedEvent(name, email);
@@ -298,7 +322,7 @@ export class User extends AggregateRoot {
     private applyUserUpdatedEvent(event: UserUpdatedEvent) {
         this.name = event.newName;
     }
-    
+
 }
 ```
 
@@ -537,10 +561,10 @@ import { PublishedDomainEvent, DomainEventSubscription, OnDomainEvent } from "@e
 @DomainEventSubscription(UserCreatedEvent, UserUpdatedEvent)
 export class UserEventSubscription implements OnDomainEvent<UserCreatedEvent | UserUpdatedEvent> {
 
-  onDomainEvent(event: PublishedDomainEvent<UserCreatedEvent | UserUpdatedEvent>): Promise<unknown> {
-    //Here you can create/update your read model based on the event and your custom logic.
-    return Promise.resolve(undefined);
-  }
+    onDomainEvent(event: PublishedDomainEvent<UserCreatedEvent | UserUpdatedEvent>): Promise<unknown> {
+        //Here you can create/update your read model based on the event and your custom logic.
+        return Promise.resolve(undefined);
+    }
 
 }
 ```

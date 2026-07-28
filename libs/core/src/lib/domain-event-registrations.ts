@@ -1,9 +1,10 @@
-import { isNil } from "es-toolkit";
+import { intersection, isNil, uniq } from "es-toolkit";
 
 import { EventNameConflictException } from "./exceptions/event-name-conflict-exception";
 import { Class } from "./utils/type-utils";
 
 type Registration = {
+    aliases: Array<string>;
     eventClass: unknown;
     eventName: string;
 };
@@ -12,10 +13,13 @@ const registrations: Array<Registration> = [];
 
 /**
  * Returns the class that matches the provided name. Or undefined.
+ * The name is matched against the event name and the aliases of each registration.
  * @param name The event name to be checked.
  */
 export function getEventClass<T>(name: string): Class<T> | undefined {
-    const found = registrations.find((registration) => registration.eventName === name);
+    const found = registrations.find(
+        (registration) => registration.eventName === name || registration.aliases.includes(name)
+    );
     return isNil(found) ? undefined : (found.eventClass as Class<T>);
 }
 
@@ -33,8 +37,17 @@ export function isRegistered(event: object): boolean {
 }
 
 export function registerEvent(newRegistration: Registration) {
-    if (registrations.some((registration) => registration.eventName === newRegistration.eventName)) {
-        throw new EventNameConflictException(newRegistration.eventName);
+    const newNames = [newRegistration.eventName, ...newRegistration.aliases];
+
+    if (uniq(newNames).length !== newNames.length) {
+        const duplicated = newNames.find((name, index) => newNames.indexOf(name) !== index);
+        throw new EventNameConflictException(duplicated ?? newRegistration.eventName);
+    }
+
+    const existingNames = registrations.flatMap((registration) => [registration.eventName, ...registration.aliases]);
+    const [conflicting] = intersection(newNames, existingNames);
+    if (!isNil(conflicting)) {
+        throw new EventNameConflictException(conflicting);
     }
 
     registrations.push(newRegistration);

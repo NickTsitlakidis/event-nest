@@ -24,6 +24,11 @@ class NotSnapshotAwareRoot extends AggregateRoot {
     }
 }
 
+@DomainEvent("renamed-test-event", { aliases: ["legacy-test-event"] })
+class RenamedTestEvent {
+    constructor(public value: string) {}
+}
+
 @AggregateRootConfig({ name: "SnapshotAwareRoot", snapshotRevision: 1 })
 class SnapshotRoot extends AggregateRoot implements SnapshotAware<{ value: string }> {
     value!: string;
@@ -71,10 +76,17 @@ class TestRoot extends AggregateRoot {
 
     public published: Array<AggregateRootEvent<object>> = [];
 
+    public renamedEventValues: Array<string> = [];
+
     someProperty!: string;
 
     constructor(id: string) {
         super(id);
+    }
+
+    @ApplyEvent(RenamedTestEvent)
+    applyRenamedEvent(event: RenamedTestEvent) {
+        this.renamedEventValues.push(event.value);
     }
 
     @ApplyEvent(TestEventForThisBinding)
@@ -233,6 +245,22 @@ describe("AggregateRoot", () => {
             entity.reconstitute([event1]);
 
             expect(entity.someProperty).toBe("test");
+        });
+
+        test("applies events stored under an alias of the event name", () => {
+            const event1 = StoredEvent.fromStorage("ev1", "id1", "legacy-test-event", new Date(), 1, "ag-name", {
+                value: "from-legacy-name"
+            });
+            const event2 = StoredEvent.fromStorage("ev2", "id1", "renamed-test-event", new Date(), 2, "ag-name", {
+                value: "from-canonical-name"
+            });
+
+            const entity = new TestRoot("id1");
+
+            entity.reconstitute([event1, event2]);
+
+            expect(entity.renamedEventValues).toEqual(["from-legacy-name", "from-canonical-name"]);
+            expect(entity.version).toBe(2);
         });
     });
 
