@@ -20,6 +20,10 @@ class TestClass8 {}
 
 class TestClass9 {}
 
+class TestClass10 {}
+
+class TestClass11 {}
+
 describe("DomainEvent", () => {
     test("throws for duplicate event names", () => {
         DomainEvent("event-one")(TestClass1);
@@ -56,19 +60,21 @@ describe("DomainEvent", () => {
     });
 
     test("throws when an alias conflicts with a registered alias", () => {
-        expect(() => DomainEvent("event-seven", { aliases: ["event-four-legacy"] })(TestClass8)).toThrow(
+        DomainEvent("event-seven", { aliases: ["event-seven-legacy"] })(TestClass9);
+        expect(() => DomainEvent("event-eight", { aliases: ["event-seven-legacy"] })(TestClass10)).toThrow(
             EventNameConflictException
         );
-        expect(isRegistered(new TestClass8())).toBe(false);
+        expect(isRegistered(new TestClass9())).toBe(true);
+        expect(isRegistered(new TestClass10())).toBe(false);
     });
 
     test("throws when an alias is duplicated within the same registration", () => {
-        expect(() => DomainEvent("event-eight", { aliases: ["event-eight"] })(TestClass9)).toThrow(
+        expect(() => DomainEvent("event-nine", { aliases: ["event-nine"] })(TestClass11)).toThrow(
             EventNameConflictException
         );
         expect(() =>
-            DomainEvent("event-nine", { aliases: ["event-nine-legacy", "event-nine-legacy"] })(TestClass9)
+            DomainEvent("event-ten", { aliases: ["event-ten-legacy", "event-ten-legacy"] })(TestClass11)
         ).toThrow(EventNameConflictException);
-        expect(isRegistered(new TestClass9())).toBe(false);
+        expect(isRegistered(new TestClass11())).toBe(false);
     });
 });
