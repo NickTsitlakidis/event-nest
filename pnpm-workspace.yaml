@@ -18,3 +18,4 @@ minimumReleaseAgeExclude:
   - "@nestjs/platform-express@11.1.28"
   - "@nestjs/testing@11.1.28"
   - "@types/node@22.20.1"
+  - webpack@5.109.1

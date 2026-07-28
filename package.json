@@ -53,9 +53,9 @@
         "ts-node": "10.9.2",
         "typescript": "6.0.3",
         "typescript-eslint": "8.65.0",
-        "webpack": "5.109.0",
+        "webpack": "5.109.1",
         "webpack-cli": "^7.0.0",
-        "webpack-dev-server": "5.2.6"
+        "webpack-dev-server": "6.0.0"
     },
     "dependencies": {
         "@nestjs/common": "11.1.28",
