@@ -12,7 +12,7 @@ export type DomainEventOptions = {
 };
 
 /**
- * A decorator to mark a class as a domain event. Objects of these types of classes are persisted in the database and
+ * A decorator to mark a class as a domain event. Objects of these classes are persisted in the database and
  * they describe the events which happened in the system.
  *
  * The classes can contain any data required to describe the event with the only limitation being that the object will be
