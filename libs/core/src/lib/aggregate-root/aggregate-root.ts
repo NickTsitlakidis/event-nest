@@ -154,6 +154,11 @@ export abstract class AggregateRoot {
                 this.resolveVersion(events);
             }
         } else {
+            if (!Number.isSafeInteger(aggregateRootVersion) || aggregateRootVersion < 0) {
+                throw new Error(
+                    `Invalid aggregateRootVersion: ${aggregateRootVersion}. It must be a non-negative integer.`
+                );
+            }
             this._version = aggregateRootVersion;
         }
         const duration = Date.now() - startedAt;

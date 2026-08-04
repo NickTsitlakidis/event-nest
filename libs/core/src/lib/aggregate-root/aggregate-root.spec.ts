@@ -206,6 +206,21 @@ describe("AggregateRoot", () => {
             expect(entity.version).toBe(7);
         });
 
+        test.each([
+            [-1, "negative"],
+            [1.5, "decimal"],
+            [Number.MAX_SAFE_INTEGER + 1, "unsafe integer"],
+            [NaN, "NaN"],
+            [Infinity, "Infinity"],
+            [-Infinity, "-Infinity"]
+        ])("throws when aggregateRootVersion is %s (%s)", (invalidVersion) => {
+            const entity = new TestRoot("id1");
+
+            expect(() => entity.reconstitute([], undefined, invalidVersion as number)).toThrow(
+                `Invalid aggregateRootVersion: ${invalidVersion}. It must be a non-negative integer.`
+            );
+        });
+
         test("calls mapped apply methods after sorting", () => {
             const event1 = StoredEvent.fromStorage("ev1", "id1", "test-event-2", new Date(), 10, "ag-name", {});
             const event2 = StoredEvent.fromStorage("ev2", "id1", "test-event-1", new Date(), 2, "ag-name", {});

@@ -21,7 +21,7 @@ export class OrderService {
             const { aggregateRootVersion, events, snapshot } = await this._eventStore.findWithSnapshot(Order, id);
             order = Order.fromEvents(id, events, snapshot, aggregateRootVersion);
         } catch {
-            //fallback to full events reconstituion
+            //fallback to full events reconstitution
             const events = await this._eventStore.findByAggregateRootId(Order, id);
             order = Order.fromEvents(id, events);
         }

@@ -136,7 +136,7 @@ export abstract class AbstractEventStore implements EventStore {
         const aggregateRootName = getAggregateRootName(aggregateRootClass);
         if (isNil(aggregateRootName)) {
             this._abstractStoreLogger.error(
-                `Missing aggregate root name for class: ${aggregateRootClass.name}. Use the @AggregateRootName decorator.`
+                `Missing aggregate root name for class: ${aggregateRootClass.name}. Use the @AggregateRootConfig decorator.`
             );
             throw new MissingAggregateRootNameException(aggregateRootClass.name);
         }
