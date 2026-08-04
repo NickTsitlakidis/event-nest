@@ -25,7 +25,7 @@ jobs:
                 with:
                     node-version: ${{ matrix.node-version }}
             -   name: Install pnpm
-                uses: pnpm/action-setup@v4
+                uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa
                 with:
                     run_install: false
             -   name: Get pnpm store directory
@@ -54,4 +54,4 @@ jobs:
             -   name: Build postgresql
                 run: pnpm nx run postgresql:build
             -   name: Upload test coverage
-                uses: coverallsapp/github-action@v2
+                uses: coverallsapp/github-action@8d6379e14d29928660c4ba802d8e85393440b329
