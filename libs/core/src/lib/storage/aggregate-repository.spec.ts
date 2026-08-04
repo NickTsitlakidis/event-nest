@@ -43,9 +43,14 @@ class SnapshotRoot extends AggregateRoot implements SnapshotAware<{ values: Arra
         super(id);
     }
 
-    static fromEvents(id: string, events: Array<StoredEvent>, snapshot?: { values: Array<string> }): SnapshotRoot {
+    static fromEvents(
+        id: string,
+        events: Array<StoredEvent>,
+        snapshot?: { values: Array<string> },
+        aggregateRootVersion?: number
+    ): SnapshotRoot {
         const root = new SnapshotRoot(id);
-        root.reconstitute(events, snapshot);
+        root.reconstitute(events, snapshot, aggregateRootVersion);
         return root;
     }
 
@@ -133,6 +138,7 @@ describe("AggregateRepository", () => {
 
         test("reconstitutes a snapshot-aware aggregate from a snapshot and its newer events", async () => {
             eventStore.findWithSnapshot.mockResolvedValue({
+                aggregateRootVersion: 3,
                 events: [buildStoredEvent("ev3", "id1", "SnapshotRoot", 3, "after-snapshot")],
                 snapshot: { values: ["from-snapshot"] }
             });
@@ -141,12 +147,14 @@ describe("AggregateRepository", () => {
             const loaded = await repository.load("id1");
 
             expect(loaded?.values).toEqual(["from-snapshot", "after-snapshot"]);
+            expect(loaded?.version).toBe(3);
             expect(eventStore.findWithSnapshot).toHaveBeenCalledWith(SnapshotRoot, "id1");
             expect(eventStore.findByAggregateRootId).not.toHaveBeenCalled();
         });
 
         test("reconstitutes a snapshot-aware aggregate when only a snapshot exists", async () => {
             eventStore.findWithSnapshot.mockResolvedValue({
+                aggregateRootVersion: 2,
                 events: [],
                 snapshot: { values: ["from-snapshot"] }
             });
@@ -155,10 +163,11 @@ describe("AggregateRepository", () => {
             const loaded = await repository.load("id1");
 
             expect(loaded?.values).toEqual(["from-snapshot"]);
+            expect(loaded?.version).toBe(2);
         });
 
         test("returns undefined when a snapshot-aware aggregate has no events and no snapshot", async () => {
-            eventStore.findWithSnapshot.mockResolvedValue({ events: [], snapshot: undefined });
+            eventStore.findWithSnapshot.mockResolvedValue({ aggregateRootVersion: 0, events: [], snapshot: undefined });
             const repository = new AggregateRepository(eventStore, SnapshotRoot, SnapshotRoot.fromEvents);
 
             const loaded = await repository.load("id1");

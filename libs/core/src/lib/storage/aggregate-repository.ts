@@ -10,12 +10,15 @@ import { StoredEvent } from "./stored-event";
 /**
  * A function that creates an aggregate root instance from its persisted state. Typically this matches a static
  * factory method on the aggregate root class which calls {@link AggregateRoot:reconstitute} with the provided
- * events and optional snapshot.
+ * events, optional snapshot and optional aggregate root version. Snapshot-aware factories should forward the
+ * version to {@link AggregateRoot:reconstitute}, otherwise an aggregate whose snapshot has no newer events would
+ * resolve its version to 0.
  */
 export type AggregateRootFactory<T extends AggregateRoot> = (
     id: string,
     events: Array<StoredEvent>,
-    snapshot?: AggregateRootSnapshot<T>
+    snapshot?: AggregateRootSnapshot<T>,
+    aggregateRootVersion?: number
 ) => T;
 
 /**
@@ -48,12 +51,12 @@ export class AggregateRepository<T extends AggregateRoot> {
      * @returns The reconstituted aggregate root, or undefined when there is no persisted state for the id
      */
     async load(id: string): Promise<T | undefined> {
-        const { events, snapshot } = await this.find(id);
+        const { aggregateRootVersion, events, snapshot } = await this.find(id);
         if (events.length === 0 && isNil(snapshot)) {
             return undefined;
         }
 
-        const aggregate = this._factory(id, events, snapshot);
+        const aggregate = this._factory(id, events, snapshot, aggregateRootVersion);
         return this._eventStore.addPublisher(aggregate);
     }
 
@@ -66,7 +69,9 @@ export class AggregateRepository<T extends AggregateRoot> {
         return this._eventStore.addPublisher(aggregate).commit();
     }
 
-    private async find(id: string): Promise<{ events: Array<StoredEvent>; snapshot?: AggregateRootSnapshot<T> }> {
+    private async find(
+        id: string
+    ): Promise<{ aggregateRootVersion?: number; events: Array<StoredEvent>; snapshot?: AggregateRootSnapshot<T> }> {
         const snapshotRevision = getAggregateRootSnapshotRevision(this._aggregateRootClass);
         if (isNil(snapshotRevision)) {
             return {
