@@ -81,6 +81,11 @@ export interface EventStore {
      *   - `snapshot` (optional): the snapshot of the aggregate, if found
      *   - `events`: an array of events that occurred after the snapshot;
      *       if `snapshot` is undefined, this array contains **all events associated with the aggregate root**
+     *   - `aggregateRootVersion`: the version of the aggregate root as of this read. Always populated by the
+     *       event-nest stores (it is optional only to avoid breaking third-party implementations): the version of
+     *       the latest returned event, or the snapshot's version when no events exist after the snapshot, or 0 when
+     *       the aggregate does not exist. Pass it to {@link AggregateRoot.reconstitute} so that aggregates whose
+     *       snapshot sits at the stream head still resolve their correct version.
      * @throws {SnapshotRevisionMismatchException} If the current snapshotRevision does not match the snapshot revision in the stored snapshot record
      * @throws {AggregateClassNotSnapshotAwareException} If the aggregate root class is missing the snapshot revision configuration
      * @throws {MissingAggregateRootNameException} If the aggregate root name is missing
@@ -89,6 +94,7 @@ export interface EventStore {
         aggregateRootClass: AggregateRootClass<T>,
         id: string
     ): Promise<{
+        aggregateRootVersion?: number;
         events: Array<StoredEvent>;
         snapshot?: AggregateRootSnapshot<T>;
     }>;

@@ -648,6 +648,7 @@ describe("MongoEventStore", () => {
 
             const res = await eventStore.findWithSnapshot(SnapshotAwareAggregateRoot, aggregateRootId);
             expect(res.snapshot).toBeUndefined();
+            expect(res.aggregateRootVersion).toBe(5);
             expect(res.events.length).toEqual(2);
             expect(res.events[0].id).toBe(event0Id);
             expect(res.events[0].aggregateRootVersion).toBe(3);
@@ -698,7 +699,7 @@ describe("MongoEventStore", () => {
             );
         });
 
-        test("returns snapshot and empty events array when no events exist after snapshot", async () => {
+        test("returns all events when no snapshot exists", async () => {
             const aggregateRootId = new ObjectId().toHexString();
             const event0Id = new ObjectId().toHexString();
             const event1Id = new ObjectId().toHexString();
@@ -768,9 +769,10 @@ describe("MongoEventStore", () => {
             const result = await eventStore.findWithSnapshot(SnapshotAwareAggregateRoot, aggregateRootId);
             expect(result.events.length).toBe(5);
             expect(result.snapshot).toBeUndefined();
+            expect(result.aggregateRootVersion).toBe(15);
         });
 
-        test("returns events from the beginning if no snapshot exists", async () => {
+        test("returns snapshot and empty events array when no events exist after snapshot", async () => {
             const aggregateRootId = new ObjectId().toHexString();
             const snapshotId = new ObjectId().toHexString();
 
@@ -788,6 +790,19 @@ describe("MongoEventStore", () => {
 
             expect(result.snapshot).toEqual(snapshotPayload);
             expect(result.events).toEqual([]);
+            expect(result.aggregateRootVersion).toBe(10);
+        });
+
+        test("returns version 0 when the aggregate does not exist", async () => {
+            const aggregateRootId = new ObjectId().toHexString();
+
+            snapshotStore.findLatestSnapshotByAggregateId.mockResolvedValue(undefined);
+
+            const result = await eventStore.findWithSnapshot(SnapshotAwareAggregateRoot, aggregateRootId);
+
+            expect(result.snapshot).toBeUndefined();
+            expect(result.events).toEqual([]);
+            expect(result.aggregateRootVersion).toBe(0);
         });
 
         test("returns snapshot and events that occurred after the snapshot version", async () => {
@@ -865,6 +880,7 @@ describe("MongoEventStore", () => {
             const result = await eventStore.findWithSnapshot(SnapshotAwareAggregateRoot, aggregateRootId);
 
             expect(result.snapshot).toEqual(snapshotPayload);
+            expect(result.aggregateRootVersion).toBe(15);
             expect(result.events.length).toBe(2);
 
             expect(result.events[0].id).toBe(event3Id);
@@ -926,6 +942,7 @@ describe("MongoEventStore", () => {
             const result = await eventStore.findWithSnapshot(SnapshotAwareAggregateRoot, aggregateRootId);
 
             expect(result.snapshot).toEqual(snapshotPayload);
+            expect(result.aggregateRootVersion).toBe(10);
             expect(result.events.length).toBe(2);
             expect(result.events[0].aggregateRootVersion).toBe(5);
             expect(result.events[1].aggregateRootVersion).toBe(10);
