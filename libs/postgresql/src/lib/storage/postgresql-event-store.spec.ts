@@ -723,6 +723,7 @@ describe("PostgreSQLEventStore", () => {
 
             const result = await eventStore.findWithSnapshot(SnapshotAwareAggregateRoot, aggregateRootId);
             expect(result.snapshot).toBeUndefined();
+            expect(result.aggregateRootVersion).toBe(2);
 
             expect(result.events.length).toBe(2);
             expect(result.events[0].id).toBe(ev1Id);
@@ -792,6 +793,19 @@ describe("PostgreSQLEventStore", () => {
 
             expect(result.snapshot).toEqual(snapshotPayload);
             expect(result.events).toEqual([]);
+            expect(result.aggregateRootVersion).toBe(10);
+        });
+
+        test("returns version 0 when the aggregate does not exist", async () => {
+            const aggregateRootId = randomUUID();
+
+            snapshotStore.findLatestSnapshotByAggregateId.mockResolvedValue(undefined);
+
+            const result = await eventStore.findWithSnapshot(SnapshotAwareAggregateRoot, aggregateRootId);
+
+            expect(result.snapshot).toBeUndefined();
+            expect(result.events).toEqual([]);
+            expect(result.aggregateRootVersion).toBe(0);
         });
 
         test("returns snapshot and events that occurred after the snapshot version", async () => {
@@ -872,6 +886,7 @@ describe("PostgreSQLEventStore", () => {
 
             // snapshot was created on 10th version -> should return events with 11 & 15 versions
             expect(result.snapshot).toEqual(snapshotPayload);
+            expect(result.aggregateRootVersion).toBe(15);
             expect(result.events.length).toBe(2);
 
             expect(result.events[0].id).toBe(ev3Id);
@@ -934,6 +949,7 @@ describe("PostgreSQLEventStore", () => {
             const result = await eventStore.findWithSnapshot(SnapshotAwareAggregateRoot, aggregateRootId);
 
             expect(result.snapshot).toEqual(snapshotPayload);
+            expect(result.aggregateRootVersion).toBe(10);
             expect(result.events.length).toBe(2);
             expect(result.events[0].aggregateRootVersion).toBe(5);
             expect(result.events[1].aggregateRootVersion).toBe(10);

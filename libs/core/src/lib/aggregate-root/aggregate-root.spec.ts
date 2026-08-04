@@ -167,6 +167,45 @@ describe("AggregateRoot", () => {
             );
         });
 
+        test("sets version from aggregateRootVersion when no events are provided", () => {
+            const entity = new SnapshotRoot("id1");
+
+            entity.reconstitute([], { value: "from-snapshot" }, 42);
+
+            expect(entity.version).toBe(42);
+            expect(entity.value).toBe("from-snapshot");
+        });
+
+        test("prefers aggregateRootVersion parameter over event versions", () => {
+            const event1 = StoredEvent.fromStorage("ev1", "id1", "event-with-value", new Date(), 10, "ag-name", {
+                value: "from-event"
+            });
+            const entity = new SnapshotRoot("id1");
+
+            entity.reconstitute([event1], { value: "from-snapshot" }, 12);
+
+            expect(entity.version).toBe(12);
+        });
+
+        test("treats aggregateRootVersion of 0 as provided", () => {
+            const event1 = StoredEvent.fromStorage("ev1", "id1", "event-with-value", new Date(), 10, "ag-name", {
+                value: "from-event"
+            });
+            const entity = new SnapshotRoot("id1");
+
+            entity.reconstitute([event1], { value: "from-snapshot" }, 0);
+
+            expect(entity.version).toBe(0);
+        });
+
+        test("sets version from aggregateRootVersion when no snapshot is provided", () => {
+            const entity = new TestRoot("id1");
+
+            entity.reconstitute([], undefined, 7);
+
+            expect(entity.version).toBe(7);
+        });
+
         test("calls mapped apply methods after sorting", () => {
             const event1 = StoredEvent.fromStorage("ev1", "id1", "test-event-2", new Date(), 10, "ag-name", {});
             const event2 = StoredEvent.fromStorage("ev2", "id1", "test-event-1", new Date(), 2, "ag-name", {});
