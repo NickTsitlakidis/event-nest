@@ -402,9 +402,14 @@ export class User extends AggregateRoot implements SnapshotAware<UserSnapshot> {
         return user;
     }
 
-    public static fromEvents(id: string, events: Array<StoredEvent>, snapshot?: UserSnapshot): User {
+    public static fromEvents(
+        id: string,
+        events: Array<StoredEvent>,
+        snapshot?: UserSnapshot,
+        aggregateRootVersion?: number
+    ): User {
         const user = new User(id);
-        user.reconstitute(events, snapshot);
+        user.reconstitute(events, snapshot, aggregateRootVersion);
         return user;
     }
 
@@ -436,7 +441,7 @@ export class User extends AggregateRoot implements SnapshotAware<UserSnapshot> {
 }
 ```
 
-The `toSnapshot()` method returns a plain representation of the aggregate's current state. The `applySnapshot()` method restores that state when a snapshot is loaded from storage. The `reconstitute` method accepts an optional snapshot parameter. When a snapshot is provided, it will be applied first, and then any remaining events will be replayed on top of it.
+The `toSnapshot()` method returns a plain representation of the aggregate's current state. The `applySnapshot()` method restores that state when a snapshot is loaded from storage. The `reconstitute` method accepts an optional snapshot parameter. When a snapshot is provided, it will be applied first, and then any remaining events will be replayed on top of it. It also accepts an optional `aggregateRootVersion` parameter which, when provided, is set as the aggregate's version instead of resolving it from the events. Pass the `aggregateRootVersion` returned by `findWithSnapshot` here, so the version is correct even when no events exist after the snapshot.
 
 Note that when calling `commit`, the library will automatically evaluate the configured snapshot strategy to determine whether a new snapshot should be created. If the strategy says yes, it will call `toSnapshot()` and persist the result. You don't need to manage snapshot creation manually.
 
@@ -510,6 +515,8 @@ The composite strategies can be nested to express more complex rules. For exampl
 
 The `EventStore` provides a `findWithSnapshot` method that retrieves the latest snapshot for an aggregate root along with any events that occurred after that snapshot. If no snapshot is found, all events are returned.
 
+The result also includes an `aggregateRootVersion` which reflects the version of the aggregate root as of this read: the version of the latest returned event, or the snapshot's version when no events were stored after the snapshot, or 0 when the aggregate does not exist. Pass it to `reconstitute` (third parameter) so the aggregate resolves the correct version even when the snapshot is at the head of the stream and no events are returned. Skipping this would leave such an aggregate at version 0, and its next commit would fail with an `EventConcurrencyException`.
+
 ```typescript
 import { EVENT_STORE, EventStore } from "@event-nest/core";
 
@@ -518,8 +525,8 @@ export class UserService {
     constructor(@Inject(EVENT_STORE) private eventStore: EventStore) {}
 
     async updateUser(id: string, newName: string) {
-        const { events, snapshot } = await this.eventStore.findWithSnapshot(User, id);
-        const user = User.fromEvents(id, events, snapshot);
+        const { aggregateRootVersion, events, snapshot } = await this.eventStore.findWithSnapshot(User, id);
+        const user = User.fromEvents(id, events, snapshot, aggregateRootVersion);
         const userWithPublisher = this.eventStore.addPublisher(user);
         user.update(newName);
         await userWithPublisher.commit();

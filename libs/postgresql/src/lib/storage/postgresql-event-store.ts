@@ -1,21 +1,18 @@
 import {
     AbstractEventStore,
     AbstractSnapshotStore,
-    AggregateClassNotSnapshotAwareException,
     AggregateRoot,
     AggregateRootClass,
     AggregateRootSnapshot,
     DomainEventEmitter,
     EventConcurrencyException,
     getAggregateRootName,
-    getAggregateRootSnapshotRevision,
     MissingAggregateRootNameException,
-    SnapshotRevisionMismatchException,
     StoredAggregateRoot,
     StoredEvent
 } from "@event-nest/core";
 import { Logger } from "@nestjs/common";
-import { isNil } from "es-toolkit";
+import { isNil, maxBy } from "es-toolkit";
 import { knex } from "knex";
 import { randomUUID } from "node:crypto";
 
@@ -113,35 +110,24 @@ export class PostgreSQLEventStore extends AbstractEventStore {
     async findWithSnapshot<T extends AggregateRoot>(
         aggregateRootClass: AggregateRootClass<T>,
         id: string
-    ): Promise<{ events: Array<StoredEvent>; snapshot?: AggregateRootSnapshot<T> }> {
-        const aggregateRootName = getAggregateRootName(aggregateRootClass);
-        if (isNil(aggregateRootName)) {
-            this._logger.error(
-                `Missing aggregate root name for class: ${aggregateRootClass.name}. Use the @AggregateRootName decorator.`
-            );
-            throw new MissingAggregateRootNameException(aggregateRootClass.name);
-        }
+    ): Promise<{ aggregateRootVersion?: number; events: Array<StoredEvent>; snapshot?: AggregateRootSnapshot<T> }> {
+        const { aggregateRootName, snapshot } = await this.resolveSnapshot(aggregateRootClass, id);
 
-        const snapshotRevision = getAggregateRootSnapshotRevision(aggregateRootClass);
-        if (isNil(snapshotRevision)) {
-            this._logger.error(
-                `Missing snapshot revision for class: ${aggregateRootClass.name}. Use the @AggregateRootConfig decorator to set the snapshotRevision.`
-            );
-            throw new AggregateClassNotSnapshotAwareException(aggregateRootName);
-        }
-
-        const snapshot = await this._snapshotStore.findLatestSnapshotByAggregateId(id);
-        if (!snapshot) {
-            return { events: await this.findByAggregateRootId(aggregateRootClass, id), snapshot: undefined };
-        }
-
-        if (snapshot.revision != snapshotRevision) {
-            throw new SnapshotRevisionMismatchException(aggregateRootName);
+        if (isNil(snapshot)) {
+            const events = await this.findByAggregateRootId(aggregateRootClass, id);
+            return {
+                aggregateRootVersion: maxBy(events, (event) => event.aggregateRootVersion)?.aggregateRootVersion ?? 0,
+                events,
+                snapshot: undefined
+            };
         }
 
         const events = await this.findEvents(id, aggregateRootName, snapshot.aggregateRootVersion);
 
         return {
+            aggregateRootVersion:
+                maxBy(events, (event) => event.aggregateRootVersion)?.aggregateRootVersion ??
+                snapshot.aggregateRootVersion,
             events,
             snapshot: snapshot.payload as AggregateRootSnapshot<T>
         };

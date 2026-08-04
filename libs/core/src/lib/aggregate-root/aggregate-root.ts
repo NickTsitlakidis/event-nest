@@ -115,10 +115,14 @@ export abstract class AggregateRoot {
      * application logic.
      * @param events The events that will be sent to {@link ApplyEvent} functions
      * @param snapshot Optional snapshot to apply before replaying events
+     * @param aggregateRootVersion Optional authoritative version of the aggregate root. When provided, it is set as
+     * the aggregate's version instead of resolving the version from the events. Pass the `aggregateRootVersion`
+     * returned by {@link EventStore.findWithSnapshot} so that aggregates whose snapshot sits at the stream head
+     * (no events after the snapshot) still end up with the correct version.
      * @throws AggregateInstanceNotSnapshotAwareException if a snapshot is provided but the aggregate is not snapshot-aware
      * @throws UnknownEventException if an event is not known
      */
-    reconstitute<Snapshot = unknown>(events: Array<StoredEvent>, snapshot?: Snapshot) {
+    reconstitute<Snapshot = unknown>(events: Array<StoredEvent>, snapshot?: Snapshot, aggregateRootVersion?: number) {
         const startedAt = Date.now();
         if (!isNil(snapshot)) {
             assertIsSnapshotAwareAggregateRoot(this);
@@ -143,7 +147,19 @@ export abstract class AggregateRoot {
                     throw error;
                 }
             }
-            this.resolveVersion(events);
+        }
+
+        if (isNil(aggregateRootVersion)) {
+            if (events.length > 0) {
+                this.resolveVersion(events);
+            }
+        } else {
+            if (!Number.isSafeInteger(aggregateRootVersion) || aggregateRootVersion < 0) {
+                throw new Error(
+                    `Invalid aggregateRootVersion: ${aggregateRootVersion}. It must be a non-negative integer.`
+                );
+            }
+            this._version = aggregateRootVersion;
         }
         const duration = Date.now() - startedAt;
         this._logger.debug(`Reconstitution of ${this.constructor.name} took ${duration}ms`);

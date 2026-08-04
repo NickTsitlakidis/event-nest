@@ -1,16 +1,20 @@
 import { createMock } from "@golevelup/ts-jest";
 
 import { AggregateRoot } from "../aggregate-root/aggregate-root";
-import { AggregateRootName } from "../aggregate-root/aggregate-root-name";
+import { AggregateRootConfig } from "../aggregate-root/aggregate-root-config";
+import { SnapshotAware } from "../aggregate-root/snapshot-aware";
 import { DomainEventEmitter } from "../domain-event-emitter";
+import { AggregateClassNotSnapshotAwareException } from "../exceptions/aggregate-class-not-snapshot-aware-exception";
 import { IdGenerationException } from "../exceptions/id-generation-exception";
 import { MissingAggregateRootNameException } from "../exceptions/missing-aggregate-root-name-exception";
+import { SnapshotRevisionMismatchException } from "../exceptions/snapshot-revision-mismatch-exception";
 import { SubscriptionException } from "../exceptions/subscription-exception";
 import { UnknownEventVersionException } from "../exceptions/unknown-event-version-exception";
 import { PublishedDomainEvent } from "../published-domain-event";
 import { AbstractEventStore } from "./abstract-event-store";
 import { AggregateRootClass, AggregateRootSnapshot } from "./event-store";
 import { AbstractSnapshotStore } from "./snapshot/abstract-snapshot-store";
+import { StoredSnapshot } from "./snapshot/stored-snapshot";
 import { StoredAggregateRoot } from "./stored-aggregate-root";
 import { StoredEvent } from "./stored-event";
 
@@ -22,7 +26,24 @@ class NoNameEntity extends AggregateRoot {
     }
 }
 
-@AggregateRootName("test-entity")
+@AggregateRootConfig({ name: "snapshot-entity", snapshotRevision: 3 })
+class SnapshotEntity extends AggregateRoot implements SnapshotAware<{ someData: string }> {
+    someData = "";
+
+    constructor() {
+        super("id");
+    }
+
+    applySnapshot(snapshot: { someData: string }): void {
+        this.someData = snapshot.someData;
+    }
+
+    toSnapshot(): { someData: string } {
+        return { someData: this.someData };
+    }
+}
+
+@AggregateRootConfig({ name: "test-entity" })
 class TestEntity extends AggregateRoot {
     constructor() {
         super("id");
@@ -74,6 +95,13 @@ class TestStore extends AbstractEventStore {
         return Promise.resolve();
     }
 
+    resolveSnapshotForTest<T extends AggregateRoot>(
+        aggregateRootClass: AggregateRootClass<T>,
+        id: string
+    ): Promise<{ aggregateRootName: string; snapshot?: StoredSnapshot }> {
+        return this.resolveSnapshot(aggregateRootClass, id);
+    }
+
     save(events: Array<StoredEvent>, aggregate: StoredAggregateRoot): Promise<Array<StoredEvent>> {
         this.savedEvents = events;
         this.savedAggregate = aggregate;
@@ -94,6 +122,60 @@ class TestStore extends AbstractEventStore {
 }
 
 describe("AbstractEventStore", () => {
+    describe("resolveSnapshot", () => {
+        test("throws MissingAggregateRootNameException when the class has no name", async () => {
+            const store = new TestStore();
+            await expect(store.resolveSnapshotForTest(NoNameEntity, "id")).rejects.toThrow(
+                MissingAggregateRootNameException
+            );
+        });
+
+        test("throws AggregateClassNotSnapshotAwareException when the class has no snapshot revision", async () => {
+            const store = new TestStore();
+            await expect(store.resolveSnapshotForTest(TestEntity, "id")).rejects.toThrow(
+                AggregateClassNotSnapshotAwareException
+            );
+        });
+
+        test("returns undefined snapshot when the snapshot store has none", async () => {
+            const snapshotStore = createMock<AbstractSnapshotStore>({
+                findLatestSnapshotByAggregateId: jest.fn().mockResolvedValue(undefined)
+            });
+            const store = new TestStore(eventEmitter, snapshotStore);
+
+            const resolved = await store.resolveSnapshotForTest(SnapshotEntity, "id");
+
+            expect(resolved.aggregateRootName).toBe("snapshot-entity");
+            expect(resolved.snapshot).toBeUndefined();
+            expect(snapshotStore.findLatestSnapshotByAggregateId).toHaveBeenCalledWith("id");
+        });
+
+        test("throws SnapshotRevisionMismatchException when revisions differ", async () => {
+            const snapshot = StoredSnapshot.create("snapshot-id", 5, 2, { someData: "test" }, "id");
+            const snapshotStore = createMock<AbstractSnapshotStore>({
+                findLatestSnapshotByAggregateId: jest.fn().mockResolvedValue(snapshot)
+            });
+            const store = new TestStore(eventEmitter, snapshotStore);
+
+            await expect(store.resolveSnapshotForTest(SnapshotEntity, "id")).rejects.toThrow(
+                SnapshotRevisionMismatchException
+            );
+        });
+
+        test("returns the stored snapshot when the revision matches", async () => {
+            const snapshot = StoredSnapshot.create("snapshot-id", 5, 3, { someData: "test" }, "id");
+            const snapshotStore = createMock<AbstractSnapshotStore>({
+                findLatestSnapshotByAggregateId: jest.fn().mockResolvedValue(snapshot)
+            });
+            const store = new TestStore(eventEmitter, snapshotStore);
+
+            const resolved = await store.resolveSnapshotForTest(SnapshotEntity, "id");
+
+            expect(resolved.aggregateRootName).toBe("snapshot-entity");
+            expect(resolved.snapshot).toBe(snapshot);
+        });
+    });
+
     describe("addPublisher", () => {
         test("adds publisher method to the aggregate root", () => {
             const store = new TestStore();
