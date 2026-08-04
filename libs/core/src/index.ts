@@ -31,6 +31,7 @@ export * from "./lib/snapshot-strategy/no-snapshot-strategy";
 export * from "./lib/snapshot-strategy/snapshot-strategy";
 
 export * from "./lib/storage/abstract-event-store";
+export * from "./lib/storage/aggregate-repository";
 export * from "./lib/storage/event-store";
 export * from "./lib/storage/snapshot/abstract-snapshot-store";
 export * from "./lib/storage/snapshot/no-op-snapshot-store";

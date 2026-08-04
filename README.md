@@ -26,6 +26,7 @@ What Event Nest is Not:
     - [Event](#event)
         - [Renaming an event](#renaming-an-event)
     - [Aggregate Root](#aggregate-root)
+        - [The AggregateRepository helper](#the-aggregaterepository-helper)
     - [Snapshots](#snapshots)
         - [Making an aggregate root snapshot-aware](#making-an-aggregate-root-snapshot-aware)
         - [Snapshot strategies](#snapshot-strategies)
@@ -358,6 +359,44 @@ export class UserService {
     }
 }
 ```
+
+#### The AggregateRepository helper
+
+The service above interacts with the event store directly. For the common load → mutate → commit flow, the `AggregateRepository` class wraps the retrieval of events, the call to your factory method and the connection to the event store :
+
+```typescript
+import { AggregateRepository, EVENT_STORE, EventStore } from "@event-nest/core";
+
+@Injectable()
+export class UserService {
+    private repository: AggregateRepository<User>;
+
+    constructor(@Inject(EVENT_STORE) eventStore: EventStore) {
+        this.repository = new AggregateRepository(eventStore, User, User.fromEvents);
+    }
+
+    async createUser(name: string, email: string) {
+        const user = User.createNew("a-unique-id", name, email);
+        await this.repository.save(user);
+        return user.id;
+    }
+
+    async updateUser(id: string, newName: string) {
+        const user = await this.repository.load(id);
+        if (!user) {
+            throw new NotFoundException();
+        }
+        user.update(newName);
+        await this.repository.save(user);
+    }
+}
+```
+
+A few things to know about the repository :
+* The `load` method returns `undefined` when there is no persisted state for the provided id.
+* If the aggregate root class is snapshot-aware (its `@AggregateRootConfig` defines a `snapshotRevision`), `load` will automatically use the latest snapshot and replay only the events that occurred after it. If the stored snapshot revision doesn't match the class revision, it falls back to a full event replay instead of throwing.
+* The aggregate root returned by `load` is already connected to the event store, so calling `commit` on it directly also works.
+* The factory parameter matches a static method with the signature `(id, events, snapshot?) => T`. If your factory relies on `this`, pass an arrow function instead: `(id, events) => User.fromEvents(id, events)`.
 
 ### Snapshots
 As the number of events for an aggregate root grows, replaying the full event stream to reconstruct its state can become increasingly slow. Snapshots address this by periodically capturing the aggregate's state, so that reconstitution can start from a recent snapshot instead of replaying every event from the beginning.
