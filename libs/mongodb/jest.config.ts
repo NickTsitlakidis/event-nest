@@ -8,5 +8,8 @@ export default {
     },
     moduleFileExtensions: ["ts", "js", "html"],
     coverageDirectory: "../../coverage/libs/mongodb",
+    collectCoverage: true,
+    collectCoverageFrom: ["src/**/*.ts", "!src/**/index.ts"],
+    coverageReporters: ["lcov", "html"],
     resetMocks: true
 };
