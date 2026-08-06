@@ -16,10 +16,6 @@
                 "assets": ["libs/postgresql/*.md"],
                 "updateBuildableProjectDepsInPackageJson": true
             }
-        },
-        "publish": {
-            "command": "node tools/scripts/publish.mjs postgresql {args.ver} {args.tag}",
-            "dependsOn": ["build"]
         }
     }
 }

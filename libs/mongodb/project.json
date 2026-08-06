@@ -16,10 +16,6 @@
                 "assets": ["libs/mongodb/*.md"],
                 "updateBuildableProjectDepsInPackageJson": true
             }
-        },
-        "publish": {
-            "command": "node tools/scripts/publish.mjs mongodb {args.ver} {args.tag}",
-            "dependsOn": ["build"]
         }
     }
 }

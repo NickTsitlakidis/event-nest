@@ -25,6 +25,17 @@
             "inputs": ["production", "^production"]
         }
     },
+    "release": {
+        "projects": ["tag:publishable"],
+        "projectsRelationship": "fixed",
+        "version": {
+            "preVersionCommand": "pnpm nx run-many -t build --projects=tag:publishable",
+            "manifestRootsToUpdate": ["{projectRoot}", "dist/{projectRoot}"]
+        },
+        "changelog": {
+            "workspaceChangelog": true
+        }
+    },
     "namedInputs": {
         "default": ["{projectRoot}/**/*", "sharedGlobals"],
         "production": [
