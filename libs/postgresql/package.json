@@ -28,6 +28,9 @@
         "rxjs": "^7.2.0",
         "pg": "^8.14.1"
     },
+    "dependencies": {
+        "@event-nest/core": "6.0.0"
+    },
     "main": "./src/index.js",
     "typings": "./src/index.d.ts"
 }

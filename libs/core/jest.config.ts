@@ -9,5 +9,8 @@ export default {
     moduleFileExtensions: ["ts", "js", "html"],
     setupFilesAfterEnv: ["<rootDir>/setup-tests.ts"],
     coverageDirectory: "../../coverage/libs/core",
+    collectCoverage: true,
+    collectCoverageFrom: ["src/**/*.ts", "!src/**/index.ts"],
+    coverageReporters: ["lcov", "html"],
     resetMocks: true
 };

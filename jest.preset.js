@@ -8,4 +8,4 @@ process.env.MONGO_MEMORY_SERVER_FILE = path.resolve(__dirname, "jest-mongodb-con
 const mongoPreset = require("@shelf/jest-mongodb/jest-preset");
 const merged = Object.assign(nxPreset, mongoPreset);
 
-module.exports = { ...merged };
+module.exports = { ...merged, passWithNoTests: true };

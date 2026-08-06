@@ -27,5 +27,8 @@
         "reflect-metadata": "^0.1.12 || ^0.2.0",
         "rxjs": "^7.2.0",
         "mongodb": "^7.0.0"
+    },
+    "dependencies": {
+        "@event-nest/core": "6.0.0"
     }
 }
