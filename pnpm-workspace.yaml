@@ -1,14 +1,73 @@
+packages:
+  - "apps/*"
+  - "libs/*"
+
+linkWorkspacePackages: true
+sharedWorkspaceLockfile: true
+catalogMode: strict
+
+catalog:
+  '@eslint/js': '10.0.1'
+  '@golevelup/ts-jest': '3.0.0'
+  '@nestjs/common': '11.1.28'
+  '@nestjs/core': '11.1.28'
+  '@nestjs/platform-express': '11.1.28'
+  '@nestjs/schematics': '11.1.0'
+  '@nestjs/testing': '11.1.28'
+  '@nx/eslint': '23.1.1'
+  '@nx/eslint-plugin': '23.1.1'
+  '@nx/jest': '23.1.1'
+  '@nx/js': '23.1.1'
+  '@nx/nest': '23.1.1'
+  '@nx/node': '23.1.1'
+  '@nx/webpack': '23.1.1'
+  '@nx/workspace': '23.1.1'
+  '@shelf/jest-mongodb': '6.0.2'
+  '@testcontainers/postgresql': '12.0.4'
+  '@types/jest': '30.0.0'
+  '@types/node': '22.20.1'
+  '@typescript-eslint/eslint-plugin': '8.66.0'
+  '@typescript-eslint/parser': '8.66.0'
+  '@typescript-eslint/utils': '8.66.0'
+  'class-transformer': '^0.5.1'
+  'es-toolkit': '^1.45.1'
+  'eslint': '10.8.0'
+  'eslint-config-prettier': '10.1.8'
+  'eslint-plugin-perfectionist': '5.10.0'
+  'eslint-plugin-prettier': '5.5.6'
+  'eslint-plugin-unicorn': '71.1.0'
+  'expect-type': '1.4.0'
+  'husky': '9.1.7'
+  'jest': '30.4.2'
+  'jest-environment-node': '30.4.1'
+  'jest-util': '30.4.1'
+  'knex': '^3.1.0'
+  'mongodb': '^7.0.0'
+  'nx': '23.1.1'
+  'pg': '^8.14.1'
+  'prettier': '3.9.6'
+  'reflect-metadata': '0.2.2'
+  'rxjs': '^7.8.0'
+  'ts-jest': '29.4.12'
+  'ts-node': '10.9.2'
+  'tslib': '^2.3.0'
+  'typescript': '6.0.3'
+  'typescript-eslint': '8.66.0'
+  'webpack': '5.109.1'
+  'webpack-cli': '^7.0.0'
+  'webpack-dev-server': '6.0.0'
+
 allowBuilds:
   '@nestjs/core': true
   '@parcel/watcher': false
   '@swc/core': false
-  cpu-features: true
-  less: true
-  mongodb-memory-server: true
-  nx: true
-  protobufjs: true
-  ssh2: true
-  unrs-resolver: true
+  'cpu-features': true
+  'less': true
+  'mongodb-memory-server': true
+  'nx': true
+  'protobufjs': true
+  'ssh2': true
+  'unrs-resolver': true
 
 # These exact versions were pinned before the pnpm 11 minimumReleaseAge guard
 # existed; the entries become no-ops once the versions are >24h old and can be removed.

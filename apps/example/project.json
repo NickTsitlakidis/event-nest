@@ -11,6 +11,7 @@
             "defaultConfiguration": "production",
             "options": {
                 "target": "node",
+                "externalDependencies": "all",
                 "compiler": "tsc",
                 "outputPath": "dist/apps/example",
                 "main": "apps/example/src/main.ts",

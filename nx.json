@@ -30,7 +30,8 @@
         "projectsRelationship": "fixed",
         "version": {
             "preVersionCommand": "pnpm nx run-many -t build --projects=tag:publishable",
-            "manifestRootsToUpdate": ["{projectRoot}", "dist/{projectRoot}"]
+            "manifestRootsToUpdate": ["{projectRoot}", "dist/{projectRoot}"],
+            "preserveMatchingDependencyRanges": false
         },
         "changelog": {
             "workspaceChangelog": true
@@ -46,7 +47,7 @@
             "!{projectRoot}/src/test-setup.[jt]s",
             "!{projectRoot}/eslint.config.js"
         ],
-        "sharedGlobals": []
+        "sharedGlobals": ["{workspaceRoot}/pnpm-workspace.yaml"]
     },
     "plugins": [
         {

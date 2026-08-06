@@ -4,158 +4,437 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    '@eslint/js':
+      specifier: 10.0.1
+      version: 10.0.1
+    '@golevelup/ts-jest':
+      specifier: 3.0.0
+      version: 3.0.0
+    '@nestjs/common':
+      specifier: 11.1.28
+      version: 11.1.28
+    '@nestjs/core':
+      specifier: 11.1.28
+      version: 11.1.28
+    '@nestjs/platform-express':
+      specifier: 11.1.28
+      version: 11.1.28
+    '@nestjs/schematics':
+      specifier: 11.1.0
+      version: 11.1.0
+    '@nestjs/testing':
+      specifier: 11.1.28
+      version: 11.1.28
+    '@nx/eslint':
+      specifier: 23.1.1
+      version: 23.1.1
+    '@nx/eslint-plugin':
+      specifier: 23.1.1
+      version: 23.1.1
+    '@nx/jest':
+      specifier: 23.1.1
+      version: 23.1.1
+    '@nx/js':
+      specifier: 23.1.1
+      version: 23.1.1
+    '@nx/nest':
+      specifier: 23.1.1
+      version: 23.1.1
+    '@nx/node':
+      specifier: 23.1.1
+      version: 23.1.1
+    '@nx/webpack':
+      specifier: 23.1.1
+      version: 23.1.1
+    '@nx/workspace':
+      specifier: 23.1.1
+      version: 23.1.1
+    '@shelf/jest-mongodb':
+      specifier: 6.0.2
+      version: 6.0.2
+    '@testcontainers/postgresql':
+      specifier: 12.0.4
+      version: 12.0.4
+    '@types/jest':
+      specifier: 30.0.0
+      version: 30.0.0
+    '@types/node':
+      specifier: 22.20.1
+      version: 22.20.1
+    '@typescript-eslint/eslint-plugin':
+      specifier: 8.66.0
+      version: 8.66.0
+    '@typescript-eslint/parser':
+      specifier: 8.66.0
+      version: 8.66.0
+    '@typescript-eslint/utils':
+      specifier: 8.66.0
+      version: 8.66.0
+    class-transformer:
+      specifier: ^0.5.1
+      version: 0.5.1
+    es-toolkit:
+      specifier: ^1.45.1
+      version: 1.50.0
+    eslint:
+      specifier: 10.8.0
+      version: 10.8.0
+    eslint-config-prettier:
+      specifier: 10.1.8
+      version: 10.1.8
+    eslint-plugin-perfectionist:
+      specifier: 5.10.0
+      version: 5.10.0
+    eslint-plugin-prettier:
+      specifier: 5.5.6
+      version: 5.5.6
+    eslint-plugin-unicorn:
+      specifier: 71.1.0
+      version: 71.1.0
+    expect-type:
+      specifier: 1.4.0
+      version: 1.4.0
+    husky:
+      specifier: 9.1.7
+      version: 9.1.7
+    jest:
+      specifier: 30.4.2
+      version: 30.4.2
+    jest-environment-node:
+      specifier: 30.4.1
+      version: 30.4.1
+    jest-util:
+      specifier: 30.4.1
+      version: 30.4.1
+    knex:
+      specifier: ^3.1.0
+      version: 3.3.0
+    mongodb:
+      specifier: ^7.0.0
+      version: 7.5.0
+    nx:
+      specifier: 23.1.1
+      version: 23.1.1
+    pg:
+      specifier: ^8.14.1
+      version: 8.22.0
+    prettier:
+      specifier: 3.9.6
+      version: 3.9.6
+    reflect-metadata:
+      specifier: 0.2.2
+      version: 0.2.2
+    rxjs:
+      specifier: ^7.8.0
+      version: 7.8.2
+    ts-jest:
+      specifier: 29.4.12
+      version: 29.4.12
+    ts-node:
+      specifier: 10.9.2
+      version: 10.9.2
+    tslib:
+      specifier: ^2.3.0
+      version: 2.8.1
+    typescript:
+      specifier: 6.0.3
+      version: 6.0.3
+    typescript-eslint:
+      specifier: 8.66.0
+      version: 8.66.0
+    webpack:
+      specifier: 5.109.1
+      version: 5.109.1
+    webpack-cli:
+      specifier: ^7.0.0
+      version: 7.2.2
+    webpack-dev-server:
+      specifier: 6.0.0
+      version: 6.0.0
+
 importers:
 
   .:
     dependencies:
       '@nestjs/common':
-        specifier: 11.1.28
+        specifier: 'catalog:'
         version: 11.1.28(class-transformer@0.5.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@nestjs/core':
-        specifier: 11.1.28
+        specifier: 'catalog:'
         version: 11.1.28(@nestjs/common@11.1.28(class-transformer@0.5.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.28)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@nestjs/platform-express':
-        specifier: 11.1.28
+        specifier: 'catalog:'
         version: 11.1.28(@nestjs/common@11.1.28(class-transformer@0.5.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28)
       class-transformer:
-        specifier: ^0.5.1
+        specifier: 'catalog:'
         version: 0.5.1
       es-toolkit:
-        specifier: ^1.45.1
+        specifier: 'catalog:'
         version: 1.50.0
-      knex:
-        specifier: ^3.1.0
-        version: 3.3.0(pg@8.22.0)
       mongodb:
-        specifier: ^7.0.0
+        specifier: 'catalog:'
         version: 7.5.0
-      pg:
-        specifier: ^8.14.1
-        version: 8.22.0
       reflect-metadata:
-        specifier: 0.2.2
+        specifier: 'catalog:'
         version: 0.2.2
       rxjs:
-        specifier: ^7.8.0
+        specifier: 'catalog:'
         version: 7.8.2
       tslib:
-        specifier: ^2.3.0
+        specifier: 'catalog:'
         version: 2.8.1
     devDependencies:
       '@eslint/js':
-        specifier: 10.0.1
+        specifier: 'catalog:'
         version: 10.0.1(eslint@10.8.0(jiti@2.7.0))
       '@golevelup/ts-jest':
-        specifier: 3.0.0
+        specifier: 'catalog:'
         version: 3.0.0
       '@nestjs/schematics':
-        specifier: 11.1.0
+        specifier: 'catalog:'
         version: 11.1.0(chokidar@4.0.3)(prettier@3.9.6)(typescript@6.0.3)
       '@nestjs/testing':
-        specifier: 11.1.28
+        specifier: 'catalog:'
         version: 11.1.28(@nestjs/common@11.1.28(class-transformer@0.5.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28)(@nestjs/platform-express@11.1.28)
       '@nx/eslint':
-        specifier: 23.1.1
+        specifier: 'catalog:'
         version: 23.1.1(@babel/traverse@7.29.8)(@nx/jest@23.1.1(@babel/traverse@7.29.8)(@swc/core@1.15.47)(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(jest@30.4.2(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.9.2(@swc/core@1.15.47)(@types/node@22.20.1)(typescript@6.0.3)))(nx@23.1.1(@swc/core@1.15.47))(ts-jest@29.4.12(@babel/core@7.29.7)(@jest/transform@30.4.1)(@jest/types@30.4.1)(babel-jest@30.4.1(@babel/core@7.29.7))(jest-util@30.4.1)(jest@30.4.2(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.9.2(@swc/core@1.15.47)(@types/node@22.20.1)(typescript@6.0.3)))(typescript@6.0.3))(ts-node@10.9.2(@swc/core@1.15.47)(@types/node@22.20.1)(typescript@6.0.3))(typescript@6.0.3))(@swc/core@1.15.47)(@zkochan/js-yaml@0.0.7)(eslint@10.8.0(jiti@2.7.0))(nx@23.1.1(@swc/core@1.15.47))
       '@nx/eslint-plugin':
-        specifier: 23.1.1
+        specifier: 'catalog:'
         version: 23.1.1(@babel/traverse@7.29.8)(@swc/core@1.15.47)(@typescript-eslint/parser@8.66.0(eslint@10.8.0(jiti@2.7.0))(typescript@6.0.3))(eslint-config-prettier@10.1.8(eslint@10.8.0(jiti@2.7.0)))(eslint@10.8.0(jiti@2.7.0))(nx@23.1.1(@swc/core@1.15.47))(typescript@6.0.3)
       '@nx/jest':
-        specifier: 23.1.1
+        specifier: 'catalog:'
         version: 23.1.1(@babel/traverse@7.29.8)(@swc/core@1.15.47)(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(jest@30.4.2(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.9.2(@swc/core@1.15.47)(@types/node@22.20.1)(typescript@6.0.3)))(nx@23.1.1(@swc/core@1.15.47))(ts-jest@29.4.12(@babel/core@7.29.7)(@jest/transform@30.4.1)(@jest/types@30.4.1)(babel-jest@30.4.1(@babel/core@7.29.7))(jest-util@30.4.1)(jest@30.4.2(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.9.2(@swc/core@1.15.47)(@types/node@22.20.1)(typescript@6.0.3)))(typescript@6.0.3))(ts-node@10.9.2(@swc/core@1.15.47)(@types/node@22.20.1)(typescript@6.0.3))(typescript@6.0.3)
       '@nx/js':
-        specifier: 23.1.1
+        specifier: 'catalog:'
         version: 23.1.1(@babel/traverse@7.29.8)(@swc/core@1.15.47)(nx@23.1.1(@swc/core@1.15.47))
       '@nx/nest':
-        specifier: 23.1.1
+        specifier: 'catalog:'
         version: 23.1.1(7b05c4dc7f86947fe20db8d655e63549)
       '@nx/node':
-        specifier: 23.1.1
+        specifier: 'catalog:'
         version: 23.1.1(@babel/traverse@7.29.8)(@swc/core@1.15.47)(@types/node@22.20.1)(@zkochan/js-yaml@0.0.7)(babel-plugin-macros@3.1.0)(eslint@10.8.0(jiti@2.7.0))(express@5.2.1)(jest@30.4.2(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.9.2(@swc/core@1.15.47)(@types/node@22.20.1)(typescript@6.0.3)))(nx@23.1.1(@swc/core@1.15.47))(ts-jest@29.4.12(@babel/core@7.29.7)(@jest/transform@30.4.1)(@jest/types@30.4.1)(babel-jest@30.4.1(@babel/core@7.29.7))(jest-util@30.4.1)(jest@30.4.2(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.9.2(@swc/core@1.15.47)(@types/node@22.20.1)(typescript@6.0.3)))(typescript@6.0.3))(ts-node@10.9.2(@swc/core@1.15.47)(@types/node@22.20.1)(typescript@6.0.3))(typescript@6.0.3)
       '@nx/webpack':
-        specifier: 23.1.1
+        specifier: 'catalog:'
         version: 23.1.1(@babel/traverse@7.29.8)(@swc/core@1.15.47)(nx@23.1.1(@swc/core@1.15.47))(typescript@6.0.3)(webpack-cli@7.2.2)(webpack-dev-server@6.0.0)(webpack@5.109.1)
       '@nx/workspace':
-        specifier: 23.1.1
+        specifier: 'catalog:'
         version: 23.1.1(@swc/core@1.15.47)
       '@shelf/jest-mongodb':
-        specifier: 6.0.2
+        specifier: 'catalog:'
         version: 6.0.2(@swc/core@1.15.47)(jest-environment-node@30.4.1)(mongodb@7.5.0)
       '@testcontainers/postgresql':
-        specifier: 12.0.4
+        specifier: 'catalog:'
         version: 12.0.4
       '@types/jest':
-        specifier: 30.0.0
+        specifier: 'catalog:'
         version: 30.0.0
       '@types/node':
-        specifier: 22.20.1
+        specifier: 'catalog:'
         version: 22.20.1
       '@typescript-eslint/eslint-plugin':
-        specifier: 8.66.0
+        specifier: 'catalog:'
         version: 8.66.0(@typescript-eslint/parser@8.66.0(eslint@10.8.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.8.0(jiti@2.7.0))(typescript@6.0.3)
       '@typescript-eslint/parser':
-        specifier: 8.66.0
+        specifier: 'catalog:'
         version: 8.66.0(eslint@10.8.0(jiti@2.7.0))(typescript@6.0.3)
       '@typescript-eslint/utils':
-        specifier: 8.66.0
+        specifier: 'catalog:'
         version: 8.66.0(eslint@10.8.0(jiti@2.7.0))(typescript@6.0.3)
       eslint:
-        specifier: 10.8.0
+        specifier: 'catalog:'
         version: 10.8.0(jiti@2.7.0)
       eslint-config-prettier:
-        specifier: 10.1.8
+        specifier: 'catalog:'
         version: 10.1.8(eslint@10.8.0(jiti@2.7.0))
       eslint-plugin-perfectionist:
-        specifier: 5.10.0
+        specifier: 'catalog:'
         version: 5.10.0(eslint@10.8.0(jiti@2.7.0))(typescript@6.0.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
+        specifier: 'catalog:'
         version: 5.5.6(eslint-config-prettier@10.1.8(eslint@10.8.0(jiti@2.7.0)))(eslint@10.8.0(jiti@2.7.0))(prettier@3.9.6)
       eslint-plugin-unicorn:
-        specifier: 71.1.0
+        specifier: 'catalog:'
         version: 71.1.0(eslint@10.8.0(jiti@2.7.0))
       expect-type:
-        specifier: 1.4.0
+        specifier: 'catalog:'
         version: 1.4.0
       husky:
-        specifier: 9.1.7
+        specifier: 'catalog:'
         version: 9.1.7
       jest:
-        specifier: 30.4.2
+        specifier: 'catalog:'
         version: 30.4.2(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.9.2(@swc/core@1.15.47)(@types/node@22.20.1)(typescript@6.0.3))
       jest-environment-node:
-        specifier: 30.4.1
+        specifier: 'catalog:'
         version: 30.4.1
       jest-util:
-        specifier: 30.4.1
+        specifier: 'catalog:'
         version: 30.4.1
       nx:
-        specifier: 23.1.1
+        specifier: 'catalog:'
         version: 23.1.1(@swc/core@1.15.47)
       prettier:
-        specifier: 3.9.6
+        specifier: 'catalog:'
         version: 3.9.6
       ts-jest:
-        specifier: 29.4.12
+        specifier: 'catalog:'
         version: 29.4.12(@babel/core@7.29.7)(@jest/transform@30.4.1)(@jest/types@30.4.1)(babel-jest@30.4.1(@babel/core@7.29.7))(jest-util@30.4.1)(jest@30.4.2(@types/node@22.20.1)(babel-plugin-macros@3.1.0)(ts-node@10.9.2(@swc/core@1.15.47)(@types/node@22.20.1)(typescript@6.0.3)))(typescript@6.0.3)
       ts-node:
-        specifier: 10.9.2
+        specifier: 'catalog:'
         version: 10.9.2(@swc/core@1.15.47)(@types/node@22.20.1)(typescript@6.0.3)
       typescript:
-        specifier: 6.0.3
+        specifier: 'catalog:'
         version: 6.0.3
       typescript-eslint:
-        specifier: 8.66.0
+        specifier: 'catalog:'
         version: 8.66.0(eslint@10.8.0(jiti@2.7.0))(typescript@6.0.3)
       webpack:
-        specifier: 5.109.1
+        specifier: 'catalog:'
         version: 5.109.1(@swc/core@1.15.47)(postcss@8.5.25)(webpack-cli@7.2.2)
       webpack-cli:
-        specifier: ^7.0.0
+        specifier: 'catalog:'
         version: 7.2.2(js-yaml@4.3.1)(json5@2.2.3)(webpack-dev-server@6.0.0)(webpack@5.109.1)
       webpack-dev-server:
-        specifier: 6.0.0
+        specifier: 'catalog:'
         version: 6.0.0(webpack-cli@7.2.2)(webpack@5.109.1)
+
+  apps/example:
+    dependencies:
+      '@event-nest/core':
+        specifier: workspace:*
+        version: link:../../libs/core
+      '@event-nest/mongodb':
+        specifier: workspace:*
+        version: link:../../libs/mongodb
+      '@nestjs/common':
+        specifier: 'catalog:'
+        version: 11.1.28(class-transformer@0.5.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/core':
+        specifier: 'catalog:'
+        version: 11.1.28(@nestjs/common@11.1.28(class-transformer@0.5.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.28)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/platform-express':
+        specifier: 'catalog:'
+        version: 11.1.28(@nestjs/common@11.1.28(class-transformer@0.5.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28)
+      mongodb:
+        specifier: 'catalog:'
+        version: 7.5.0
+      reflect-metadata:
+        specifier: 'catalog:'
+        version: 0.2.2
+      rxjs:
+        specifier: 'catalog:'
+        version: 7.8.2
+      tslib:
+        specifier: 'catalog:'
+        version: 2.8.1
+
+  libs/core:
+    dependencies:
+      class-transformer:
+        specifier: 'catalog:'
+        version: 0.5.1
+      es-toolkit:
+        specifier: 'catalog:'
+        version: 1.50.0
+      tslib:
+        specifier: 'catalog:'
+        version: 2.8.1
+    devDependencies:
+      '@golevelup/ts-jest':
+        specifier: 'catalog:'
+        version: 3.0.0
+      '@nestjs/common':
+        specifier: 'catalog:'
+        version: 11.1.28(class-transformer@0.5.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/core':
+        specifier: 'catalog:'
+        version: 11.1.28(@nestjs/common@11.1.28(class-transformer@0.5.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.28)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      expect-type:
+        specifier: 'catalog:'
+        version: 1.4.0
+      reflect-metadata:
+        specifier: 'catalog:'
+        version: 0.2.2
+      rxjs:
+        specifier: 'catalog:'
+        version: 7.8.2
+
+  libs/mongodb:
+    dependencies:
+      '@event-nest/core':
+        specifier: 6.0.0
+        version: link:../core
+      es-toolkit:
+        specifier: 'catalog:'
+        version: 1.50.0
+      tslib:
+        specifier: 'catalog:'
+        version: 2.8.1
+    devDependencies:
+      '@golevelup/ts-jest':
+        specifier: 'catalog:'
+        version: 3.0.0
+      '@nestjs/common':
+        specifier: 'catalog:'
+        version: 11.1.28(class-transformer@0.5.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/core':
+        specifier: 'catalog:'
+        version: 11.1.28(@nestjs/common@11.1.28(class-transformer@0.5.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.28)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/testing':
+        specifier: 'catalog:'
+        version: 11.1.28(@nestjs/common@11.1.28(class-transformer@0.5.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28)(@nestjs/platform-express@11.1.28)
+      mongodb:
+        specifier: 'catalog:'
+        version: 7.5.0
+      reflect-metadata:
+        specifier: 'catalog:'
+        version: 0.2.2
+      rxjs:
+        specifier: 'catalog:'
+        version: 7.8.2
+
+  libs/postgresql:
+    dependencies:
+      '@event-nest/core':
+        specifier: 6.0.0
+        version: link:../core
+      es-toolkit:
+        specifier: 'catalog:'
+        version: 1.50.0
+      knex:
+        specifier: 'catalog:'
+        version: 3.3.0(pg@8.22.0)
+      tslib:
+        specifier: 'catalog:'
+        version: 2.8.1
+    devDependencies:
+      '@golevelup/ts-jest':
+        specifier: 'catalog:'
+        version: 3.0.0
+      '@nestjs/common':
+        specifier: 'catalog:'
+        version: 11.1.28(class-transformer@0.5.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/core':
+        specifier: 'catalog:'
+        version: 11.1.28(@nestjs/common@11.1.28(class-transformer@0.5.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.28)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/testing':
+        specifier: 'catalog:'
+        version: 11.1.28(@nestjs/common@11.1.28(class-transformer@0.5.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28)(@nestjs/platform-express@11.1.28)
+      '@testcontainers/postgresql':
+        specifier: 'catalog:'
+        version: 12.0.4
+      pg:
+        specifier: 'catalog:'
+        version: 8.22.0
+      reflect-metadata:
+        specifier: 'catalog:'
+        version: 0.2.2
+      rxjs:
+        specifier: 'catalog:'
+        version: 7.8.2
 
 packages:
 
@@ -1763,6 +2042,9 @@ packages:
 
   '@types/node@22.20.1':
     resolution: {integrity: sha512-EANqOCF9QFyra+4pfxUcX9STKJpCLjMbObVzljIJomAWSnuSIEAvyzEU53GaajbXJEgdh0iEcPL+DGvpUd4k1Q==}
+
+  '@types/node@26.1.2':
+    resolution: {integrity: sha512-Vu4a5UFA9rIIFJ7rB/Vaafh9lrCQszopTCx6KjFboXTGQbPNasehVR5TEiithSDGyd1DEiUByggTZsg8jukeIg==}
 
   '@types/parse-json@4.0.2':
     resolution: {integrity: sha512-dISoDXWWQwUquiKsyZ4Ng+HX2KsPL7LyHKHQwgGFEA3IaKac4Obd+h2a/a6waisAoepJlBcx9paWqjA8/HVjCw==}
@@ -5675,6 +5957,9 @@ packages:
   undici-types@6.21.0:
     resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
 
+  undici-types@8.3.0:
+    resolution: {integrity: sha512-j375ScV60dom+YkPFIfTLcOiPxkN/buHz5GobjLhixFuANaNs3C9l4GmrWqejgXWJ7BbJcFYpTEUkS1Ge8bpZQ==}
+
   undici@8.10.0:
     resolution: {integrity: sha512-HvltHd7avK13QIw/oLe4qoOLyoVSoafqJ2jYOrtMRBkbYT31eiBQ8O0ehRKZiEZCMEyLFQNIADpgCWC5fALvYQ==}
     engines: {node: '>=22.19.0'}
@@ -6975,7 +7260,7 @@ snapshots:
 
   '@jest/pattern@30.4.0':
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 26.1.2
       jest-regex-util: 30.4.0
 
   '@jest/reporters@30.4.1':
@@ -7062,7 +7347,7 @@ snapshots:
       '@jest/schemas': 30.4.1
       '@types/istanbul-lib-coverage': 2.0.6
       '@types/istanbul-reports': 3.0.4
-      '@types/node': 22.20.1
+      '@types/node': 26.1.2
       '@types/yargs': 17.0.35
       chalk: 4.1.2
 
@@ -8045,6 +8330,10 @@ snapshots:
   '@types/node@22.20.1':
     dependencies:
       undici-types: 6.21.0
+
+  '@types/node@26.1.2':
+    dependencies:
+      undici-types: 8.3.0
 
   '@types/parse-json@4.0.2': {}
 
@@ -10093,7 +10382,7 @@ snapshots:
   jest-haste-map@30.4.1:
     dependencies:
       '@jest/types': 30.4.1
-      '@types/node': 22.20.1
+      '@types/node': 26.1.2
       anymatch: 3.1.3
       fb-watchman: 2.0.2
       graceful-fs: 4.2.11
@@ -10277,7 +10566,7 @@ snapshots:
 
   jest-worker@30.4.1:
     dependencies:
-      '@types/node': 22.20.1
+      '@types/node': 26.1.2
       '@ungap/structured-clone': 1.3.3
       jest-util: 30.4.1
       merge-stream: 2.0.0
@@ -12163,6 +12452,8 @@ snapshots:
   undici-types@5.26.5: {}
 
   undici-types@6.21.0: {}
+
+  undici-types@8.3.0: {}
 
   undici@8.10.0: {}
 

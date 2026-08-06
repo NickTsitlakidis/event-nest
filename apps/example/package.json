@@ -1,0 +1,16 @@
+{
+    "name": "@event-nest/example",
+    "version": "0.0.0",
+    "private": true,
+    "dependencies": {
+        "@event-nest/core": "workspace:*",
+        "@event-nest/mongodb": "workspace:*",
+        "@nestjs/common": "catalog:",
+        "@nestjs/core": "catalog:",
+        "@nestjs/platform-express": "catalog:",
+        "mongodb": "catalog:",
+        "reflect-metadata": "catalog:",
+        "rxjs": "catalog:",
+        "tslib": "catalog:"
+    }
+}
