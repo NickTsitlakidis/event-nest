@@ -1,0 +1,51 @@
+{
+    "name": "docs",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "apps/docs/src",
+    "projectType": "application",
+    "tags": [],
+    "targets": {
+        "build": {
+            "executor": "nx:run-commands",
+            "outputs": ["{workspaceRoot}/dist/apps/docs"],
+            "options": {
+                "cwd": "apps/docs",
+                "command": "vite build"
+            }
+        },
+        "serve": {
+            "continuous": true,
+            "executor": "nx:run-commands",
+            "options": {
+                "cwd": "apps/docs",
+                "command": "vite dev"
+            }
+        },
+        "preview": {
+            "continuous": true,
+            "dependsOn": ["build"],
+            "executor": "nx:run-commands",
+            "options": {
+                "cwd": "apps/docs",
+                "command": "vite preview"
+            }
+        },
+        "check": {
+            "cache": true,
+            "executor": "nx:run-commands",
+            "options": {
+                "cwd": "apps/docs",
+                "commands": ["svelte-kit sync", "svelte-check --tsconfig ./tsconfig.json"],
+                "parallel": false
+            }
+        },
+        "lint": {
+            "cache": true,
+            "executor": "nx:run-commands",
+            "options": {
+                "cwd": "apps/docs",
+                "command": "eslint ."
+            }
+        }
+    }
+}

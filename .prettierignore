@@ -3,4 +3,5 @@
 /coverage
 /.nx/cache
 /.nx/workspace-data
+**/.svelte-kit
 .nx/self-healing

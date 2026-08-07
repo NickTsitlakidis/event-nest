@@ -41,6 +41,14 @@ jobs:
                         ${{ runner.os }}-pnpm-store-
             -   name: Install dependencies
                 run: pnpm install --frozen-lockfile
+            -   name: Check docs
+                run: pnpm nx run docs:check
+            -   name: Lint docs
+                run: pnpm nx run docs:lint
+            -   name: Build docs
+                run: pnpm nx run docs:build
+                env:
+                    BASE_PATH: /event-nest
             -   name: Check core
                 run: pnpm nx run core:lint && pnpm nx run core:test
             -   name: Check mongodb
