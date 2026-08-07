@@ -21,11 +21,31 @@
         "node": ">= 22"
     },
     "type": "commonjs",
+    "exports": {
+        ".": {
+            "event-nest-source": "./src/index.ts",
+            "types": "./src/index.d.ts",
+            "default": "./src/index.js"
+        },
+        "./package.json": "./package.json"
+    },
     "peerDependencies": {
         "@nestjs/common": "^10.0.0 || ^11.0.0",
         "@nestjs/core": "^10.0.0 || ^11.0.0",
         "reflect-metadata": "^0.1.12 || ^0.2.0",
-        "rxjs": "^7.2.0",
-        "tslib": "^2.3.0"
+        "rxjs": "^7.2.0"
+    },
+    "dependencies": {
+        "class-transformer": "catalog:",
+        "es-toolkit": "catalog:",
+        "tslib": "catalog:"
+    },
+    "devDependencies": {
+        "@golevelup/ts-jest": "catalog:",
+        "@nestjs/common": "catalog:",
+        "@nestjs/core": "catalog:",
+        "expect-type": "catalog:",
+        "reflect-metadata": "catalog:",
+        "rxjs": "catalog:"
     }
 }

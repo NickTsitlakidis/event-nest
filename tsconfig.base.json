@@ -14,11 +14,7 @@
         "skipLibCheck": true,
         "skipDefaultLibCheck": true,
         "isolatedModules": true,
-        "paths": {
-            "@event-nest/core": ["./libs/core/src/index.ts"],
-            "@event-nest/mongodb": ["./libs/mongodb/src/index.ts"],
-            "@event-nest/postgresql": ["./libs/postgresql/src/index.ts"]
-        },
+        "customConditions": ["event-nest-source"],
         "strict": false,
         "noUncheckedSideEffectImports": false,
         "types": ["*"],

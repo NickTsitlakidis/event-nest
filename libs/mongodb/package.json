@@ -12,6 +12,14 @@
         "node": ">= 22"
     },
     "type": "commonjs",
+    "exports": {
+        ".": {
+            "event-nest-source": "./src/index.ts",
+            "types": "./src/index.d.ts",
+            "default": "./src/index.js"
+        },
+        "./package.json": "./package.json"
+    },
     "keywords": [
         "nestjs",
         "event sourcing",
@@ -29,6 +37,17 @@
         "mongodb": "^7.0.0"
     },
     "dependencies": {
-        "@event-nest/core": "6.0.0"
+        "@event-nest/core": "6.0.0",
+        "es-toolkit": "catalog:",
+        "tslib": "catalog:"
+    },
+    "devDependencies": {
+        "@golevelup/ts-jest": "catalog:",
+        "@nestjs/common": "catalog:",
+        "@nestjs/core": "catalog:",
+        "@nestjs/testing": "catalog:",
+        "mongodb": "catalog:",
+        "reflect-metadata": "catalog:",
+        "rxjs": "catalog:"
     }
 }

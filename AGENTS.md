@@ -32,7 +32,7 @@ Read these in order:
 
 ## Prerequisites and Environment
 
-- Node: `>=20`
+- Node: `>=22`
 - Package manager: `pnpm`
 - Workspace: Nx monorepo
 
