@@ -41,6 +41,7 @@ Thumbs.db
 
 .nx/cache
 .nx/workspace-data
+**/.sveltepress
 **/.svelte-kit
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md

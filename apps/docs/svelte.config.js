@@ -6,6 +6,7 @@ const outputDirectory = fileURLToPath(new URL("../../dist/apps/docs", import.met
 
 /** @type {import("@sveltejs/kit").Config} */
 const config = {
+    extensions: [".svelte", ".md"],
     kit: {
         adapter: adapter({
             assets: outputDirectory,
@@ -13,10 +14,11 @@ const config = {
             pages: outputDirectory
         }),
         paths: {
-            base: process.env.BASE_PATH ?? ""
+            base: process.env.BASE_PATH ?? "",
+            relative: false
         }
     },
-    preprocess: vitePreprocess()
+    preprocess: [vitePreprocess()]
 };
 
 export default config;
