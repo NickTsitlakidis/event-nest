@@ -10,6 +10,5 @@ export default {
     coverageDirectory: "../../coverage/libs/mongodb",
     collectCoverage: true,
     collectCoverageFrom: ["src/**/*.ts", "!src/**/index.ts"],
-    coverageReporters: ["lcov", "html"],
     resetMocks: true
 };

@@ -11,6 +11,5 @@ export default {
     coverageDirectory: "../../coverage/libs/core",
     collectCoverage: true,
     collectCoverageFrom: ["src/**/*.ts", "!src/**/index.ts"],
-    coverageReporters: ["lcov", "html"],
     resetMocks: true
 };
