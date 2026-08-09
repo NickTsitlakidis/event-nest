@@ -1,0 +1,55 @@
+{
+    "name": "@event-nest/mssql",
+    "version": "6.0.0",
+    "license": "MIT",
+    "description": "Event sourcing module for NestJS using Microsoft SQL Server",
+    "author": "Nick Tsitlakidis",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/NickTsitlakidis/event-nest.git"
+    },
+    "engines": {
+        "node": ">= 22"
+    },
+    "type": "commonjs",
+    "exports": {
+        ".": {
+            "event-nest-source": "./src/index.ts",
+            "types": "./src/index.d.ts",
+            "default": "./src/index.js"
+        },
+        "./package.json": "./package.json"
+    },
+    "keywords": [
+        "nestjs",
+        "event sourcing",
+        "cqrs",
+        "ddd",
+        "sql",
+        "sql server",
+        "mssql"
+    ],
+    "peerDependencies": {
+        "@nestjs/common": "^10.0.0 || ^11.0.0",
+        "@nestjs/core": "^10.0.0 || ^11.0.0",
+        "reflect-metadata": "^0.1.12 || ^0.2.0",
+        "rxjs": "^7.2.0",
+        "tedious": "^20.0.0"
+    },
+    "dependencies": {
+        "@event-nest/core": "6.0.0",
+        "es-toolkit": "catalog:",
+        "knex": "catalog:",
+        "tslib": "catalog:"
+    },
+    "devDependencies": {
+        "@golevelup/ts-jest": "catalog:",
+        "@nestjs/common": "catalog:",
+        "@nestjs/core": "catalog:",
+        "@nestjs/testing": "catalog:",
+        "@testcontainers/mssqlserver": "catalog:",
+        "reflect-metadata": "catalog:",
+        "rxjs": "catalog:",
+        "tedious": "catalog:"
+    }
+}

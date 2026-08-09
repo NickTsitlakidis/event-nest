@@ -15,6 +15,7 @@ Goals:
 
 - `libs/core`: domain/event-sourcing primitives (aggregate root, event store contracts, decorators, subscriptions, snapshot strategies).
 - `libs/mongodb`: MongoDB adapter module and stores.
+- `libs/mssql`: Microsoft SQL Server adapter module and stores.
 - `libs/postgresql`: PostgreSQL adapter module and stores.
 - `apps/example`: usage example app; useful reference, not the canonical architecture source.
 
@@ -26,6 +27,7 @@ Read these in order:
 2. Target library README (if present):
     - `libs/core/README.md`
     - `libs/mongodb/README.md`
+    - `libs/mssql/README.md`
     - `libs/postgresql/README.md`
 3. The exact implementation file you plan to change.
 4. The matching spec file(s) for that implementation.
@@ -39,9 +41,12 @@ Read these in order:
 Testing dependencies:
 
 - PostgreSQL integration tests use Testcontainers -> Docker must be available/running.
+- MSSQL integration tests use Testcontainers and accept Microsoft's SQL Server container EULA -> Docker must be available/running.
 - MongoDB tests rely on jest-mongodb environment (`MONGO_URL` provided by test setup).
 
 ## Canonical Commands
+
+Always run commands through `pnpm` (`pnpm nx ...`, `pnpm ...`). Do not use `npm`, `npx`, or direct binary invocations (for example `npx jest`); run tests and other targets via `pnpm nx <target> <project>`.
 
 Install:
 
@@ -67,14 +72,17 @@ Targeted checks (preferred during iteration):
 ```bash
 pnpm nx lint core
 pnpm nx lint mongodb
+pnpm nx lint mssql
 pnpm nx lint postgresql
 
 pnpm nx test core
 pnpm nx test mongodb
+pnpm nx test mssql
 pnpm nx test postgresql
 
 pnpm nx build core
 pnpm nx build mongodb
+pnpm nx build mssql
 pnpm nx build postgresql
 ```
 
@@ -95,6 +103,7 @@ pnpm nx build postgresql
 - Event store concurrency/version checks are core behavior; do not bypass them.
 - Snapshots are optional, but when enabled:
     - MongoDB requires both `snapshotStrategy` and `snapshotCollection`.
+    - MSSQL requires both `snapshotStrategy` and `snapshotTableName`.
     - PostgreSQL requires both `snapshotStrategy` and `snapshotTableName`.
 - Subscriptions run after events are persisted; subscription failures do not imply storage rollback.
 

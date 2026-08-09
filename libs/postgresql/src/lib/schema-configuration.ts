@@ -39,7 +39,9 @@ export class SchemaConfiguration {
      * The schema-aware snapshots table name (schema.snapshotTable)
      */
     get schemaAwareSnapshotTable(): string | undefined {
-        if (!this._snapshotTable) return undefined;
+        if (!this._snapshotTable) {
+            return undefined;
+        }
         return this._schema + "." + this._snapshotTable;
     }
 
