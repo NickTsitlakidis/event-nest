@@ -4,6 +4,7 @@ import { isNil } from "es-toolkit";
 import { AggregateRoot } from "../aggregate-root/aggregate-root";
 import { getAggregateRootName, getAggregateRootSnapshotRevision } from "../aggregate-root/aggregate-root-config";
 import { AggregateRootEvent } from "../aggregate-root/aggregate-root-event";
+import { assertIsSnapshotAwareAggregateRoot } from "../aggregate-root/snapshot-aware";
 import { DomainEventEmitter } from "../domain-event-emitter";
 import { AggregateClassNotSnapshotAwareException } from "../exceptions/aggregate-class-not-snapshot-aware-exception";
 import { IdGenerationException } from "../exceptions/id-generation-exception";
@@ -51,7 +52,7 @@ export abstract class AbstractEventStore implements EventStore {
             // This decision has to be made before the events are saved because strategies like
             // ForCountSnapshotStrategy project the future version based on the current version and the
             // uncommitted events. After saving, the resolved version would break that projection.
-            const shouldCreateSnapshot = this._snapshotStore.shouldCreateSnapshot(aggregateRoot);
+            const shouldCreateSnapshot = await this._snapshotStore.shouldCreateSnapshot(aggregateRoot);
             const published: Array<PublishedDomainEvent<object>> = [];
             const storedEvents: Array<StoredEvent> = [];
 
@@ -82,6 +83,7 @@ export abstract class AbstractEventStore implements EventStore {
             aggregateRoot.resolveVersion(saved);
 
             if (shouldCreateSnapshot) {
+                assertIsSnapshotAwareAggregateRoot(aggregateRoot);
                 await this._snapshotStore.create(aggregateRoot);
             }
 

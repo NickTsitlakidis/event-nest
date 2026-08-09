@@ -45,10 +45,12 @@ export interface SnapshotStore {
     save(snapshot: StoredSnapshot): Promise<StoredSnapshot | undefined>;
 
     /**
-     * Asserts the snapshot should be created for an aggregate.
-     * The result assersion is used for .create() method of SnapshotStore
+     * Decides whether a snapshot should be created for an aggregate by evaluating the configured
+     * {@link SnapshotStrategy}. The strategy result is awaited, so both synchronous and asynchronous
+     * strategies are supported. When the result is true, the aggregate is guaranteed to be snapshot
+     * aware and can be safely passed to {@link SnapshotStore.create}.
      * @throws If the strategy matches, but the aggregate is not snapshot aware, an error will be thrown.
      * @param aggregate The aggregate root instance to potentially create a snapshot for
      */
-    shouldCreateSnapshot(aggregate: AggregateRoot): aggregate is SnapshotAwareAggregateRoot;
+    shouldCreateSnapshot(aggregate: AggregateRoot): Promise<boolean>;
 }

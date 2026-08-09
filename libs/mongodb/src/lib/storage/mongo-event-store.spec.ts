@@ -12,6 +12,7 @@ import {
     NoOpSnapshotStore,
     SnapshotAware,
     SnapshotRevisionMismatchException,
+    SnapshotStrategy,
     StoredAggregateRoot,
     StoredEvent,
     StoredSnapshot
@@ -24,6 +25,16 @@ import { MongoSnapshotStore } from "./mongo-snapshot-store";
 
 interface TestSnapshot {
     someData: string;
+}
+
+class AsyncSnapshotStrategy extends SnapshotStrategy {
+    constructor(private readonly shouldCreate: boolean) {
+        super();
+    }
+
+    shouldCreateSnapshot(): Promise<boolean> {
+        return Promise.resolve(this.shouldCreate);
+    }
 }
 
 @DomainEvent("counter-incremented-event")
@@ -1046,6 +1057,57 @@ describe("MongoEventStore", () => {
             reloaded.reconstitute(found.events, found.snapshot, found.aggregateRootVersion);
             expect(reloaded.count).toBe(3);
             expect(reloaded.version).toBe(3);
+        });
+
+        test("creates a snapshot when an asynchronous strategy resolves to true", async () => {
+            const asyncSnapshotStore = new MongoSnapshotStore(
+                new AsyncSnapshotStrategy(true),
+                mongoClient,
+                "snapshots"
+            );
+            const asyncStore = new MongoEventStore(
+                createMock<DomainEventEmitter>(),
+                asyncSnapshotStore,
+                mongoClient,
+                "aggregates",
+                "events"
+            );
+
+            const aggregateRootId = new ObjectId().toHexString();
+            const aggregate = asyncStore.addPublisher(new CounterSnapshotAggregateRoot(aggregateRootId));
+            aggregate.increment();
+            await aggregate.commit();
+
+            const storedSnapshot = await asyncSnapshotStore.findLatestSnapshotByAggregateId(aggregateRootId);
+            expect(storedSnapshot?.aggregateRootVersion).toBe(1);
+            expect(storedSnapshot?.payload).toEqual({ count: 1 });
+        });
+
+        test("does not create a snapshot when an asynchronous strategy resolves to false", async () => {
+            const asyncSnapshotStore = new MongoSnapshotStore(
+                new AsyncSnapshotStrategy(false),
+                mongoClient,
+                "snapshots"
+            );
+            const asyncStore = new MongoEventStore(
+                createMock<DomainEventEmitter>(),
+                asyncSnapshotStore,
+                mongoClient,
+                "aggregates",
+                "events"
+            );
+
+            const aggregateRootId = new ObjectId().toHexString();
+            const aggregate = asyncStore.addPublisher(new CounterSnapshotAggregateRoot(aggregateRootId));
+            aggregate.increment();
+            await aggregate.commit();
+
+            const storedSnapshot = await asyncSnapshotStore.findLatestSnapshotByAggregateId(aggregateRootId);
+            expect(storedSnapshot).toBeUndefined();
+
+            const found = await asyncStore.findWithSnapshot(CounterSnapshotAggregateRoot, aggregateRootId);
+            expect(found.events.length).toBe(1);
+            expect(found.snapshot).toBeUndefined();
         });
     });
 });
