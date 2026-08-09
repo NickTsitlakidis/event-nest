@@ -2,9 +2,11 @@ import {
     AggregateRoot,
     AggregateRootConfig,
     AggregateRootName,
+    ApplyEvent,
     DomainEvent,
     DomainEventEmitter,
     EventConcurrencyException,
+    ForCountSnapshotStrategy,
     getAggregateRootName,
     MissingAggregateRootNameException,
     NoOpSnapshotStore,
@@ -22,6 +24,37 @@ import { MongoSnapshotStore } from "./mongo-snapshot-store";
 
 interface TestSnapshot {
     someData: string;
+}
+
+@DomainEvent("counter-incremented-event")
+class CounterIncrementedEvent {}
+
+@AggregateRootConfig({ name: "counter-aggregate", snapshotRevision: 1 })
+class CounterSnapshotAggregateRoot extends AggregateRoot implements SnapshotAware<{ count: number }> {
+    count = 0;
+
+    constructor(id: string) {
+        super(id);
+    }
+
+    applySnapshot(snapshot: { count: number }): void {
+        this.count = snapshot.count;
+    }
+
+    increment() {
+        const event = new CounterIncrementedEvent();
+        this.applyCounterIncrementedEvent();
+        this.append(event);
+    }
+
+    toSnapshot(): { count: number } {
+        return { count: this.count };
+    }
+
+    @ApplyEvent(CounterIncrementedEvent)
+    private applyCounterIncrementedEvent() {
+        this.count += 1;
+    }
 }
 
 @AggregateRootName("test-aggregate")
@@ -946,6 +979,73 @@ describe("MongoEventStore", () => {
             expect(result.events.length).toBe(2);
             expect(result.events[0].aggregateRootVersion).toBe(5);
             expect(result.events[1].aggregateRootVersion).toBe(10);
+        });
+    });
+
+    describe("publisher round trip with snapshots", () => {
+        let realSnapshotStore: MongoSnapshotStore;
+        let storeWithSnapshots: MongoEventStore;
+
+        beforeEach(async () => {
+            const snapshotsCollection = mongoClient.db().collection("snapshots");
+            await snapshotsCollection.deleteMany({});
+            realSnapshotStore = new MongoSnapshotStore(
+                new ForCountSnapshotStrategy({ count: 2 }),
+                mongoClient,
+                "snapshots"
+            );
+            storeWithSnapshots = new MongoEventStore(
+                createMock<DomainEventEmitter>(),
+                realSnapshotStore,
+                mongoClient,
+                "aggregates",
+                "events"
+            );
+        });
+
+        test("creates the snapshot with the committed version so that snapshotted events are not replayed", async () => {
+            const aggregateRootId = new ObjectId().toHexString();
+            const aggregate = storeWithSnapshots.addPublisher(new CounterSnapshotAggregateRoot(aggregateRootId));
+            aggregate.increment();
+            aggregate.increment();
+            await aggregate.commit();
+
+            expect(aggregate.version).toBe(2);
+
+            const storedSnapshot = await realSnapshotStore.findLatestSnapshotByAggregateId(aggregateRootId);
+            expect(storedSnapshot?.aggregateRootVersion).toBe(2);
+            expect(storedSnapshot?.payload).toEqual({ count: 2 });
+
+            const found = await storeWithSnapshots.findWithSnapshot(CounterSnapshotAggregateRoot, aggregateRootId);
+            expect(found.events.length).toBe(0);
+            expect(found.aggregateRootVersion).toBe(2);
+            expect(found.snapshot).toEqual({ count: 2 });
+
+            const reloaded = new CounterSnapshotAggregateRoot(aggregateRootId);
+            reloaded.reconstitute(found.events, found.snapshot, found.aggregateRootVersion);
+            expect(reloaded.count).toBe(2);
+            expect(reloaded.version).toBe(2);
+        });
+
+        test("replays only the events that were committed after the snapshot", async () => {
+            const aggregateRootId = new ObjectId().toHexString();
+            const aggregate = storeWithSnapshots.addPublisher(new CounterSnapshotAggregateRoot(aggregateRootId));
+            aggregate.increment();
+            aggregate.increment();
+            await aggregate.commit();
+
+            aggregate.increment();
+            await aggregate.commit();
+
+            const found = await storeWithSnapshots.findWithSnapshot(CounterSnapshotAggregateRoot, aggregateRootId);
+            expect(found.events.length).toBe(1);
+            expect(found.events[0].aggregateRootVersion).toBe(3);
+            expect(found.aggregateRootVersion).toBe(3);
+
+            const reloaded = new CounterSnapshotAggregateRoot(aggregateRootId);
+            reloaded.reconstitute(found.events, found.snapshot, found.aggregateRootVersion);
+            expect(reloaded.count).toBe(3);
+            expect(reloaded.version).toBe(3);
         });
     });
 });

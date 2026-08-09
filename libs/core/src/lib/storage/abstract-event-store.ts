@@ -48,6 +48,9 @@ export abstract class AbstractEventStore implements EventStore {
             if (ids.length !== events.length || !hasAllValues(ids)) {
                 throw new IdGenerationException(ids.length, events.length);
             }
+            // This decision has to be made before the events are saved because strategies like
+            // ForCountSnapshotStrategy project the future version based on the current version and the
+            // uncommitted events. After saving, the resolved version would break that projection.
             const shouldCreateSnapshot = this._snapshotStore.shouldCreateSnapshot(aggregateRoot);
             const published: Array<PublishedDomainEvent<object>> = [];
             const storedEvents: Array<StoredEvent> = [];
@@ -73,6 +76,11 @@ export abstract class AbstractEventStore implements EventStore {
             const toStore = new StoredAggregateRoot(aggregateRoot.id, aggregateRoot.version);
             const saved = await this.save(storedEvents, toStore);
 
+            // The version has to be resolved before the snapshot is created. Otherwise, the snapshot metadata
+            // would point to the pre-save version while its payload already includes the new events, and those
+            // events would be replayed on top of the snapshot during reconstitution.
+            aggregateRoot.resolveVersion(saved);
+
             if (shouldCreateSnapshot) {
                 await this._snapshotStore.create(aggregateRoot);
             }
@@ -86,7 +94,6 @@ export abstract class AbstractEventStore implements EventStore {
                 publishedEvent.version = found.aggregateRootVersion;
             }
 
-            aggregateRoot.resolveVersion(saved);
             await this._eventEmitter.emitMultiple(published);
             return saved;
         };
