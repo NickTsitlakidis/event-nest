@@ -250,6 +250,25 @@ describe("AbstractEventStore", () => {
             expect(snapshotStore.create).toHaveBeenCalledWith(entity);
         });
 
+        test("publisher resolves the aggregate version before creating the snapshot", async () => {
+            let versionWhenSnapshotIsCreated: number | undefined;
+            const snapshotStore = createMock<AbstractSnapshotStore>({
+                create: jest.fn().mockImplementation((aggregateRoot: AggregateRoot) => {
+                    versionWhenSnapshotIsCreated = aggregateRoot.version;
+                    return Promise.resolve({});
+                }),
+                shouldCreateSnapshot: jest.fn().mockReturnValue(true)
+            });
+
+            const store = new TestStore(eventEmitter, snapshotStore);
+            const entity = store.addPublisher(new TestEntity());
+            const toPublish = [{ aggregateRootId: "id", occurredAt: new Date(), payload: new TestEvent("test") }];
+            await entity.publish(toPublish);
+
+            expect(versionWhenSnapshotIsCreated).toBe(100);
+            expect(entity.version).toBe(100);
+        });
+
         test("publisher stop execution in case shouldCreateSnapshot throws", async () => {
             const createSnapshotError = new Error("createSnapshotError");
             const snapshotStore = createMock<AbstractSnapshotStore>({
