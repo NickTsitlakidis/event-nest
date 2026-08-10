@@ -240,7 +240,7 @@ describe("AbstractEventStore", () => {
 
             const creationDate = new Date();
             const store = new TestStore(eventEmitter, snapshotStore);
-            const entity = store.addPublisher(new TestEntity());
+            const entity = store.addPublisher(new SnapshotEntity());
             const toPublish = [{ aggregateRootId: "id", occurredAt: creationDate, payload: new TestEvent("test") }];
             await entity.publish(toPublish);
 
@@ -248,6 +248,55 @@ describe("AbstractEventStore", () => {
             expect(snapshotStore.shouldCreateSnapshot).toHaveBeenCalledWith(entity);
             expect(snapshotStore.create).toHaveBeenCalledTimes(1);
             expect(snapshotStore.create).toHaveBeenCalledWith(entity);
+        });
+
+        test("publisher calls snapshotStore.create if an asynchronous strategy resolves to true", async () => {
+            const snapshotStore = createMock<AbstractSnapshotStore>({
+                create: jest.fn().mockResolvedValue({}),
+                shouldCreateSnapshot: jest.fn().mockResolvedValue(true)
+            });
+
+            const store = new TestStore(eventEmitter, snapshotStore);
+            const entity = store.addPublisher(new SnapshotEntity());
+            const toPublish = [{ aggregateRootId: "id", occurredAt: new Date(), payload: new TestEvent("test") }];
+            await entity.publish(toPublish);
+
+            expect(snapshotStore.create).toHaveBeenCalledTimes(1);
+            expect(snapshotStore.create).toHaveBeenCalledWith(entity);
+        });
+
+        test("publisher skips snapshot creation if an asynchronous strategy resolves to false", async () => {
+            const snapshotStore = createMock<AbstractSnapshotStore>({
+                create: jest.fn().mockResolvedValue({}),
+                shouldCreateSnapshot: jest.fn().mockResolvedValue(false)
+            });
+
+            const store = new TestStore(eventEmitter, snapshotStore);
+            const saveSpy = jest.spyOn(store, "save");
+            const entity = store.addPublisher(new SnapshotEntity());
+            const toPublish = [{ aggregateRootId: "id", occurredAt: new Date(), payload: new TestEvent("test") }];
+            await entity.publish(toPublish);
+
+            expect(snapshotStore.create).not.toHaveBeenCalled();
+            expect(saveSpy).toHaveBeenCalledTimes(1);
+        });
+
+        test("publisher stop execution in case shouldCreateSnapshot rejects", async () => {
+            const strategyError = new Error("async strategy failed");
+            const snapshotStore = createMock<AbstractSnapshotStore>({
+                create: jest.fn().mockResolvedValue({}),
+                shouldCreateSnapshot: jest.fn().mockRejectedValue(strategyError)
+            });
+
+            const store = new TestStore(eventEmitter, snapshotStore);
+            const saveSpy = jest.spyOn(store, "save");
+            const entity = store.addPublisher(new SnapshotEntity());
+            const toPublish = [{ aggregateRootId: "id", occurredAt: new Date(), payload: new TestEvent("test") }];
+
+            await expect(entity.publish(toPublish)).rejects.toThrow(strategyError);
+            expect(saveSpy).not.toHaveBeenCalled();
+            expect(snapshotStore.create).not.toHaveBeenCalled();
+            expect(eventEmitter.emitMultiple).not.toHaveBeenCalled();
         });
 
         test("publisher resolves the aggregate version before creating the snapshot", async () => {
@@ -261,7 +310,7 @@ describe("AbstractEventStore", () => {
             });
 
             const store = new TestStore(eventEmitter, snapshotStore);
-            const entity = store.addPublisher(new TestEntity());
+            const entity = store.addPublisher(new SnapshotEntity());
             const toPublish = [{ aggregateRootId: "id", occurredAt: new Date(), payload: new TestEvent("test") }];
             await entity.publish(toPublish);
 

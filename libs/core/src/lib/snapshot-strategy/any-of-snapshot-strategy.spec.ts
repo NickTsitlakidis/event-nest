@@ -20,6 +20,18 @@ class AlwaysTrueStrategy extends SnapshotStrategy {
     }
 }
 
+class AsyncFalseStrategy extends SnapshotStrategy {
+    shouldCreateSnapshot(): Promise<boolean> {
+        return Promise.resolve(false);
+    }
+}
+
+class AsyncTrueStrategy extends SnapshotStrategy {
+    shouldCreateSnapshot(): Promise<boolean> {
+        return Promise.resolve(true);
+    }
+}
+
 @AggregateRootConfig({ name: "TestAggregateRoot" })
 class TestAggregateRoot extends AggregateRoot {
     constructor(id: string) {
@@ -46,14 +58,14 @@ describe("AnyOfSnapshotStrategy", () => {
 
     describe("shouldCreateSnapshot", () => {
         describe("when it returns true", () => {
-            test("returns true when single strategy match", () => {
+            test("returns true when single strategy match", async () => {
                 const aggregateRoot = new TestAggregateRoot("test-id");
                 const strategy = new AnyOfSnapshotStrategy([new AlwaysTrueStrategy()]);
 
-                expect(strategy.shouldCreateSnapshot(aggregateRoot)).toBe(true);
+                await expect(strategy.shouldCreateSnapshot(aggregateRoot)).resolves.toBe(true);
             });
 
-            test("returns true when all strategies match", () => {
+            test("returns true when all strategies match", async () => {
                 const aggregateRoot = new TestAggregateRoot("test-id");
                 const strategy = new AnyOfSnapshotStrategy([
                     new AlwaysTrueStrategy(),
@@ -61,10 +73,10 @@ describe("AnyOfSnapshotStrategy", () => {
                     new AlwaysTrueStrategy()
                 ]);
 
-                expect(strategy.shouldCreateSnapshot(aggregateRoot)).toBe(true);
+                await expect(strategy.shouldCreateSnapshot(aggregateRoot)).resolves.toBe(true);
             });
 
-            test("returns true when at least one strategy matches", () => {
+            test("returns true when at least one strategy matches", async () => {
                 const aggregateRoot = new TestAggregateRoot("test-id");
                 const strategy = new AnyOfSnapshotStrategy([
                     new AlwaysFalseStrategy(),
@@ -72,10 +84,17 @@ describe("AnyOfSnapshotStrategy", () => {
                     new AlwaysFalseStrategy()
                 ]);
 
-                expect(strategy.shouldCreateSnapshot(aggregateRoot)).toBe(true);
+                await expect(strategy.shouldCreateSnapshot(aggregateRoot)).resolves.toBe(true);
             });
 
-            test("returns true when count strategy matches", () => {
+            test("returns true when only an asynchronous strategy matches", async () => {
+                const aggregateRoot = new TestAggregateRoot("test-id");
+                const strategy = new AnyOfSnapshotStrategy([new AlwaysFalseStrategy(), new AsyncTrueStrategy()]);
+
+                await expect(strategy.shouldCreateSnapshot(aggregateRoot)).resolves.toBe(true);
+            });
+
+            test("returns true when count strategy matches", async () => {
                 const aggregateRoot = createMock<AggregateRoot>({
                     uncommittedEvents: [
                         {
@@ -90,10 +109,10 @@ describe("AnyOfSnapshotStrategy", () => {
                     new ForEventsSnapshotStrategy({ eventClasses: [TestEvent2] })
                 ]);
 
-                expect(strategy.shouldCreateSnapshot(aggregateRoot)).toBe(true);
+                await expect(strategy.shouldCreateSnapshot(aggregateRoot)).resolves.toBe(true);
             });
 
-            test("returns true when event strategy matches", () => {
+            test("returns true when event strategy matches", async () => {
                 const aggregateRoot = new TestAggregateRoot("test-id");
                 const event1 = new TestEvent1();
                 aggregateRoot.append(event1);
@@ -103,20 +122,20 @@ describe("AnyOfSnapshotStrategy", () => {
                     new ForEventsSnapshotStrategy({ eventClasses: [TestEvent1] })
                 ]);
 
-                expect(strategy.shouldCreateSnapshot(aggregateRoot)).toBe(true);
+                await expect(strategy.shouldCreateSnapshot(aggregateRoot)).resolves.toBe(true);
             });
         });
     });
 
     describe("when it returns false", () => {
-        test("returns false when single strategy returns false", () => {
+        test("returns false when single strategy returns false", async () => {
             const aggregateRoot = new TestAggregateRoot("test-id");
             const strategy = new AnyOfSnapshotStrategy([new AlwaysFalseStrategy()]);
 
-            expect(strategy.shouldCreateSnapshot(aggregateRoot)).toBe(false);
+            await expect(strategy.shouldCreateSnapshot(aggregateRoot)).resolves.toBe(false);
         });
 
-        test("returns false when all strategies return false", () => {
+        test("returns false when all strategies return false", async () => {
             const aggregateRoot = new TestAggregateRoot("test-id");
             const strategy = new AnyOfSnapshotStrategy([
                 new AlwaysFalseStrategy(),
@@ -124,10 +143,17 @@ describe("AnyOfSnapshotStrategy", () => {
                 new AlwaysFalseStrategy()
             ]);
 
-            expect(strategy.shouldCreateSnapshot(aggregateRoot)).toBe(false);
+            await expect(strategy.shouldCreateSnapshot(aggregateRoot)).resolves.toBe(false);
         });
 
-        test("returns false when no strategies match", () => {
+        test("returns false when all strategies are asynchronous and resolve to false", async () => {
+            const aggregateRoot = new TestAggregateRoot("test-id");
+            const strategy = new AnyOfSnapshotStrategy([new AsyncFalseStrategy(), new AsyncFalseStrategy()]);
+
+            await expect(strategy.shouldCreateSnapshot(aggregateRoot)).resolves.toBe(false);
+        });
+
+        test("returns false when no strategies match", async () => {
             const aggregateRoot = new TestAggregateRoot("test-id");
             const event1 = new TestEvent1();
             aggregateRoot.append(event1);
@@ -137,7 +163,7 @@ describe("AnyOfSnapshotStrategy", () => {
                 new ForEventsSnapshotStrategy({ eventClasses: [TestEvent2] })
             ]);
 
-            expect(strategy.shouldCreateSnapshot(aggregateRoot)).toBe(false);
+            await expect(strategy.shouldCreateSnapshot(aggregateRoot)).resolves.toBe(false);
         });
     });
 });

@@ -207,45 +207,84 @@ describe("AbstractSnapshotStore", () => {
     });
 
     describe("shouldCreateSnapshot", () => {
-        test("returns false when strategy returns false", () => {
+        test("returns false when strategy returns false", async () => {
             mockStrategy.shouldCreateSnapshot.mockReturnValue(false);
             const aggregate = new NoNameAggregate("test-id");
 
-            const result = store.shouldCreateSnapshot(aggregate);
+            const result = await store.shouldCreateSnapshot(aggregate);
 
             expect(mockStrategy.shouldCreateSnapshot).toHaveBeenCalledTimes(1);
             expect(mockStrategy.shouldCreateSnapshot).toHaveBeenCalledWith(aggregate);
             expect(result).toBe(false);
         });
 
-        test("throws when aggregate root name is missing", () => {
+        test("throws when aggregate root name is missing", async () => {
             mockStrategy.shouldCreateSnapshot.mockReturnValue(true);
             const aggregate = new NoNameAggregate("test-id");
 
-            expect(() => store.shouldCreateSnapshot(aggregate)).toThrow(MissingAggregateRootNameException);
+            await expect(store.shouldCreateSnapshot(aggregate)).rejects.toThrow(MissingAggregateRootNameException);
         });
 
-        test("throws when aggregate instance is not snapshot aware", () => {
+        test("throws when aggregate instance is not snapshot aware", async () => {
             mockStrategy.shouldCreateSnapshot.mockReturnValue(true);
             const aggregate = new NoSnapshotMethodsAggregate("test-id");
 
-            expect(() => store.shouldCreateSnapshot(aggregate)).toThrow(AggregateInstanceNotSnapshotAwareException);
+            await expect(store.shouldCreateSnapshot(aggregate)).rejects.toThrow(
+                AggregateInstanceNotSnapshotAwareException
+            );
         });
 
-        test("throws when aggregate class is not snapshot aware", () => {
+        test("throws when aggregate class is not snapshot aware", async () => {
             mockStrategy.shouldCreateSnapshot.mockReturnValue(true);
             const aggregate = new NoSnapshotRevisionAggregate("test-id");
 
-            expect(() => store.shouldCreateSnapshot(aggregate)).toThrow(AggregateClassNotSnapshotAwareException);
+            await expect(store.shouldCreateSnapshot(aggregate)).rejects.toThrow(
+                AggregateClassNotSnapshotAwareException
+            );
         });
 
-        test("returns true for snapshot-aware aggregate with snapshotRevision", () => {
+        test("returns true for snapshot-aware aggregate with snapshotRevision", async () => {
             mockStrategy.shouldCreateSnapshot.mockReturnValue(true);
             const aggregate = new SnapshotAwareAggregate("test-id");
 
-            const result = store.shouldCreateSnapshot(aggregate);
+            const result = await store.shouldCreateSnapshot(aggregate);
 
             expect(result).toBe(true);
+        });
+
+        test("returns true when an asynchronous strategy resolves to true", async () => {
+            mockStrategy.shouldCreateSnapshot.mockResolvedValue(true);
+            const aggregate = new SnapshotAwareAggregate("test-id");
+
+            const result = await store.shouldCreateSnapshot(aggregate);
+
+            expect(result).toBe(true);
+        });
+
+        test("returns false when an asynchronous strategy resolves to false", async () => {
+            mockStrategy.shouldCreateSnapshot.mockResolvedValue(false);
+            const aggregate = new SnapshotAwareAggregate("test-id");
+
+            const result = await store.shouldCreateSnapshot(aggregate);
+
+            expect(result).toBe(false);
+        });
+
+        test("does not run snapshot-awareness checks when an asynchronous strategy resolves to false", async () => {
+            mockStrategy.shouldCreateSnapshot.mockResolvedValue(false);
+            const aggregate = new NoNameAggregate("test-id");
+
+            const result = await store.shouldCreateSnapshot(aggregate);
+
+            expect(result).toBe(false);
+        });
+
+        test("throws when an asynchronous strategy rejects", async () => {
+            const strategyError = new Error("strategy failed");
+            mockStrategy.shouldCreateSnapshot.mockRejectedValue(strategyError);
+            const aggregate = new SnapshotAwareAggregate("test-id");
+
+            await expect(store.shouldCreateSnapshot(aggregate)).rejects.toThrow(strategyError);
         });
     });
 });

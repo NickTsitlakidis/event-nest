@@ -32,7 +32,10 @@ export class AnyOfSnapshotStrategy extends SnapshotStrategy {
         }
     }
 
-    shouldCreateSnapshot(aggregateRoot: AggregateRoot): boolean {
-        return this.strategies.some((strategy) => strategy.shouldCreateSnapshot(aggregateRoot));
+    async shouldCreateSnapshot(aggregateRoot: AggregateRoot): Promise<boolean> {
+        const results = await Promise.all(
+            this.strategies.map((strategy) => strategy.shouldCreateSnapshot(aggregateRoot))
+        );
+        return results.some(Boolean);
     }
 }
