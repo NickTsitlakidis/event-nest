@@ -1,31 +1,29 @@
 import { AbstractSnapshotStore, SnapshotStrategy, StoredSnapshot } from "@event-nest/core";
 import { Injectable, Logger } from "@nestjs/common";
 import { isNil, isNotNil } from "es-toolkit";
-import knex from "knex";
+import { Knex } from "knex";
 import { randomUUID } from "node:crypto";
 
 import { SnapshotRow } from "./snapshot-row";
 
 @Injectable()
-export class PostgreSQLSnapshotStore extends AbstractSnapshotStore {
+export class MSSQLSnapshotStore extends AbstractSnapshotStore {
     private readonly _logger: Logger;
 
     constructor(
         snapshotStrategy: SnapshotStrategy,
         private readonly _schemaAwareSnapshotTable: string,
-        private readonly _knexConnection: knex.Knex
+        private readonly _knexConnection: Knex
     ) {
         super(snapshotStrategy);
-        this._logger = new Logger(PostgreSQLSnapshotStore.name);
+        this._logger = new Logger(MSSQLSnapshotStore.name);
     }
 
-    async deleteByAggregateId(id: string, transaction?: knex.Knex.Transaction): Promise<void> {
+    async deleteByAggregateId(id: string, transaction?: Knex.Transaction): Promise<void> {
         const startedAt = Date.now();
         const connection = isNotNil(transaction) ? transaction : this._knexConnection;
         await connection<SnapshotRow>(this._schemaAwareSnapshotTable).where("aggregate_root_id", id).delete();
-
-        const duration = Date.now() - startedAt;
-        this._logger.debug(`Deleting snapshots for aggregate ${id} took ${duration}ms`);
+        this._logger.debug(`Deleting snapshots for aggregate ${id} took ${Date.now() - startedAt}ms`);
     }
 
     async findLatestSnapshotByAggregateId(id: string): Promise<StoredSnapshot | undefined> {
@@ -33,6 +31,7 @@ export class PostgreSQLSnapshotStore extends AbstractSnapshotStore {
             .select("*")
             .where("aggregate_root_id", id)
             .orderBy("aggregate_root_version", "desc")
+            .orderBy("id", "desc")
             .first();
 
         return isNil(row)
@@ -41,7 +40,7 @@ export class PostgreSQLSnapshotStore extends AbstractSnapshotStore {
                   row.id,
                   row.aggregate_root_version,
                   row.revision,
-                  row.payload,
+                  JSON.parse(row.payload) as unknown,
                   row.aggregate_root_id
               );
     }
@@ -51,7 +50,7 @@ export class PostgreSQLSnapshotStore extends AbstractSnapshotStore {
     }
 
     async save(snapshot: StoredSnapshot): Promise<StoredSnapshot | undefined> {
-        const snapshotRow: SnapshotRow = {
+        const row: SnapshotRow = {
             aggregate_root_id: snapshot.aggregateRootId,
             aggregate_root_version: snapshot.aggregateRootVersion,
             id: snapshot.id,
@@ -60,11 +59,8 @@ export class PostgreSQLSnapshotStore extends AbstractSnapshotStore {
         };
 
         const startedAt = Date.now();
-        await this._knexConnection<SnapshotRow>(this._schemaAwareSnapshotTable).insert(snapshotRow);
-
-        const duration = Date.now() - startedAt;
-        this._logger.debug(`Saving snapshot for aggregate ${snapshot.id} took ${duration}ms`);
-
+        await this._knexConnection<SnapshotRow>(this._schemaAwareSnapshotTable).insert(row);
+        this._logger.debug(`Saving snapshot with id ${snapshot.id} took ${Date.now() - startedAt}ms`);
         return snapshot;
     }
 }

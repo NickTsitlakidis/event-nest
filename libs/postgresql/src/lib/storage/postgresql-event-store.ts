@@ -59,7 +59,7 @@ export class PostgreSQLEventStore extends AbstractEventStore {
         const aggregateRootName = getAggregateRootName(aggregateRootClass);
         if (isNil(aggregateRootName)) {
             this._logger.error(
-                `Missing aggregate root name for class: ${aggregateRootClass.name}. Use the @AggregateRootName decorator.`
+                `Missing aggregate root name for class: ${aggregateRootClass.name}. Use the @AggregateRootConfig decorator.`
             );
             throw new MissingAggregateRootNameException(aggregateRootClass.name);
         }

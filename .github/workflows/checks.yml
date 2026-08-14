@@ -45,12 +45,16 @@ jobs:
                 run: pnpm nx run core:lint && pnpm nx run core:test
             -   name: Check mongodb
                 run: pnpm nx run mongodb:lint && pnpm nx run mongodb:test
+            -   name: Check mssql
+                run: pnpm nx run mssql:lint && pnpm nx run mssql:test
             -   name: Check postgresql
                 run: pnpm nx run postgresql:lint && pnpm nx run postgresql:test
             -   name: Build core
                 run: pnpm nx run core:build
             -   name: Build mongodb
                 run: pnpm nx run mongodb:build
+            -   name: Build mssql
+                run: pnpm nx run mssql:build
             -   name: Build postgresql
                 run: pnpm nx run postgresql:build
             -   name: Upload test coverage

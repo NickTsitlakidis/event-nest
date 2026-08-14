@@ -56,6 +56,7 @@ module.exports = [
             "unicorn/no-for-each": "off",
             "unicorn/no-for-loop": "warn",
             "unicorn/no-static-only-class": "off",
+            "unicorn/prefer-minimal-ternary": "off",
             "unicorn/prefer-ternary": "warn",
             "unicorn/prefer-top-level-await": "warn",
             "unicorn/prevent-abbreviations": "warn"
