@@ -31,7 +31,10 @@ export class AllOfSnapshotStrategy extends SnapshotStrategy {
         }
     }
 
-    shouldCreateSnapshot(aggregateRoot: AggregateRoot): boolean {
-        return this.strategies.every((strategy) => strategy.shouldCreateSnapshot(aggregateRoot));
+    async shouldCreateSnapshot(aggregateRoot: AggregateRoot): Promise<boolean> {
+        const results = await Promise.all(
+            this.strategies.map((strategy) => strategy.shouldCreateSnapshot(aggregateRoot))
+        );
+        return results.every(Boolean);
     }
 }

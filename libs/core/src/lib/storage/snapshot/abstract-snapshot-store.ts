@@ -32,8 +32,8 @@ export abstract class AbstractSnapshotStore implements SnapshotStore {
     abstract generateEntityId(): Promise<string>;
     abstract save(snapshot: StoredSnapshot): Promise<StoredSnapshot | undefined>;
 
-    shouldCreateSnapshot(aggregateRoot: AggregateRoot): aggregateRoot is SnapshotAwareAggregateRoot {
-        if (!this.snapshotStrategy.shouldCreateSnapshot(aggregateRoot)) {
+    async shouldCreateSnapshot(aggregateRoot: AggregateRoot): Promise<boolean> {
+        if (!(await this.snapshotStrategy.shouldCreateSnapshot(aggregateRoot))) {
             return false;
         }
 

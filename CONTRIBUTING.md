@@ -22,6 +22,7 @@ pnpm test
 # Run tests for a specific library
 nx test core
 nx test mongodb
+nx test mssql
 nx test postgresql
 
 # Run linting
@@ -29,6 +30,7 @@ pnpm lint
 
 # Build a specific library
 nx build core
+nx build mssql
 ```
 
 ## Testing
@@ -39,7 +41,7 @@ We use [Jest](https://github.com/facebook/jest) to write tests. All changes must
 - **Integration tests**: For database operations
 - **Coverage**: PRs should not decrease overall coverage
 
-The MongoDB and PostgreSQL libraries use test containers to run integration tests against real database instances.
+The PostgreSQL and MSSQL libraries use Testcontainers to run integration tests against real database instances. Docker must be running. MSSQL tests explicitly accept the Microsoft SQL Server container EULA in test setup.
 
 ## Code Style
 

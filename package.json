@@ -32,6 +32,7 @@
         "@nx/webpack": "catalog:",
         "@nx/workspace": "catalog:",
         "@shelf/jest-mongodb": "catalog:",
+        "@testcontainers/mssqlserver": "catalog:",
         "@testcontainers/postgresql": "catalog:",
         "@types/jest": "catalog:",
         "@types/node": "catalog:",

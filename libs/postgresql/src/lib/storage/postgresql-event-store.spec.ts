@@ -1,7 +1,6 @@
 import {
     AggregateRoot,
     AggregateRootConfig,
-    AggregateRootName,
     DomainEvent,
     DomainEventEmitter,
     EventConcurrencyException,
@@ -29,7 +28,7 @@ interface TestSnapshot {
     someData: string;
 }
 
-@AggregateRootName("test-aggregate")
+@AggregateRootConfig({ name: "test-aggregate" })
 class DecoratedAggregateRoot extends AggregateRoot {
     constructor(id: string) {
         super(id);

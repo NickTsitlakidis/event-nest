@@ -1,0 +1,21 @@
+{
+    "name": "mssql",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "libs/mssql/src",
+    "projectType": "library",
+    "tags": ["publishable"],
+    "targets": {
+        "build": {
+            "executor": "@nx/js:tsc",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "outputPath": "dist/libs/mssql",
+                "tsConfig": "libs/mssql/tsconfig.lib.json",
+                "packageJson": "libs/mssql/package.json",
+                "main": "libs/mssql/src/index.ts",
+                "assets": ["libs/mssql/*.md"],
+                "updateBuildableProjectDepsInPackageJson": true
+            }
+        }
+    }
+}
