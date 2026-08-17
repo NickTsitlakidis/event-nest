@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-labelledby="title">
+  <title id="title">Event Nest</title>
+  <path fill="#2e7de9" d="M60 8 108 36v48L60 112 12 84V36z"/>
+  <path fill="none" stroke="#d9e5fb" stroke-linecap="round" stroke-width="9" d="M35 41h51M35 60h40M35 79h51"/>
+  <circle cx="31" cy="41" r="5" fill="#bb9af7"/><circle cx="79" cy="60" r="5" fill="#bb9af7"/><circle cx="31" cy="79" r="5" fill="#bb9af7"/>
+</svg>

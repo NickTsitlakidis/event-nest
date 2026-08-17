@@ -49,6 +49,10 @@ jobs:
                 run: pnpm nx run docs:build
                 env:
                     BASE_PATH: /event-nest
+            -   name: Check docs links
+                run: pnpm nx run docs:links
+                env:
+                    BASE_PATH: /event-nest
             -   name: Check core
                 run: pnpm nx run core:lint && pnpm nx run core:test
             -   name: Check mongodb

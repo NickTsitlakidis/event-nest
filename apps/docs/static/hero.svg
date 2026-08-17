@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 240" role="img" aria-labelledby="heroTitle">
+  <title id="heroTitle">Events flowing into an Event Nest aggregate</title>
+  <circle cx="160" cy="120" r="94" fill="#2e7de9" opacity="0.12"/>
+  <path fill="none" stroke="#7dcfff" stroke-width="3" stroke-linecap="round" opacity="0.4" d="M49 70Q76 76 96 93"/>
+  <path fill="none" stroke="#bb9af7" stroke-width="3" stroke-linecap="round" opacity="0.4" d="M38 120h52"/>
+  <path fill="none" stroke="#7aa2f7" stroke-width="3" stroke-linecap="round" opacity="0.4" d="M53 170Q78 165 96 147"/>
+  <path fill="none" stroke="#7dcfff" stroke-width="4" stroke-linecap="round" opacity="0.45" d="M12 70h16"/>
+  <path fill="none" stroke="#bb9af7" stroke-width="4" stroke-linecap="round" opacity="0.45" d="M2 120h14"/>
+  <path fill="none" stroke="#7aa2f7" stroke-width="4" stroke-linecap="round" opacity="0.45" d="M16 170h16"/>
+  <circle cx="40" cy="70" r="7" fill="#7dcfff"/>
+  <circle cx="28" cy="120" r="7" fill="#bb9af7"/>
+  <circle cx="44" cy="170" r="7" fill="#7aa2f7"/>
+  <path fill="#2e7de9" d="M160 50l61 35v70l-61 35-61-35V85z"/>
+  <path fill="none" stroke="#d9e5fb" stroke-linecap="round" stroke-width="10" d="M130 95h60M130 120h45M130 145h60"/>
+  <circle cx="125" cy="95" r="5.5" fill="#bb9af7"/>
+  <circle cx="180" cy="120" r="5.5" fill="#bb9af7"/>
+  <circle cx="125" cy="145" r="5.5" fill="#bb9af7"/>
+</svg>

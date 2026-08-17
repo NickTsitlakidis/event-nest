@@ -24,5 +24,11 @@ export default defineConfig(
         rules: {
             "unicorn/consistent-boolean-name": "off"
         }
+    },
+    {
+        files: ["src/lib/components/{report-issue,search,source-link}.svelte"],
+        rules: {
+            "svelte/no-navigation-without-resolve": "off"
+        }
     }
 );

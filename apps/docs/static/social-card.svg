@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Event Nest documentation</title><desc id="desc">Event sourcing libraries for NestJS</desc>
+  <rect width="1200" height="630" fill="#1a1b26"/><path fill="#2e7de9" d="m225 145 145 84v167l-145 84-145-84V229z"/>
+  <path fill="none" stroke="#d9e5fb" stroke-linecap="round" stroke-width="22" d="M145 255h157M145 312h125M145 369h157"/>
+  <text x="430" y="290" fill="#c0caf5" font-family="system-ui,sans-serif" font-size="92" font-weight="700">Event Nest</text>
+  <text x="435" y="370" fill="#a9b1d6" font-family="system-ui,sans-serif" font-size="38">Event sourcing libraries for NestJS</text>
+</svg>

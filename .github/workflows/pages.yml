@@ -1,0 +1,65 @@
+name: Deploy documentation
+
+on:
+    push:
+        branches: [main]
+        paths:
+            - ".github/workflows/pages.yml"
+            - "apps/docs/**"
+            - "package.json"
+            - "pnpm-lock.yaml"
+            - "pnpm-workspace.yaml"
+    workflow_dispatch:
+
+permissions:
+    contents: read
+    id-token: write
+    pages: write
+
+concurrency:
+    group: github-pages
+    cancel-in-progress: false
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+            - name: Use Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+            - name: Install pnpm
+              uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa
+              with:
+                  run_install: false
+            - name: Configure Pages
+              uses: actions/configure-pages@v5
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+            - name: Check documentation
+              run: pnpm nx run docs:check && pnpm nx run docs:lint
+            - name: Build documentation
+              run: pnpm nx run docs:build
+              env:
+                  BASE_PATH: /event-nest
+            - name: Validate links
+              run: pnpm nx run docs:links
+              env:
+                  BASE_PATH: /event-nest
+            - name: Upload Pages artifact
+              uses: actions/upload-pages-artifact@v3
+              with:
+                  path: dist/apps/docs
+
+    deploy:
+        environment:
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}
+        needs: build
+        runs-on: ubuntu-latest
+        steps:
+            - name: Deploy to GitHub Pages
+              id: deployment
+              uses: actions/deploy-pages@v4

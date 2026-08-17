@@ -13,6 +13,15 @@
                 "command": "vite build"
             }
         },
+        "links": {
+            "cache": true,
+            "dependsOn": ["build"],
+            "executor": "nx:run-commands",
+            "options": {
+                "cwd": "apps/docs",
+                "command": "node scripts/check-links.mjs ../../dist/apps/docs"
+            }
+        },
         "serve": {
             "continuous": true,
             "executor": "nx:run-commands",

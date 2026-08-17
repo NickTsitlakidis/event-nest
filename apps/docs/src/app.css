@@ -1,0 +1,308 @@
+/* Tokyo Night palette: Day-derived light mode, Night dark mode. */
+:root {
+    --en-accent: #2e7de9;
+    --en-accent-strong: #2260bd;
+    --en-accent-soft: #d9e5fb;
+    --en-bg: #e9ebf2;
+    --en-surface: #f5f6fa;
+    --en-surface-muted: #e1e2e7;
+    --en-border: #c8cbd8;
+    --en-text: #343b58;
+    --en-text-muted: #565a6e;
+    --en-code-bg: #e1e2e7;
+    --en-focus: #b45309;
+    --en-danger: #c53a52;
+    --en-warning: #8c6c1e;
+    --svp-code-font: ui-monospace, "JetBrains Mono", "Cascadia Code", "Fira Code", "SF Mono", Menlo, Consolas,
+        "DejaVu Sans Mono", monospace;
+    color-scheme: light dark;
+}
+
+html.dark {
+    --en-accent: #7aa2f7;
+    --en-accent-strong: #9ab8ff;
+    --en-accent-soft: #24304f;
+    --en-bg: #1a1b26;
+    --en-surface: #1f2335;
+    --en-surface-muted: #292e42;
+    --en-border: #3b4261;
+    --en-text: #c0caf5;
+    --en-text-muted: #a9b1d6;
+    --en-code-bg: #16161e;
+    --en-danger: #f7768e;
+    --en-warning: #e0af68;
+}
+
+/* The compiled theme gradient (vite.config themeColor) targets light mode; brighten it for dark. */
+html.dark .gradient-title,
+html.dark header span.title {
+    background-image: linear-gradient(120deg, #7aa2f7, #bb9af7) !important;
+}
+
+/* Primary action: subtle vertical gradient instead of the compiled two-hue diagonal. */
+.svp-action--primary {
+    background: linear-gradient(180deg, #3987f0, #2a6fd6) !important;
+}
+
+html.dark .svp-action--primary {
+    background: linear-gradient(180deg, #8db2f8, #6e96ef) !important;
+}
+
+/* The theme hardcodes a navy wrapper behind the Shiki pre, which reads as a fat outline in dark mode. */
+.svp-code-block-wrapper {
+    background: var(--en-code-bg) !important;
+    border: 1px solid var(--en-border);
+}
+
+.svp-code-block-wrapper pre,
+html.dark .svp-code-block-wrapper pre.shiki {
+    background: transparent !important;
+}
+
+.svp-code-block-wrapper .shiki,
+.svp-code-block-wrapper .shiki span {
+    font-family: var(--svp-code-font) !important;
+    font-style: normal !important;
+}
+
+.svp-code-block-wrapper .shiki span,
+html.dark .svp-code-block-wrapper .shiki span {
+    background-color: transparent !important;
+}
+
+body {
+    background: var(--en-bg) !important;
+    color: var(--en-text) !important;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+
+:where(a, button, input, summary):focus-visible {
+    outline: 3px solid var(--en-focus);
+    outline-offset: 3px;
+}
+
+.theme-default--page-layout .content {
+    line-height: 1.72;
+}
+
+.theme-default--page-layout .content > p,
+.theme-default--page-layout .content > ul,
+.theme-default--page-layout .content > ol {
+    max-width: 72ch;
+}
+
+.theme-default--page-layout table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    border-collapse: collapse;
+}
+
+.theme-default--page-layout th {
+    text-align: left;
+}
+
+.theme-default--page-layout :not(pre) > code {
+    border: 1px solid var(--en-border);
+    border-radius: 0.3rem;
+    background: var(--en-code-bg);
+    padding: 0.08rem 0.3rem;
+}
+
+/* Monospace runs optically larger than the body sans; keep inline code proportional everywhere. */
+main :not(pre) > code {
+    font-size: 0.85em;
+}
+
+/* The theme's dark sidebar is near-black zinc; keep it recessed but on the palette's inset tone. */
+html.dark .theme-default-sidebar {
+    background: color-mix(in srgb, var(--en-code-bg) 50%, var(--en-bg)) !important;
+}
+
+/* Replace the theme's pointing-hand marker on the active sidebar item with a subtle accent dot. */
+.sidebar-group .active-icon svg {
+    display: none;
+}
+
+.sidebar-group .active-icon::before {
+    content: "";
+    display: block;
+    width: 0.38rem;
+    height: 0.38rem;
+    border-radius: 50%;
+    background: var(--en-accent);
+}
+
+.theme-default--page-layout h2 {
+    border-color: var(--en-border) !important;
+}
+
+.theme-default--page-layout a {
+    color: var(--en-accent-strong) !important;
+    text-decoration-color: color-mix(in srgb, var(--en-accent) 45%, transparent);
+    text-underline-offset: 0.18em;
+}
+
+.theme-default--page-layout a:hover {
+    text-decoration: underline;
+}
+
+/* Home page: hide the article outline and align the markdown content with the hero container. */
+main:has(> .home-page) .toc {
+    display: none;
+}
+
+main:has(> .home-page) > :not(.home-page) {
+    box-sizing: border-box;
+    margin-inline: auto;
+    max-width: 1152px;
+    padding-inline: 1rem;
+}
+
+@media (min-width: 640px) {
+    main:has(> .home-page) > :not(.home-page) {
+        padding-inline: 0;
+        width: 70vw;
+    }
+}
+
+main:has(> .home-page) > p,
+main:has(> .home-page) > ul,
+main:has(> .home-page) > ol {
+    max-width: min(72ch, 100%);
+}
+
+main:has(> .home-page) .feature-item .icon {
+    background: var(--en-accent-soft) !important;
+}
+
+main:has(> .home-page) a:not(.svp-action) {
+    color: var(--en-accent-strong);
+}
+
+@media (min-width: 640px) {
+    main:has(> .home-page) .hero-image img {
+        max-width: 320px;
+        width: 320px;
+    }
+}
+
+@media (min-width: 768px) {
+    main:has(> .home-page) .features {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .theme-default--page-layout pre {
+        max-width: calc(100vw - 2rem);
+    }
+}
+
+header nav .nav-item {
+    padding-inline: 0.5rem;
+    white-space: nowrap;
+}
+
+/* 1000-1200px: widen the header container and tighten nav spacing so the section links keep fitting. */
+@media (min-width: 1000.1px) and (max-width: 1200px) {
+    header .header-inner {
+        width: 96vw !important;
+    }
+
+    header nav .nav-item {
+        padding-inline: 0.3rem;
+        font-size: 0.95rem;
+    }
+
+    header .left span.title {
+        display: none;
+    }
+}
+
+@media (max-width: 1000px) {
+    .nav-trigger {
+        display: flex !important;
+    }
+
+    .navbar-pc > div:first-child {
+        display: none !important;
+    }
+}
+
+/* Anchor the search pill against the nav links instead of the theme's floating content-column shift. */
+header .doc-search {
+    justify-content: flex-end;
+    left: 0 !important;
+    margin-right: 0.75rem;
+}
+
+header .nav-links {
+    flex-grow: 0 !important;
+}
+
+/* Desktop: [logo] ... [nav links] [search] [github] [theme]. The icons are pinned right out of flex
+   flow so the search (a sibling of the nav) can visually sit between the Help link and the icons. */
+@media (min-width: 960px) {
+    header .header-inner {
+        position: relative;
+        padding-right: 100px;
+    }
+
+    header .nav-links {
+        margin-left: auto;
+    }
+
+    header .nav-links,
+    header .navbar-pc {
+        position: static !important;
+    }
+
+    header .doc-search {
+        order: 1;
+        flex-grow: 0 !important;
+        margin-right: 0;
+        margin-left: 0.25rem;
+    }
+
+    header .navbar-pc > a {
+        position: absolute !important;
+        top: 0;
+        right: 48px;
+        height: 100%;
+        align-items: center;
+    }
+
+    header .navbar-pc > div:nth-of-type(2) {
+        position: absolute;
+        top: 0;
+        right: 0;
+    }
+}
+
+/* Below the theme's 960px breakpoint the sidebar (and its logo) go off-canvas and the theme drops the header
+   logo entirely; keep a wordmark next to the menu trigger so the brand and navigation stay discoverable. */
+@media (max-width: 959.9px) {
+    header .left > a {
+        display: none !important;
+    }
+
+    header .left::after {
+        content: "Event Nest";
+        margin-left: 0.3rem;
+        color: var(--en-accent);
+        font-weight: 700;
+        white-space: nowrap;
+    }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+    }
+}
