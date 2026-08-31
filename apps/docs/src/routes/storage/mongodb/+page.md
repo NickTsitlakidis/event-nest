@@ -75,7 +75,7 @@ The async options type has no `imports` property. Injected providers must alread
 | `snapshotStrategy` | No | Snapshots disabled | Must be supplied together with `snapshotCollection`. |
 | `snapshotCollection` | No | Snapshots disabled | Must be supplied together with `snapshotStrategy`. |
 
-An incomplete snapshot pair fails provider creation with: `To use snapshots, both 'snapshotStrategy' and 'snapshotCollection' must be provided.`
+An incomplete snapshot pair causes provider creation to fail.
 
 ```ts
 import { ForCountSnapshotStrategy } from "@event-nest/core";
@@ -91,7 +91,7 @@ EventNestMongoDbModule.forRoot({
 
 ## Document shape
 
-MongoDB stores generated entity identifiers as `ObjectId` values. `generateEntityId()` returns their 24-character hexadecimal string form to application code. Aggregate ids and generated event or snapshot ids passed back into the adapter must be valid `ObjectId` strings because the store constructs `new ObjectId(id)` for `_id` queries and writes.
+MongoDB stores aggregate, event, and snapshot document identifiers as `ObjectId` values. Aggregate IDs supplied by the application must therefore be 24-character hexadecimal `ObjectId` strings because the adapter constructs `new ObjectId(id)` for `_id` queries and writes. UUID strings do not work with this adapter. Applications can create compatible IDs with the MongoDB driver's `new ObjectId().toHexString()`; Event Nest generates its event and snapshot IDs internally.
 
 | Collection | Fields |
 | --- | --- |
@@ -105,7 +105,7 @@ The adapter has no collection initializer. It does not create collection validat
 
 Every non-empty event save starts a client session and calls `withTransaction`. The aggregate document, event documents, and aggregate version update are in one multi-document transaction. Deploy MongoDB as a transaction-capable replica set or sharded cluster; a standalone MongoDB server cannot execute these operations.
 
-The client is constructed during provider creation. The adapter does not explicitly call `connect()`, so the driver establishes connectivity when operations require it. The module also has no shutdown hook that calls `MongoClient.close()`. Applications that require deterministic client cleanup must account for that lifecycle behavior.
+The client is constructed during provider creation. The adapter does not explicitly call `connect()`, so the driver establishes connectivity when operations require it.
 
 Snapshot insertion is outside the event transaction and occurs after it commits. See [Storage model](/storage/storage-model/) for the shared commit boundary.
 

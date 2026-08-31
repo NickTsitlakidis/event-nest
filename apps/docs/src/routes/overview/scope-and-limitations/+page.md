@@ -39,8 +39,7 @@ Event Nest does not provide:
 - A command bus, query bus, command handlers, sagas, or process-manager framework.
 - HTTP, GraphQL, or message-based application interfaces.
 - An ORM or general-purpose entity repository.
-- Projection schemas, query models, projection checkpoints, rebuild orchestration, or lag monitoring.
-- Event payload upcasters or an automated event-data migration system. Event aliases resolve old names only.
+- Projection schemas, query models, projection checkpoints, or rebuild orchestration.
 - Cross-aggregate transaction orchestration or automatic retries after a concurrency conflict.
 - Hosted storage, database migrations for application environments, backup management, or operational dashboards.
 - A distributed message broker, outbox, inbox, durable consumer, retry queue, or dead-letter queue.
@@ -72,8 +71,6 @@ Events are durable before subscriptions run. This has several consequences:
 - A snapshot write also occurs after event persistence. If that write fails, the commit rejects even though the event save has already completed, and subscription dispatch is not reached.
 - Application code must not assume that every rejected commit means no event was stored. Recovery and retry logic should inspect the failure type and persisted stream version.
 
-This is not an atomic event-plus-side-effect or event-plus-snapshot boundary. Design idempotent projection updates and explicit recovery procedures for work that matters.
-
 ## Concurrency boundaries
 
 Built-in stores compare one aggregate's expected version with its current stored version. On success, each new event receives the next version. On mismatch, `EventConcurrencyException` rejects the save.
@@ -87,10 +84,8 @@ Persisted events are long-lived data:
 - `@DomainEvent` names must be unique and stable.
 - Aliases allow historical names to resolve to the current event class, while new writes use the current name.
 - Aliases do not rewrite stored rows and do not adapt payload fields or semantics.
-- Event classes must serialize and deserialize through `class-transformer` correctly.
-- Every event replayed by an aggregate needs both a registered class and a matching `@ApplyEvent` method.
-
-Plan compatibility before changing a name, payload, event meaning, or aggregate applier. Test replay against representative historical streams, not only newly created events.
+- Event classes must serialize and deserialize through [`class-transformer`](https://github.com/typestack/class-transformer) correctly.
+- Every event replayed by an aggregate needs both a registered class and a matching method decorated with `@ApplyEvent`.
 
 ## Snapshot limitations
 
@@ -103,14 +98,6 @@ The revision protects against loading an incompatible snapshot format. `Aggregat
 - MongoDB persistence and purge operations use transactions, so the MongoDB deployment must support transactions. Aggregate identifiers are interpreted as MongoDB `ObjectId` values by the built-in store.
 - PostgreSQL and SQL Server use application-configured schemas and table names. Their built-in schemas use UUID-compatible aggregate and event identifiers.
 - Automatic table creation for PostgreSQL and SQL Server is optional, disabled by default, and requires schema-creation permissions when enabled.
-- Storage configuration is global to an adapter module registration. Multi-database routing, tenant placement, archival, and custom partitioning are not managed automatically.
+- Storage configuration is global to an adapter module registration.
 
 Confirm database-specific behavior and operational requirements with production-like infrastructure before deployment.
-
-## Maturity
-
-The current repository packages are version `6.0.0`, include automated tests, and support NestJS 10 and 11 through the core package's peer dependencies. The project's own README says extensive production testing has not yet been conducted and advises use at your own risk.
-
-Treat that statement as an engineering input: run workload, conflict, crash, replay, backup, restore, and upgrade tests for your environment. If you need a system with established large-scale production evidence or managed operational guarantees, Event Nest does not currently claim either.
-
-Return to [When to Use It](/overview/when-to-use-it/) for a decision checklist or proceed to [Build Your First Aggregate](/build-your-first-aggregate/installation/).

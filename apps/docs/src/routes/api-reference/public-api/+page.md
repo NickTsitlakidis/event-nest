@@ -48,7 +48,7 @@ The helper functions are public because the barrel exports their source module, 
 | Export | Kind | Purpose |
 | --- | --- | --- |
 | `EVENT_STORE` | Symbol | Nest injection token for the configured event store. |
-| `EventStore` | Interface | `addPublisher`, version/event/snapshot reads, ID generation, `save`, and `purgeAggregate`. |
+| `EventStore` | Interface | `addPublisher`, version/event/snapshot reads, `save`, `purgeAggregate`, and ID generation used by the persistence pipeline. |
 | `AbstractEventStore` | Abstract class | Storage-independent publish pipeline for custom adapters. |
 | `AggregateRepository<T>` | Class | Snapshot-aware load and publisher-connected save helper. |
 | `AggregateRootFactory<T>` | Type | `(id, events, snapshot?, aggregateRootVersion?) => T`. |
@@ -65,7 +65,7 @@ The helper functions are public because the barrel exports their source module, 
 | Export | Kind | Purpose |
 | --- | --- | --- |
 | `SNAPSHOT_STORE` | Symbol | Snapshot-store injection token; adapter modules do not re-export the provider. |
-| `SnapshotStore` | Interface | Snapshot creation, lookup, deletion, persistence, ID generation, and policy evaluation. |
+| `SnapshotStore` | Interface | Snapshot creation, lookup, deletion, persistence, internal ID generation, and policy evaluation. |
 | `AbstractSnapshotStore` | Abstract class | Implements policy checks and snapshot construction for custom stores. |
 | `NoOpSnapshotStore` | Class | Store used when adapter snapshot settings are absent. |
 | `StoredSnapshot<T>` | Class | Snapshot ID, aggregate ID/version, revision, and payload. |

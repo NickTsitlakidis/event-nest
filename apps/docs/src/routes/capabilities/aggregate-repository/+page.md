@@ -112,9 +112,12 @@ See [Snapshots](/capabilities/snapshots/) for revision and replay details.
 `save(aggregate)` connects the publisher and calls `commit()`, so it also works for newly created aggregate instances:
 
 ```ts
-const id = await eventStore.generateEntityId();
-const user = User.create(id, "Initial name", "user@example.com");
-await users.save(user);
+async function createUser(id: string): Promise<User> {
+    const user = User.create(id, "Initial name", "user@example.com");
+    return users.save(user);
+}
 ```
+
+The application owns aggregate ID generation and must supply an ID compatible with its configured adapter. UUIDs work with the built-in PostgreSQL and SQL Server schemas, but not with MongoDB; the MongoDB adapter expects a 24-character hexadecimal `ObjectId` string. Event Nest uses `generateEntityId()` internally rather than as the recommended application-facing ID API.
 
 The returned promise resolves to the same aggregate after a successful commit. If there are no uncommitted events, `commit()` returns without writing anything.

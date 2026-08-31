@@ -3,6 +3,6 @@
 </script>
 
 <FlowDiagram
-    caption="The common repository workflow loads history, runs behavior, and commits new events."
+    caption="This is the common workflow for loading an aggregate, making a change, and persisting it. The repository is a thin helper on top of that flow."
     steps={["Load stream", "Reconstitute", "Run behavior", "Append changes", "Commit"]}
 />

@@ -62,7 +62,7 @@ The decorator defaults to `isAsync: true`:
 @DomainEventSubscription(UserCreatedEvent, UserNameChangedEvent)
 ```
 
-This is a **non-waiting** subscription. With the default dispatcher and no waiting subscriptions in the emitted batch, `commit()` returns after persistence and after dispatch has been scheduled, not after the handler promises finish.
+This is a **non-waiting** subscription. With the default dispatcher and no waiting subscriptions in the emitted batch, `commit()` returns after persistence and dispatch have been scheduled, not after the handlers' promises settle. Most applications do not need to wait for a subscription to finish, so the default is appropriate.
 
 Set `isAsync: false` when the caller must wait:
 
@@ -75,7 +75,7 @@ Set `isAsync: false` when the caller must wait:
 
 This is a **waiting** subscription. A rejected handler promise is wrapped in `SubscriptionException` and rejects `commit()`. The events are still persisted, the aggregate has its committed version, and its uncommitted list is cleared.
 
-The `isAsync` name controls waiting; it does not move dispatch before persistence and it does not make a handler run in another process.
+A waiting subscription also guarantees that its read-model update has finished when `commit()` resolves. A client that reads that model immediately after the command can therefore avoid an eventual-consistency window.
 
 ## Ordering and concurrency
 

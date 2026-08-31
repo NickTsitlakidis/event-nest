@@ -54,7 +54,7 @@ Decorators register event classes when their modules are evaluated, so these con
 
 An alias changes name-to-class resolution only. It does not transform historical payloads.
 
-The current event class must remain compatible with data stored under every alias. Renaming a field, changing its type, adding a required invariant, or changing class-transformer behavior can still break replay even though the event name resolves correctly. Preserve a compatible event shape or migrate the stored payloads before depending on the new shape.
+The current event class must remain compatible with data stored under every alias. Renaming a field, changing its type, adding a required invariant, or changing [class-transformer](https://github.com/typestack/class-transformer) behavior can still break replay even though the event name resolves correctly. Preserve a compatible event shape or migrate the stored payloads before depending on the new shape.
 
 Aliases solve event type renames. They are not snapshot revisions, payload upcasters, or database migrations. For snapshot payload changes, use the revision mechanism described in [Snapshots](/capabilities/snapshots/).
 

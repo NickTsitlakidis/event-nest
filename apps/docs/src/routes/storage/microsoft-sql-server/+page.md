@@ -95,7 +95,7 @@ The async options type does not provide `imports`; injected providers must alrea
 
 `schemaName`, `aggregatesTableName`, `eventsTableName`, and a configured `snapshotTableName` must be non-empty, at most 128 characters, and contain no dot. Invalid values fail provider creation. Pass the schema separately rather than using a qualified table name.
 
-An incomplete snapshot pair fails provider creation with: `To use snapshots, both 'snapshotStrategy' and 'snapshotTableName' must be provided.`
+An incomplete snapshot pair causes provider creation to fail.
 
 ## Connection options
 
@@ -126,7 +126,5 @@ See the [exact SQL Server schema](/storage/sql-server-schema/) for migrations an
 Every non-empty save is a Knex transaction. The aggregate lookup uses `UPDLOCK, HOLDLOCK`; event inserts are sent in chunks of 250; and the aggregate version update includes the previously read version. The generated unique event-stream index also turns competing duplicate versions into a concurrency signal. Aggregate metadata, event rows, and the version advance are committed atomically.
 
 Snapshot creation, when selected, occurs after that transaction. It is not rolled back with the event write. See [Storage model](/storage/storage-model/) for the shared commit boundary.
-
-The module owns its Knex pool and calls `destroy()` from `onApplicationShutdown`. Call `app.close()` during controlled shutdown; enable Nest shutdown hooks when process signals should trigger application shutdown. This pool cleanup is implemented by the SQL Server adapter but not by the PostgreSQL or MongoDB adapters.
 
 For aggregate deletion semantics, see [Purging aggregates](/capabilities/purging-aggregates/).

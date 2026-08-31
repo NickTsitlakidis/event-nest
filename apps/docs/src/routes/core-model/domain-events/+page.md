@@ -48,9 +48,9 @@ New rows use only `user-created`; a stored `user-registered` row resolves to `Us
 
 ## Design the payload for history
 
-Event payloads are serialized and deserialized with `class-transformer`. Prefer constructor data made of stable, JSON-compatible values. `readonly` prevents accidental mutation in application code, but you must still treat the persisted payload as permanent.
+Event payloads are serialized and deserialized with [`class-transformer`](https://github.com/typestack/class-transformer). Prefer constructor data made of stable, JSON-compatible values. `readonly` prevents accidental mutation in application code, but you must still treat the persisted payload as permanent.
 
-Good events contain the information needed to understand and apply that fact. They should not contain services, open database objects, callbacks, or behavior that depends on current external state. If an event's meaning changes, introduce a new event or preserve compatibility rather than rewriting history.
+Well-designed events contain the information needed to understand and apply that fact. They should not contain services, open database objects, callbacks, or behavior that depends on current external state. If an event's meaning changes, introduce a new event or preserve compatibility rather than rewriting history.
 
 Event Nest adds storage metadata separately. A committed event exposed to a subscription is a `PublishedDomainEvent<T>` with:
 

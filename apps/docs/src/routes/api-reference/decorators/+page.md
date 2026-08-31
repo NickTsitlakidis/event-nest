@@ -17,7 +17,7 @@ All decorators are exported from `@event-nest/core`. Import `reflect-metadata` a
 function DomainEvent(eventName: string, options?: { aliases?: string[] }): ClassDecorator
 ```
 
-Registers the decorated class under a persisted canonical name. `AggregateRoot.append()` accepts only registered event instances, and stored payloads are serialized and reconstructed with `class-transformer`.
+Registers the decorated class under a persisted canonical name. `AggregateRoot.append()` accepts only registered event instances, and stored payloads are serialized and reconstructed with [`class-transformer`](https://github.com/typestack/class-transformer).
 
 ```ts
 @DomainEvent("user-renamed", { aliases: ["user-name-changed"] })

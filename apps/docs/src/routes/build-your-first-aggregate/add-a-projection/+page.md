@@ -3,7 +3,7 @@ title: Add a Projection
 description: Project committed User events into an in-process read model with a domain subscription.
 ---
 
-The aggregate from [Your First Aggregate](/build-your-first-aggregate/your-first-aggregate/) is optimized for decisions, not queries. A projection consumes committed events and maintains a read-oriented model. This example uses an in-memory store so the subscription mechanics remain visible; a real application should persist the projection in its query database.
+The aggregate from [Your First Aggregate](/build-your-first-aggregate/your-first-aggregate/) is optimized for decisions, not queries. A projection consumes committed events and maintains a read-oriented model. This example uses an in-memory store to keep the subscription mechanics visible. A real application should persist the projection in its query database instead.
 
 ## 1. Create the read-model store
 
@@ -18,30 +18,19 @@ export interface UserView {
 
 @Injectable()
 export class UserViewStore {
-    private readonly processedEventIds = new Set<string>();
     private readonly users = new Map<string, UserView>();
 
-    applyCreated(eventId: string, user: UserView): void {
-        if (this.processedEventIds.has(eventId)) {
-            return;
-        }
-
+    applyCreated(user: UserView): void {
         this.users.set(user.id, { ...user });
-        this.processedEventIds.add(eventId);
     }
 
-    applyNameChanged(eventId: string, id: string, name: string): void {
-        if (this.processedEventIds.has(eventId)) {
-            return;
-        }
-
+    applyNameChanged(id: string, name: string): void {
         const current = this.users.get(id);
         if (!current) {
             throw new Error(`Cannot project a name change for missing user ${id}`);
         }
 
         this.users.set(id, { ...current, name });
-        this.processedEventIds.add(eventId);
     }
 
     findById(id: string): UserView | undefined {
@@ -51,11 +40,9 @@ export class UserViewStore {
 }
 ```
 
-The event ID is a useful idempotency key. Persist both the read-model update and the processed ID atomically in a production projection so retries cannot apply an event twice.
-
 ## 2. Subscribe to committed events
 
-```ts title="src/users/user.projection.ts"
+```ts title="src/users/user.projector.ts"
 import {
     DomainEventSubscription,
     type OnDomainEvent,
@@ -71,18 +58,18 @@ import { UserViewStore } from "./user-view.store";
     eventClasses: [UserCreatedEvent, UserNameChangedEvent],
     isAsync: false
 })
-export class UserProjection implements OnDomainEvent<UserCreatedEvent | UserNameChangedEvent> {
+export class UserProjector implements OnDomainEvent<UserCreatedEvent | UserNameChangedEvent> {
     constructor(private readonly views: UserViewStore) {}
 
     onDomainEvent(event: PublishedDomainEvent<UserCreatedEvent | UserNameChangedEvent>): Promise<unknown> {
         if (event.payload instanceof UserCreatedEvent) {
-            this.views.applyCreated(event.eventId, {
+            this.views.applyCreated({
                 email: event.payload.email,
                 id: event.aggregateRootId,
                 name: event.payload.name
             });
         } else {
-            this.views.applyNameChanged(event.eventId, event.aggregateRootId, event.payload.name);
+            this.views.applyNameChanged(event.aggregateRootId, event.payload.name);
         }
 
         return Promise.resolve();
@@ -90,9 +77,9 @@ export class UserProjection implements OnDomainEvent<UserCreatedEvent | UserName
 }
 ```
 
-`PublishedDomainEvent` wraps the domain payload with `eventId`, `aggregateRootId`, `occurredAt`, and the committed aggregate `version`. The projection uses the aggregate ID as the read-model ID and the event ID for deduplication.
+`PublishedDomainEvent` wraps the domain payload with `eventId`, `aggregateRootId`, `occurredAt`, and the committed aggregate `version`.
 
-`isAsync: false` means `commit()` waits for this handler. The name is easy to misread: the handler still returns a promise, but Event Nest includes that promise in the commit result. This makes a tutorial query immediately after the service call deterministic.
+The projector is configured with `isAsync: false`, so `commit()` waits for the handler's promise to settle.
 
 ## 3. Register the providers
 
@@ -102,13 +89,13 @@ Subscriptions are discovered from Nest's provider container during application b
 import { Module } from "@nestjs/common";
 
 import { userRepositoryProvider } from "./user.repository";
-import { UserProjection } from "./user.projection";
+import { UserProjector } from "./user.projector";
 import { UserService } from "./user.service";
 import { UserViewStore } from "./user-view.store";
 
 @Module({
     exports: [UserService, UserViewStore],
-    providers: [userRepositoryProvider, UserService, UserViewStore, UserProjection]
+    providers: [userRepositoryProvider, UserService, UserViewStore, UserProjector]
 })
 export class UserModule {}
 ```
@@ -117,7 +104,7 @@ No change is needed in `AppModule`; it already imports `UserModule` and the Post
 
 ## Persistence comes first
 
-Event Nest invokes subscriptions only after the event store transaction succeeds and the aggregate version has been updated. If this waiting projection rejects, `commit()` rejects with `SubscriptionException`, but the events are already stored and are **not** rolled back. Event Nest clears the aggregate's uncommitted events in that case so the same instance does not recommit them.
+Event Nest invokes subscriptions only after the event-store transaction succeeds and the aggregate version is updated. If this waiting projection rejects, `commit()` rejects with a `SubscriptionException`, but the events are already stored and are **not** rolled back. Event Nest clears the aggregate's uncommitted events in that case so the same instance does not recommit them.
 
 Do not blindly retry the original command after a subscription failure: that could make a new domain decision against already-changed state. Recover or replay the projection from persisted events instead. Also remember that this in-memory example disappears on restart and is not an automatic historical replay facility.
 

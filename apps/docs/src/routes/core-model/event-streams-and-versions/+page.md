@@ -3,7 +3,7 @@ title: Event Streams and Versions
 description: Learn how Event Nest orders aggregate history and detects concurrent writes.
 ---
 
-Each aggregate instance has an event stream: the ordered sequence of facts recorded for that aggregate ID and aggregate name. For a `User`, the stream might be:
+Each aggregate instance has an event stream: the ordered sequence of events recorded for that aggregate ID and aggregate name. For a `User`, the stream might be:
 
 | Version | Event name | Meaning |
 | ---: | --- | --- |
@@ -11,7 +11,7 @@ Each aggregate instance has an event stream: the ordered sequence of facts recor
 | 2 | `user-name-changed` | The user selected a new name. |
 | 3 | `user-name-changed` | The user selected another name. |
 
-Event IDs identify individual rows. The aggregate ID identifies the stream. The aggregate root name distinguishes the model whose history should be loaded. Generate new aggregate IDs with `await eventStore.generateEntityId()` so the active adapter chooses a compatible format.
+Event IDs identify individual rows. The aggregate ID identifies the stream. The aggregate root name distinguishes the model whose history should be loaded.
 
 ## Version lifecycle
 
@@ -37,17 +37,3 @@ For example, two requests load version 6:
 3. Request B's commit fails instead of silently overwriting or interleaving a decision made from stale state.
 
 Load the aggregate again and reconsider the command against current state. Do not merely mutate the stale instance's version or bypass the check.
-
-## Commit boundaries
-
-`commit()` publishes all currently uncommitted events as one store operation. On success it:
-
-- persists the events and aggregate version;
-- updates the in-memory aggregate version;
-- creates a snapshot when configured and selected by the strategy;
-- dispatches published events to in-process subscriptions;
-- clears `uncommittedEvents`.
-
-If storage fails, uncommitted events remain on the aggregate. If a waiting subscription fails, storage has already succeeded and the uncommitted events are cleared to avoid recommitting persisted facts. That post-persistence distinction is covered in [Domain Subscriptions](/core-model/domain-subscriptions/).
-
-`AggregateRepository.load()` and `save()` preserve these version rules. Prefer them over manually loading events and attaching a publisher unless you need a lower-level operation.

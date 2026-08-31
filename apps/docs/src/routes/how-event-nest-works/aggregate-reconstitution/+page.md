@@ -33,9 +33,9 @@ Event application itself is not transactional. If an apply method throws, any sn
 
 Storage query order is not trusted. `reconstitute()` sorts by the persisted numeric aggregate version before validation and replay. Equal versions retain the ordering supplied by JavaScript's stable array sort, but a valid stream should assign one consecutive version to each event.
 
-For each known event, `StoredEvent.getPayloadAs(EventClass)` uses class-transformer's `plainToClass()` before the apply method runs. Decorator aliases participate in class lookup, so rows stored under an old event name can resolve to the current event class. New persistence uses the canonical name.
+For each known event, `StoredEvent.getPayloadAs(EventClass)` uses `plainToClass()` from [class-transformer](https://github.com/typestack/class-transformer) before the apply method runs. Decorator aliases participate in class lookup, so rows stored under an old event name can resolve to the current event class. New persistence uses the canonical name.
 
-Because serialization and deserialization use class-transformer, payload classes must follow its transformation rules. Reconstitution does not pass the adapter's raw plain payload directly to an apply method.
+Because serialization and deserialization use [class-transformer](https://github.com/typestack/class-transformer), payload classes must follow its transformation rules. Reconstitution does not pass the adapter's raw plain payload directly to an apply method.
 
 ## Version resolution
 

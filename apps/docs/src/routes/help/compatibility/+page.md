@@ -54,8 +54,6 @@ TypeScript is not a published peer dependency, so the repository's TypeScript ve
 | --- | --- | --- | --- |
 | `@AggregateRootName("Name")` | Deprecated since 5.0.0, still exported | `@AggregateRootConfig({ name: "Name" })` | Planned for 7.x |
 
-`AggregateRoot.appendedEvents` is not a current deprecation: it was deprecated in 3.4.2 and removed in 5.0.0. Use `uncommittedEvents`.
-
 See [configuration](/api-reference/configuration/) and [public API](/api-reference/public-api/).
 
 ## Sources

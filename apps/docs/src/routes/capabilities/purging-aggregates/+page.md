@@ -57,17 +57,4 @@ MongoDB deployments must support transactions for this operation, as required by
 
 Purging an unknown, adapter-valid ID succeeds and resolves to `undefined`. It does not affect unrelated aggregates. This makes repeated purge requests safe with respect to already-absent event-store data.
 
-An invalid ID representation can still fail adapter validation. For example, the MongoDB adapter converts the supplied value to an `ObjectId`; pass IDs generated for that adapter.
-
-## What Is Not Deleted
-
-`purgeAggregate` is scoped to the selected Event Nest adapter's aggregate, event, and snapshot stores. It does not delete:
-
-- Projection or read-model records maintained by subscriptions.
-- Messages already delivered to external systems.
-- Audit exports, backups, caches, or logs.
-- Related aggregates that use different IDs.
-
-No domain event is emitted for the purge, and domain subscriptions are not invoked. Coordinate those external deletions explicitly before or after the purge according to your retention and consistency requirements.
-
-Because the method is ID-only, use globally unambiguous aggregate IDs within an event store. Confirm the target ID and complete any required authorization or retention checks before calling it.
+An invalid ID representation can still fail adapter validation. For example, the MongoDB adapter converts the supplied value to an `ObjectId`; it requires a 24-character hexadecimal `ObjectId` string and does not accept UUIDs.

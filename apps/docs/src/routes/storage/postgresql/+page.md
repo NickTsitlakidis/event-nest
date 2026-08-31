@@ -83,7 +83,7 @@ The async options type does not have an `imports` property. Injected providers m
 | `snapshotStrategy` | No | Snapshots disabled | Must be supplied together with `snapshotTableName`. |
 | `snapshotTableName` | No | Snapshots disabled | Must be supplied together with `snapshotStrategy`. |
 
-An incomplete snapshot pair fails provider creation with: `To use snapshots, both 'snapshotStrategy' and 'snapshotTableName' must be provided.`
+An incomplete snapshot pair causes provider creation to fail.
 
 ```ts
 import { ForCountSnapshotStrategy } from "@event-nest/core";
@@ -110,7 +110,7 @@ See the [exact PostgreSQL schema](/storage/postgresql-schema/) for manual creati
 
 Each non-empty event save opens a Knex transaction. Existing aggregate rows are selected `FOR UPDATE`; the aggregate row, new event rows, and updated version commit or roll back together. The PostgreSQL initializer and stores use the same Knex pool.
 
-The module constructs the Knex connection during provider creation and lets Knex acquire physical connections as needed. Unlike the SQL Server adapter, the PostgreSQL module does not implement an application-shutdown hook to call `destroy()` on that pool. If deterministic pool cleanup is required by the process hosting the module, account for that lifecycle difference.
+The module constructs the Knex connection during provider creation and lets Knex acquire physical connections as needed.
 
 Selected snapshots are inserted after the event transaction rather than inside it. See [Storage model](/storage/storage-model/) for the commit boundary.
 

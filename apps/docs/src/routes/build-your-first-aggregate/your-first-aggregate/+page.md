@@ -7,7 +7,7 @@ description: Build and persist an event-sourced User aggregate with AggregateRep
     import LoadCommitLifecycle from "$lib/diagrams/load-commit-lifecycle.svelte";
 </script>
 
-This page completes a standalone `UserModule` on top of the PostgreSQL setup from [Installation](/build-your-first-aggregate/installation/). The module defines immutable events, the aggregate, an `AggregateRepository` provider, and a service that creates and changes users.
+This page completes a standalone `UserModule` on top of the PostgreSQL setup described in [Installation](/build-your-first-aggregate/installation/). The module defines immutable events, the aggregate, an `AggregateRepository` provider, and a service that creates and changes users.
 
 ## 1. Define the events
 
@@ -107,9 +107,9 @@ export class User extends AggregateRoot {
 }
 ```
 
-The factory deliberately forwards `id`, `events`, `snapshot`, and `aggregateRootVersion` to `reconstitute()`. This is the complete `AggregateRepository` factory contract and remains correct if the aggregate later becomes snapshot-aware. Because this version of `User` has no `snapshotRevision`, the repository loads the full stream and passes no snapshot.
+The factory deliberately forwards `id`, `events`, `snapshot`, and `aggregateRootVersion` to `reconstitute()`. This is the factory contract required by the `AggregateRepository` in the next step.
 
-> `append()` does not apply an event and does not save it. For a new decision, update state with the matching apply method, then append. `reconstitute()` applies stored events during a load. Only `commit()` persists uncommitted events.
+> `append()` does not apply or save an event. Only `commit()` persists uncommitted events.
 
 ## 3. Provide the repository
 
@@ -136,11 +136,14 @@ The repository is the recommended path for the usual load, mutate, and save work
 
 ## 4. Add the application service
 
-Generate aggregate IDs through the configured store. PostgreSQL returns UUID strings; another adapter can use its native identifier format.
+This guide uses PostgreSQL, so the application can create aggregate IDs with Node's `randomUUID()`. UUIDs also fit the built-in SQL Server schema, but they do **not** work with the MongoDB adapter, which expects aggregate IDs to be 24-character hexadecimal `ObjectId` strings.
+
+Aggregate ID generation belongs to the application. Event Nest uses `EventStore.generateEntityId()` internally in its persistence pipeline; it is not the recommended application-facing ID API.
 
 ```ts title="src/users/user.service.ts"
-import { AggregateRepository, EVENT_STORE, type EventStore } from "@event-nest/core";
+import { AggregateRepository } from "@event-nest/core";
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { randomUUID } from "node:crypto";
 
 import { User } from "./user";
 import { USER_REPOSITORY } from "./user.repository";
@@ -148,33 +151,76 @@ import { USER_REPOSITORY } from "./user.repository";
 @Injectable()
 export class UserService {
     constructor(
-        @Inject(EVENT_STORE) private readonly eventStore: EventStore,
-        @Inject(USER_REPOSITORY) private readonly users: AggregateRepository<User>
+        @Inject(USER_REPOSITORY) private readonly _userRepository: AggregateRepository<User>
     ) {}
 
     async createUser(name: string, email: string): Promise<string> {
-        const id = await this.eventStore.generateEntityId();
+        const id = randomUUID();
         const user = User.create(id, name, email);
-        await this.users.save(user);
+        await this._userRepository.save(user);
         return user.id;
     }
 
     async changeUserName(id: string, name: string): Promise<void> {
-        const user = await this.users.load(id);
+        const user = await this._userRepository.load(id);
         if (!user) {
             throw new NotFoundException(`User ${id} was not found`);
         }
 
         user.changeName(name);
-        await this.users.save(user);
+        await this._userRepository.save(user);
     }
 
     async getUser(id: string): Promise<{ email: string; id: string; name: string }> {
-        const user = await this.users.load(id);
+        const user = await this._userRepository.load(id);
         if (!user) {
             throw new NotFoundException(`User ${id} was not found`);
         }
 
+        return { email: user.email, id: user.id, name: user.name };
+    }
+}
+```
+
+For lower-level control, use the event store directly and manage the model lifecycle explicitly.
+
+```ts title="src/users/user.service.ts"
+import { EVENT_STORE, type EventStore } from "@event-nest/core";
+import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { randomUUID } from "node:crypto";
+
+import { User } from "./user";
+
+@Injectable()
+export class UserService {
+    constructor(@Inject(EVENT_STORE) private readonly _eventStore: EventStore) {}
+
+    async createUser(name: string, email: string): Promise<string> {
+        const id = randomUUID();
+        const user = User.create(id, name, email);
+        const userWithPublisher = this._eventStore.addPublisher(user);
+        await userWithPublisher.commit();
+        return user.id;
+    }
+
+    async changeUserName(id: string, name: string): Promise<void> {
+        const events = await this._eventStore.findByAggregateRootId(User, id);
+        if (events.length === 0) {
+            throw new NotFoundException(`User ${id} was not found`);
+        }
+
+        const user = this._eventStore.addPublisher(User.fromEvents(id, events));
+        user.changeName(name);
+        await user.commit();
+    }
+
+    async getUser(id: string): Promise<{ email: string; id: string; name: string }> {
+        const events = await this._eventStore.findByAggregateRootId(User, id);
+        if (events.length === 0) {
+            throw new NotFoundException(`User ${id} was not found`);
+        }
+
+        const user = User.fromEvents(id, events);
         return { email: user.email, id: user.id, name: user.name };
     }
 }

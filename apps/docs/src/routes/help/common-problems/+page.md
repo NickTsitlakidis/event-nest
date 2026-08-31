@@ -225,9 +225,9 @@ description: Source-aligned diagnosis and resolution steps for Event Nest config
 
 **Likely cause:** The MongoDB adapter expects aggregate IDs accepted by `new ObjectId(id)`, but application code supplied another ID format.
 
-**How to confirm:** Compare the ID with values returned by `MongoEventStore.generateEntityId()`, which returns a hexadecimal `ObjectId` string.
+**How to confirm:** Check that the ID is a 24-character hexadecimal `ObjectId` string. A UUID, including one returned by `randomUUID()`, is not accepted by this adapter.
 
-**Resolution:** Generate new aggregate IDs through the configured event store and validate external IDs before store calls. Do not assume UUID IDs are portable to the MongoDB adapter.
+**Resolution:** Create aggregate IDs in application code with the MongoDB driver's `new ObjectId().toHexString()`, and validate externally supplied IDs before store calls.
 
 **Related docs:** [Public API](/api-reference/public-api/) and [MongoDB configuration](/api-reference/configuration/).
 

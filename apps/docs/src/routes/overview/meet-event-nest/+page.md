@@ -25,7 +25,7 @@ Event Nest implements those mechanics behind a shared core API and database-spec
 
 ### Domain events
 
-A class decorated with `@DomainEvent("stable-name")` is a persistable event type. Its configured name, not the TypeScript class name, identifies it in storage. Event payloads are serialized and restored with `class-transformer`, so payload classes must remain compatible with that serialization model.
+A class decorated with `@DomainEvent("stable-name")` is a persistable event type. Its configured name, not the TypeScript class name, identifies it in storage. Event payloads are serialized and restored with [`class-transformer`](https://github.com/typestack/class-transformer), so payload classes must remain compatible with that serialization model.
 
 Aliases can map older persisted event names to a renamed event class. New events are always written under the current name; aliases do not transform an old payload into a new schema.
 

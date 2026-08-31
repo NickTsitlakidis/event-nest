@@ -29,7 +29,7 @@ The copied batch means subsequent appends are not added to the events already se
 
 ## The two representations
 
-`StoredEvent` is storage-facing. `StoredEvent.fromPublishedEvent()` resolves the canonical domain-event name and uses class-transformer's `instanceToPlain()` for its payload. The adapter later assigns `aggregateRootVersion`.
+`StoredEvent` is storage-facing. `StoredEvent.fromPublishedEvent()` resolves the canonical domain-event name and uses `instanceToPlain()` from [class-transformer](https://github.com/typestack/class-transformer) for its payload. The adapter later assigns `aggregateRootVersion`.
 
 `PublishedDomainEvent` is subscription-facing:
 

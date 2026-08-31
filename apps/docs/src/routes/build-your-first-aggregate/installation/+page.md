@@ -17,7 +17,14 @@ Install the core library, the PostgreSQL adapter, and the adapter's `pg` peer de
 
 <PackageInstall packages={tutorialPackages} />
 
-Your application must also have the NestJS peer dependencies `@nestjs/common`, `@nestjs/core`, `reflect-metadata`, and `rxjs`. A standard Nest application already includes them.
+Your application must also have these peer dependencies:
+
+- `@nestjs/common`
+- `@nestjs/core`
+- `reflect-metadata`
+- `rxjs`
+
+A standard Nest application already includes them.
 
 ## Prepare PostgreSQL
 
@@ -38,8 +45,6 @@ Set the connection string in your environment:
 ```bash
 export DATABASE_URL="postgresql://postgres:password@localhost:5432/event_nest"
 ```
-
-Use a dedicated database role in deployed environments. If you enable automatic table creation, that role also needs permission to create objects in the configured schema.
 
 ## Configure the adapter
 
@@ -75,7 +80,7 @@ export class AppModule {}
 
 Automatic initialization is convenient for this tutorial. For production, migrations are usually preferable because initialization errors are logged and the application must still be operated with a known schema.
 
-Snapshots are intentionally disabled here. PostgreSQL snapshot support requires **both** `snapshotTableName` and `snapshotStrategy`; do not provide only one of them.
+Snapshots are intentionally disabled for this tutorial to keep things simple.
 
 ## Check the connection
 
