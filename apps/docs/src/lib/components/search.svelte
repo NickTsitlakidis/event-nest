@@ -3,6 +3,8 @@
     import { base } from "$app/paths";
     import { onMount } from "svelte";
 
+    type IndexState = "error" | "loading" | "ready";
+
     interface SearchEntry {
         content: string;
         description: string;
@@ -15,8 +17,6 @@
         excerpt: string;
         score: number;
     }
-
-    type IndexState = "error" | "loading" | "ready";
 
     let dialog: HTMLDialogElement;
     let input: HTMLInputElement;
@@ -52,28 +52,6 @@
         return count;
     }
 
-    function scoreEntry(entry: SearchEntry, normalizedQuery: string, terms: string[]): number {
-        const title = entry.title.toLowerCase();
-        const description = entry.description.toLowerCase();
-        const content = entry.content.toLowerCase();
-        let score = title === normalizedQuery ? 1000 : title.startsWith(normalizedQuery) ? 200 : 0;
-
-        for (const term of terms) {
-            const titleMatches = countOccurrences(title, term);
-            const descriptionMatches = countOccurrences(description, term);
-            const contentMatches = countOccurrences(content, term);
-            if (titleMatches + descriptionMatches + contentMatches === 0) {
-                return -1;
-            }
-
-            score += Math.min(titleMatches, 3) * 100;
-            score += Math.min(descriptionMatches, 3) * 20;
-            score += Math.min(contentMatches, 8) * 2;
-        }
-
-        return score;
-    }
-
     function excerptFor(entry: SearchEntry, terms: string[]): string {
         for (const source of [entry.description, entry.content]) {
             const normalizedSource = source.toLowerCase();
@@ -88,10 +66,6 @@
         }
 
         return entry.description;
-    }
-
-    function resultLinks(): HTMLAnchorElement[] {
-        return resultsContainer ? [...resultsContainer.querySelectorAll<HTMLAnchorElement>("a")] : [];
     }
 
     function focusResult(index: number): void {
@@ -136,13 +110,6 @@
         }
     }
 
-    function openSearch(): void {
-        if (!dialog.open) {
-            dialog.showModal();
-        }
-        requestAnimationFrame(() => input.focus());
-    }
-
     async function loadIndex(): Promise<void> {
         indexState = "loading";
         try {
@@ -156,6 +123,39 @@
             entries = [];
             indexState = "error";
         }
+    }
+
+    function openSearch(): void {
+        if (!dialog.open) {
+            dialog.showModal();
+        }
+        requestAnimationFrame(() => input.focus());
+    }
+
+    function resultLinks(): HTMLAnchorElement[] {
+        return resultsContainer ? [...resultsContainer.querySelectorAll<HTMLAnchorElement>("a")] : [];
+    }
+
+    function scoreEntry(entry: SearchEntry, normalizedQuery: string, terms: string[]): number {
+        const title = entry.title.toLowerCase();
+        const description = entry.description.toLowerCase();
+        const content = entry.content.toLowerCase();
+        let score = title === normalizedQuery ? 1000 : title.startsWith(normalizedQuery) ? 200 : 0;
+
+        for (const term of terms) {
+            const titleMatches = countOccurrences(title, term);
+            const descriptionMatches = countOccurrences(description, term);
+            const contentMatches = countOccurrences(content, term);
+            if (titleMatches + descriptionMatches + contentMatches === 0) {
+                return -1;
+            }
+
+            score += Math.min(titleMatches, 3) * 100;
+            score += Math.min(descriptionMatches, 3) * 20;
+            score += Math.min(contentMatches, 8) * 2;
+        }
+
+        return score;
     }
 
     onMount(() => {

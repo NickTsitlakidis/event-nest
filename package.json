@@ -5,8 +5,8 @@
     "author": "Nick Tsitlakidis",
     "private": true,
     "scripts": {
-        "test": "nx run-many -t test --projects=tag:publishable",
-        "lint": "nx run-many -t lint --projects=tag:publishable --fix",
+        "test": "nx run-many -t test --projects=tag:checked",
+        "lint": "nx run-many -t lint --projects=tag:checked --fix",
         "release": "nx release --skip-publish",
         "prepare": "husky || true"
     },

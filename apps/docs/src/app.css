@@ -178,20 +178,6 @@ html.dark .theme-default-sidebar {
     background: color-mix(in srgb, var(--en-code-bg) 50%, var(--en-bg)) !important;
 }
 
-/* Replace the theme's pointing-hand marker on the active sidebar item with a subtle accent dot. */
-.sidebar-group .active-icon svg {
-    display: none;
-}
-
-.sidebar-group .active-icon::before {
-    content: "";
-    display: block;
-    width: 0.38rem;
-    height: 0.38rem;
-    border-radius: 50%;
-    background: var(--en-accent);
-}
-
 .theme-default--page-layout h2 {
     border-color: var(--en-border) !important;
 }
@@ -206,29 +192,29 @@ html.dark .theme-default-sidebar {
     text-decoration: underline;
 }
 
-/* Home page: hide the article outline and align the markdown content with the hero container. */
+/* Home page: hide the article outline; the theme's .home-content wrapper already aligns the
+   markdown with the hero container, so only the prose measure needs constraining. */
 main:has(> .home-page) .toc {
     display: none;
 }
 
-main:has(> .home-page) > :not(.home-page) {
-    box-sizing: border-box;
-    margin-inline: auto;
-    max-width: 1152px;
-    padding-inline: 1rem;
-}
-
-@media (min-width: 640px) {
-    main:has(> .home-page) > :not(.home-page) {
-        padding-inline: 0;
-        width: 70vw;
-    }
-}
-
-main:has(> .home-page) > p,
-main:has(> .home-page) > ul,
-main:has(> .home-page) > ol {
+.home-content > p,
+.home-content > ul,
+.home-content > ol {
     max-width: min(72ch, 100%);
+}
+
+/* The theme's hero glow is rose/amber; repaint it with the palette's blue and purple. */
+.home-page::before {
+    background:
+        radial-gradient(42% 65% at 28% 0%, rgb(46 125 233 / 10%), transparent 70%),
+        radial-gradient(38% 58% at 74% 6%, rgb(120 71 189 / 8%), transparent 70%) !important;
+}
+
+html.dark .home-page::before {
+    background:
+        radial-gradient(42% 65% at 28% 0%, rgb(122 162 247 / 13%), transparent 70%),
+        radial-gradient(38% 58% at 74% 6%, rgb(187 154 247 / 9%), transparent 70%) !important;
 }
 
 main:has(> .home-page) .feature-item .icon {
@@ -270,99 +256,47 @@ header nav .nav-item {
     white-space: nowrap;
 }
 
-/* 1000-1200px: widen the header container and tighten nav spacing so the section links keep fitting. */
-@media (min-width: 1000.1px) and (max-width: 1200px) {
-    header .header-inner {
-        width: 96vw !important;
-    }
-
-    header nav .nav-item {
-        padding-inline: 0.3rem;
-        font-size: 0.95rem;
-    }
-
-    header .left span.title {
-        display: none;
-    }
+/* The theme hardcodes zinc header/drawer surfaces; keep them on the palette. */
+header.header {
+    background: var(--en-bg) !important;
 }
 
-@media (max-width: 1000px) {
-    .nav-trigger {
+header .navbar-mobile,
+header .sub-nav {
+    background: var(--en-surface) !important;
+}
+
+/* The search host is moved into .navbar-pc (before the GitHub icon) by +layout.svelte, so it sits
+   between the nav links and the icons without any positioning tricks. */
+header .doc-search {
+    display: flex;
+    align-items: center;
+    margin-inline: 0.25rem;
+}
+
+/* The theme only shows the nav links at >=1440px and falls back to the hamburger below that; bring
+   them back on ordinary laptop widths. Below 1160px the six links no longer fit next to the sidebar
+   column, so the theme's hamburger takes over again. */
+@media (min-width: 1160px) and (max-width: 1439.9px) {
+    header .nav-trigger {
+        display: none !important;
+    }
+
+    header .desktop-nav-items {
         display: flex !important;
     }
 
-    .navbar-pc > div:first-child {
-        display: none !important;
+    header nav .nav-item {
+        padding-inline: 0.35rem;
+        font-size: 0.95rem;
     }
 }
 
-/* Anchor the search pill against the nav links instead of the theme's floating content-column shift. */
-header .doc-search {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    left: 0 !important;
-    margin-right: 0.75rem;
-}
-
-header .nav-links {
-    flex-grow: 0 !important;
-}
-
-/* Desktop: [logo] ... [nav links] [search] [github] [theme]. The icons are pinned right out of flex
-   flow so the search (a sibling of the nav) can visually sit between the Help link and the icons. */
-@media (min-width: 960px) {
-    header .header-inner {
-        position: relative;
-        padding-right: 100px;
-    }
-
-    header .nav-links {
-        margin-left: auto;
-    }
-
-    header .nav-links,
-    header .navbar-pc {
-        position: static !important;
-    }
-
-    header .doc-search {
-        order: 1;
-        flex-grow: 0 !important;
-        margin-right: 0;
-        margin-left: 0.25rem;
-    }
-
-    header .navbar-pc > a {
-        position: absolute !important;
-        top: 0;
-        right: 48px;
-        height: 100%;
-        align-items: center;
-    }
-
-    header .navbar-pc > div:nth-of-type(2) {
-        position: absolute;
-        top: 0;
-        right: 0;
-    }
-}
-
-/* Below the theme's 960px breakpoint the sidebar (and its logo) go off-canvas and the theme drops the header
-   logo entirely; keep a wordmark next to the menu trigger so the brand and navigation stay discoverable. */
-@media (max-width: 959.9px) {
-    header .left > a {
-        display: none !important;
-    }
-
-    /* The header is justify-content: space-between with [left | search | icons], which floats the
-       search pill in the middle; pack it against the icons on the right instead. */
-    header .doc-search {
-        margin-left: auto;
-    }
-
-    header .left::after {
+/* Below 1440px the theme hides the logo's wordmark; append one to the logo link so the brand stays
+   readable wherever the logo itself is visible (the theme already hides the whole logo on docs
+   pages with a visible sidebar, which carries its own brand row). */
+@media (max-width: 1439.9px) {
+    header .logo-container a::after {
         content: "Event Nest";
         margin-left: 0.3rem;
         color: var(--en-accent);
