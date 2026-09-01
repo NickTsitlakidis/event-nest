@@ -1,3 +1,21 @@
+## 6.1.0 (2026-09-01)
+
+### 🚀 Features
+
+- **core:** Support for event renames through aliases. ([#58](https://github.com/NickTsitlakidis/event-nest/pull/58))
+- **core:** Add AggregateRepository helper for common aggregate root operations ([#59](https://github.com/NickTsitlakidis/event-nest/pull/59))
+- **core, mongodb, postgresql:** Add support for consistent aggregate versioning ([#61](https://github.com/NickTsitlakidis/event-nest/pull/61))
+- **mssql:** Add MSSQL support with event and snapshot stores. ([#66](https://github.com/NickTsitlakidis/event-nest/pull/66))
+
+### 🩹 Fixes
+
+- **core:** Model version is now resolved correctly before a snapshot is created. ([#64](https://github.com/NickTsitlakidis/event-nest/pull/64))
+- **core:** Asynchronous snapshot strategies are now awaited before deciding to create a snapshot. ([#65](https://github.com/NickTsitlakidis/event-nest/pull/65))
+
+### Contributors
+
+- Nick Tsitlakidis
+
 ## 6.0.0 (2026-05-19)
 
 ### 🚀 Features
