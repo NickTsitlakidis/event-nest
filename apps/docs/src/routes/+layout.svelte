@@ -3,6 +3,7 @@
     import { base } from "$app/paths";
     import { page } from "$app/state";
     import Search from "$lib/components/search.svelte";
+    import { SITE_ORIGIN } from "$lib/site";
     import { onMount } from "svelte";
 
     import "../app.css";
@@ -10,7 +11,7 @@
     const { children } = $props();
     let searchHost: HTMLDivElement;
 
-    const canonicalUrl = $derived(`https://nicktsitlakidis.github.io${page.url.pathname}`);
+    const canonicalUrl = $derived(`${SITE_ORIGIN}${page.url.pathname}`);
 
     // The theme renders these icon-only controls without accessible names (axe: aria-command-name).
     // It also re-renders them after hydration, so a one-shot pass gets wiped; observe instead.
@@ -62,7 +63,7 @@
     />
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonicalUrl} />
-    <meta property="og:image" content={`https://nicktsitlakidis.github.io${base}/social-card.svg`} />
+    <meta property="og:image" content={`${SITE_ORIGIN}${base}/social-card.svg`} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta
         name="twitter:description"
