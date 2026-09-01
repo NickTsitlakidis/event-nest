@@ -29,7 +29,7 @@ function field(frontmatter: string, name: string): string {
 function plainText(markdown: string): string {
     return markdown
         .replace(/^---[\s\S]*?---/, "")
-        .replaceAll(/<script[\s\S]*?<\/script>/g, " ")
+        .replaceAll(/<script[\s\S]*?<\/script>/gi, " ")
         .replaceAll(/^```[^\n]*$/gm, " ")
         .replaceAll(/\[([^\]]+)]\([^)]+\)/g, "$1")
         .replaceAll(/<[^>]+>/g, " ")

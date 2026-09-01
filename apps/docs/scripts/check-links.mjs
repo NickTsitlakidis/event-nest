@@ -2,6 +2,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 
 const root = path.resolve(process.argv[2] ?? "../../dist/apps/docs");
+const basePath = process.env.BASE_PATH ?? "";
 const files = [];
 const htmlCache = new Map();
 
@@ -20,7 +21,8 @@ function isExternal(href) {
 
 function targetFor(href, currentFile) {
     if (href.startsWith("#")) return currentFile;
-    const withoutBase = href.replace(/^\/event-nest/, "");
+    const hasBasePath = basePath && (href === basePath || href.startsWith(`${basePath}/`));
+    const withoutBase = hasBasePath ? href.slice(basePath.length) : href;
     const routePath = withoutBase.split("#", 1)[0].split("?", 1)[0] || "/";
     if (/\.[a-z0-9]+$/i.test(routePath)) {
         return path.resolve(root, `.${routePath}`);

@@ -1,6 +1,9 @@
 <script lang="ts">
+    import type { Pathname } from "$app/types";
+
     import { resolve } from "$app/paths";
 
+    // These destinations are added with the follow-up documentation content, so assert them until route types include them.
     const features = [
         {
             description: "Define named domain events, apply them to aggregate state, and replay persisted streams.",
@@ -32,7 +35,7 @@
 
 <nav class="features" aria-label="Explore Event Nest">
     {#each features as feature (feature.to)}
-        <a class="feature-item" href={resolve(feature.to)}>
+        <a class="feature-item" href={resolve(feature.to as Pathname)}>
             <span class="icon" aria-hidden="true">
                 {#if feature.icon === "aggregate"}
                     <svg

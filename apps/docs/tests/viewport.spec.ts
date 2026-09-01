@@ -29,6 +29,13 @@ function findGeneratedRoutes(directory = buildDirectory): string[] {
 
 const routes = findGeneratedRoutes().toSorted((left, right) => left.localeCompare(right));
 
+test("homepage social metadata uses its page title", async ({ page }) => {
+    await page.goto(`${basePath}/`);
+
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", "Event Sourcing for NestJS");
+    await expect(page.locator('meta[name="twitter:title"]')).toHaveAttribute("content", "Event Sourcing for NestJS");
+});
+
 for (const viewport of viewports) {
     test(`generated pages fit the ${viewport.name} viewport`, async ({ page }) => {
         await page.setViewportSize(viewport);
