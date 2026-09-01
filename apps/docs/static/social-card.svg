@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Event Nest documentation</title><desc id="desc">Event sourcing libraries for NestJS</desc>
+  <defs>
+    <linearGradient id="card-ring" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7aa2f7"/>
+      <stop offset="1" stop-color="#2e7de9"/>
+    </linearGradient>
+    <linearGradient id="card-event" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#bb9af7"/>
+      <stop offset="1" stop-color="#9d7cd8"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="#1a1b26"/>
+  <path d="M280 209.7A110 110 0 1 1 170 209.7" fill="none" stroke="url(#card-ring)" stroke-width="30" stroke-linecap="round"/>
+  <path d="M212.2 182.8L185.1 233.3L154.9 186.1Z" fill="#7aa2f7" stroke="#7aa2f7" stroke-width="12" stroke-linejoin="round"/>
+  <circle cx="225" cy="305" r="40" fill="url(#card-event)"/>
+  <text x="430" y="290" fill="#c0caf5" font-family="system-ui,sans-serif" font-size="92" font-weight="700">Event Nest</text>
+  <text x="435" y="370" fill="#a9b1d6" font-family="system-ui,sans-serif" font-size="38">Event sourcing libraries for NestJS</text>
+</svg>

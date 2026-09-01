@@ -11,7 +11,7 @@ module.exports = [
     perfectionist.configs["recommended-natural"],
     eslintPluginUnicorn.configs["flat/recommended"],
     {
-        ignores: ["**/dist"]
+        ignores: ["**/.svelte-kit", "**/.sveltepress", "**/dist"]
     },
     {
         files: ["**/*.ts"],
