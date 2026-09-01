@@ -1,5 +1,5 @@
 ---
-title: Event Nest
+title: Event Sourcing for NestJS
 description: Event sourcing primitives and persistence adapters for building aggregate-based NestJS applications.
 heroImage: /hero.svg
 actions:
@@ -14,9 +14,19 @@ actions:
 
 <script lang="ts">
     import HomeFeatures from "$lib/components/home-features.svelte";
+    import PackageInstall from "$lib/components/package-install.svelte";
+
+    const quickstartPackages = ["@event-nest/core", "@event-nest/postgresql", "pg"];
 </script>
 
 <HomeFeatures />
+
+<div style="margin-top: 3rem; margin-bottom: 3rem">
+
+Install the core library and the adapter for your database — PostgreSQL shown here, with [MongoDB and Microsoft SQL Server](/storage/storage-model/) available as well:
+
+<PackageInstall packages={quickstartPackages} />
+</div>
 
 Domain methods record events; Event Nest persists them and rebuilds aggregate state by replay:
 
@@ -50,7 +60,5 @@ class User extends AggregateRoot {
     }
 }
 ```
-
-[Build your first aggregate](/build-your-first-aggregate/installation/) continues from installation through persistence and a projection.
 
 Event Nest is a focused set of libraries — not an application framework, ORM, or distributed event bus. Review [Scope and Limitations](/overview/scope-and-limitations/) before adopting it.

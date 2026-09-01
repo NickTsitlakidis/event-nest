@@ -29,14 +29,20 @@ html.dark {
     --en-text: #c0caf5;
     --en-text-muted: #a9b1d6;
     --en-code-bg: #16161e;
+    --en-focus: #e0af68;
     --en-danger: #f7768e;
     --en-warning: #e0af68;
 }
 
-/* The compiled theme gradient (vite.config themeColor) targets light mode; brighten it for dark. */
+/* The compiled theme gradient (vite.config themeColor) targets light mode; brighten it for dark.
+   The header wordmark is not a gradient-text element in the theme, so clip the gradient to the
+   glyphs ourselves or it paints the whole span as a solid block. */
 html.dark .gradient-title,
 html.dark header span.title {
     background-image: linear-gradient(120deg, #7aa2f7, #bb9af7) !important;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 /* Primary action: subtle vertical gradient instead of the compiled two-hue diagonal. */
@@ -123,6 +129,50 @@ main :not(pre) > code {
     font-size: 0.85em;
 }
 
+/* The compiled theme hardcodes light-mode colors on these; on the dark palette they fail WCAG AA
+   (language badge 1.74:1, primary-blue labels 4.25:1 on #1a1b26). */
+html.dark .svp-code-block--lang {
+    color: var(--en-text-muted) !important;
+}
+
+html.dark .edit-link,
+html.dark .edit-link .edit-text,
+html.dark a.trigger .title-label {
+    color: var(--en-accent) !important;
+}
+
+/* One Light syntax tokens that miss WCAG AA on the code background; Shiki inlines the colors as
+   style attributes, so darken the failing ones by attribute match (dark-mode colors come from the
+   --shiki-dark variables and are unaffected). */
+html:not(.dark) .shiki span[style*="E45649" i] {
+    color: #c44a3f !important;
+}
+
+html:not(.dark) .shiki span[style*="50A14F" i] {
+    color: #40813f !important;
+}
+
+html:not(.dark) .shiki span[style*="C18401" i] {
+    color: #9a6a01 !important;
+}
+
+html:not(.dark) .shiki span[style*="4078F2" i] {
+    color: #3b6edf !important;
+}
+
+html:not(.dark) .shiki span[style*="0184BC" i] {
+    color: #017cb1 !important;
+}
+
+/* The brand SVGs have no width/height attributes; reserve their space before load to avoid CLS. */
+img[src$="event-nest.svg"] {
+    aspect-ratio: 1 / 1;
+}
+
+img[src$="hero.svg"] {
+    aspect-ratio: 13 / 12;
+}
+
 /* The theme's dark sidebar is near-black zinc; keep it recessed but on the palette's inset tone. */
 html.dark .theme-default-sidebar {
     background: color-mix(in srgb, var(--en-code-bg) 50%, var(--en-bg)) !important;
@@ -185,8 +235,9 @@ main:has(> .home-page) .feature-item .icon {
     background: var(--en-accent-soft) !important;
 }
 
+/* !important: the theme's compiled .link class otherwise wins and paints #2e7de9 (4.25:1 in dark). */
 main:has(> .home-page) a:not(.svp-action) {
-    color: var(--en-accent-strong);
+    color: var(--en-accent-strong) !important;
 }
 
 @media (min-width: 640px) {
@@ -247,6 +298,9 @@ header nav .nav-item {
 
 /* Anchor the search pill against the nav links instead of the theme's floating content-column shift. */
 header .doc-search {
+    position: relative;
+    display: flex;
+    align-items: center;
     justify-content: flex-end;
     left: 0 !important;
     margin-right: 0.75rem;
@@ -300,6 +354,12 @@ header .nav-links {
 @media (max-width: 959.9px) {
     header .left > a {
         display: none !important;
+    }
+
+    /* The header is justify-content: space-between with [left | search | icons], which floats the
+       search pill in the middle; pack it against the icons on the right instead. */
+    header .doc-search {
+        margin-left: auto;
     }
 
     header .left::after {

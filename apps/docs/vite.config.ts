@@ -64,7 +64,6 @@ const theme = defaultTheme({
         { title: "How It Works", to: "/how-event-nest-works/commit-pipeline/" },
         { title: "Reference", to: "/api-reference/configuration/" }
     ],
-    search: "/src/lib/components/search.svelte",
     sidebar: {
         "/overview/": getStartedSidebar,
         "/build-your-first-aggregate/": getStartedSidebar,
@@ -86,10 +85,10 @@ const theme = defaultTheme({
                 items: [
                     { title: "Storage Model", to: "/storage/storage-model/" },
                     { title: "PostgreSQL", to: "/storage/postgresql/" },
-                    { title: "Microsoft SQL Server", to: "/storage/microsoft-sql-server/" },
-                    { title: "MongoDB", to: "/storage/mongodb/" },
                     { title: "PostgreSQL Schema", to: "/storage/postgresql-schema/" },
-                    { title: "SQL Server Schema", to: "/storage/sql-server-schema/" }
+                    { title: "Microsoft SQL Server", to: "/storage/microsoft-sql-server/" },
+                    { title: "SQL Server Schema", to: "/storage/sql-server-schema/" },
+                    { title: "MongoDB", to: "/storage/mongodb/" }
                 ]
             }
         ],

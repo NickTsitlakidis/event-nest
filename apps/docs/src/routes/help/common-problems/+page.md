@@ -3,7 +3,20 @@ title: Common Problems
 description: Source-aligned diagnosis and resolution steps for Event Nest configuration, replay, persistence, snapshots, and subscriptions.
 ---
 
-## `commit()` rejects with "There is no event publisher assigned"
+Use the exact error name or start with the part of Event Nest that is failing.
+
+<h2 id="find-your-problem">Find your problem</h2>
+
+- **Nest wiring:** [Missing event publisher](#missing-event-publisher), [`EVENT_STORE` cannot be injected](#event-store-injection)
+- **Event registration and replay:** [Unregistered event on append](#unregistered-event-append), [`UnknownEventException` during replay](#unknown-event-replay), [undefined `@ApplyEvent` class](#undefined-apply-event-class), [event name conflict](#event-name-conflict), [missing aggregate name](#missing-aggregate-name)
+- **Concurrency and versions:** [Concurrent write conflict](#event-concurrency), [invalid explicit aggregate version](#invalid-explicit-version)
+- **Snapshots:** [Incomplete configuration](#snapshot-config-pair), [aggregate is not snapshot-aware](#snapshot-aware), [invalid strategy construction](#snapshot-strategy-constructor), [revision mismatch](#snapshot-revision-mismatch), [load resumes at version 0](#snapshot-load-version-zero)
+- **Subscriptions:** [Handlers are not discovered](#subscriptions-not-discovered), [asynchronous failure does not reject `commit()`](#async-subscription-failure), [`SubscriptionException` after persistence](#subscription-exception-after-persistence)
+- **Storage adapters:** [SQL tables are not created](#sql-table-creation), [MongoDB transaction failure](#mongodb-transactions), [MongoDB rejects an aggregate ID](#mongodb-aggregate-id), [PostgreSQL SSL failure](#postgresql-ssl), [SQL Server configuration rejection](#sql-server-configuration)
+
+## Nest wiring
+
+<h3 id="missing-event-publisher">Missing event publisher</h3>
 
 **Symptom:** Calling `commit()` rejects with the string `There is no event publisher assigned`.
 
@@ -15,7 +28,21 @@ description: Source-aligned diagnosis and resolution steps for Event Nest config
 
 **Related docs:** [Public API](/api-reference/public-api/) and [AggregateRepository](/capabilities/aggregate-repository/).
 
-## An event cannot be appended
+<h3 id="event-store-injection"><code>EVENT_STORE</code> cannot be injected</h3>
+
+**Symptom:** Nest reports that it cannot resolve the `EVENT_STORE` dependency.
+
+**Likely cause:** A scoped `register`/`registerAsync` module is not imported where the consumer is declared, or an async factory dependency is not visible. Async option types do not support an `imports` field.
+
+**How to confirm:** Check whether registration used `forRoot*` (global) or `register*` (scoped), and whether every token in `inject` is already available in that module context.
+
+**Resolution:** Import the scoped dynamic module into the consumer's module, re-export it as needed, or use one global `forRoot*` registration. Make async factory dependencies global or otherwise visible before registration.
+
+**Related docs:** [Registration methods](/api-reference/configuration/) and [Public API](/api-reference/public-api/).
+
+## Event registration and replay
+
+<h3 id="unregistered-event-append">Unregistered event on append</h3>
 
 **Symptom:** `append()` reports that an event class is not registered.
 
@@ -27,7 +54,7 @@ description: Source-aligned diagnosis and resolution steps for Event Nest config
 
 **Related docs:** [Decorators](/api-reference/decorators/) and [Exceptions](/api-reference/exceptions/).
 
-## Replay throws `UnknownEventException`
+<h3 id="unknown-event-replay"><code>UnknownEventException</code> during replay</h3>
 
 **Symptom:** Reconstitution lists names under `Unregistered` or `Missing apply method`.
 
@@ -39,7 +66,7 @@ description: Source-aligned diagnosis and resolution steps for Event Nest config
 
 **Related docs:** [Decorators](/api-reference/decorators/), [Event aliases](/capabilities/event-aliases/), and [Exceptions](/api-reference/exceptions/).
 
-## `@ApplyEvent` receives an undefined class
+<h3 id="undefined-apply-event-class">Undefined <code>@ApplyEvent</code> class</h3>
 
 **Symptom:** Application initialization reports that `@ApplyEvent` was used with a null or undefined event class.
 
@@ -51,7 +78,7 @@ description: Source-aligned diagnosis and resolution steps for Event Nest config
 
 **Related docs:** [Decorators](/api-reference/decorators/) and [Exceptions](/api-reference/exceptions/).
 
-## Event registration fails during startup
+<h3 id="event-name-conflict">Event name conflict</h3>
 
 **Symptom:** Startup throws `EventNameConflictException` before a command is handled.
 
@@ -63,7 +90,7 @@ description: Source-aligned diagnosis and resolution steps for Event Nest config
 
 **Related docs:** [Decorators](/api-reference/decorators/).
 
-## Aggregate reads or commits report a missing name
+<h3 id="missing-aggregate-name">Missing aggregate name</h3>
 
 **Symptom:** `MissingAggregateRootNameException` occurs during publish, event lookup, or snapshot lookup.
 
@@ -75,7 +102,9 @@ description: Source-aligned diagnosis and resolution steps for Event Nest config
 
 **Related docs:** [Decorators](/api-reference/decorators/).
 
-## `EventConcurrencyException` occurs on save
+## Concurrency and versions
+
+<h3 id="event-concurrency">Concurrent write conflict</h3>
 
 **Symptom:** A commit reports different expected and stored aggregate versions.
 
@@ -87,67 +116,7 @@ description: Source-aligned diagnosis and resolution steps for Event Nest config
 
 **Related docs:** [Exceptions](/api-reference/exceptions/), [Event streams and versions](/core-model/event-streams-and-versions/), and [Snapshot loading](/how-event-nest-works/snapshot-loading/).
 
-## Snapshot configuration fails at startup
-
-**Symptom:** Provider creation says both snapshot fields must be supplied.
-
-**Likely cause:** Only `snapshotStrategy` or only the adapter storage field was configured.
-
-**How to confirm:** For MongoDB inspect `snapshotStrategy` plus `snapshotCollection`; for PostgreSQL/SQL Server inspect `snapshotStrategy` plus `snapshotTableName`. This is enforced by the option union and repeated at runtime for sync and async registration.
-
-**Resolution:** Provide the pair or remove both to install `NoOpSnapshotStore`. There is no shared public snapshot-options object to configure separately.
-
-**Related docs:** [Configuration](/api-reference/configuration/) and [Exceptions](/api-reference/exceptions/).
-
-## Snapshot creation says the aggregate is not snapshot-aware
-
-**Symptom:** `AggregateClassNotSnapshotAwareException` or `AggregateInstanceNotSnapshotAwareException` occurs when a strategy matches.
-
-**Likely cause:** The class omits numeric `snapshotRevision`, or the instance lacks callable `toSnapshot()` or `applySnapshot()` methods. A broad strategy can also match an aggregate not intended for snapshots.
-
-**How to confirm:** Check all three requirements independently: aggregate name, numeric class revision, and both instance methods. TypeScript `implements SnapshotAware` does not exist at runtime.
-
-**Resolution:** Complete `@AggregateRootConfig` and `SnapshotAware`, or compose the policy with `ForAggregateRootsStrategy` so only ready aggregates match.
-
-**Related docs:** [Decorators](/api-reference/decorators/), [Snapshot policies](/capabilities/snapshot-policies/), and [Exceptions](/api-reference/exceptions/).
-
-## A snapshot strategy constructor throws
-
-**Symptom:** Startup reports that count may not be less than 1 or that a composite strategy requires at least one strategy.
-
-**Likely cause:** `ForCountSnapshotStrategy` received `count < 1`, or `AllOfSnapshotStrategy`/`AnyOfSnapshotStrategy` received an empty array.
-
-**How to confirm:** Inspect the values used to construct the strategy, especially environment-derived counts and conditionally assembled arrays.
-
-**Resolution:** Use a positive count and at least one child strategy. Use `NoSnapshotStrategy` or omit the adapter snapshot pair when snapshots should be disabled.
-
-**Related docs:** [Public API](/api-reference/public-api/) and [Configuration](/api-reference/configuration/).
-
-## A snapshot revision no longer matches
-
-**Symptom:** Direct `findWithSnapshot()` throws `SnapshotRevisionMismatchException` after a deployment.
-
-**Likely cause:** The aggregate's configured revision differs from the latest stored snapshot revision.
-
-**How to confirm:** Compare `@AggregateRootConfig({ snapshotRevision })` with the snapshot row/document revision. Also check whether mixed application versions are active.
-
-**Resolution:** Fall back to `findByAggregateRootId()` and full replay, then allow a new snapshot to be produced. `AggregateRepository.load()` already catches this one exception and performs the full replay; other snapshot errors are rethrown.
-
-**Related docs:** [Exceptions](/api-reference/exceptions/) and [Snapshot loading](/how-event-nest-works/snapshot-loading/).
-
-## Snapshot loads save at version 0
-
-**Symptom:** An aggregate loaded from a snapshot with no later events has correct state but its next commit conflicts, often expecting version 0.
-
-**Likely cause:** The factory ignored `aggregateRootVersion` returned by `findWithSnapshot()`. With no replayed events, `reconstitute()` cannot infer the snapshot's stream version from the event array.
-
-**How to confirm:** Log the read result and aggregate version immediately after factory construction. The built-in adapters return the snapshot version when the post-snapshot event list is empty.
-
-**Resolution:** Define the factory as `(id, events, snapshot, aggregateRootVersion)` and call `root.reconstitute(events, snapshot, aggregateRootVersion)`, or use `AggregateRepository` with a factory that forwards all arguments.
-
-**Related docs:** [Public API](/api-reference/public-api/) and [Snapshot loading](/how-event-nest-works/snapshot-loading/).
-
-## `reconstitute()` rejects an explicit version
+<h3 id="invalid-explicit-version">Invalid explicit aggregate version</h3>
 
 **Symptom:** Reconstitution says `aggregateRootVersion` must be a non-negative integer.
 
@@ -159,7 +128,71 @@ description: Source-aligned diagnosis and resolution steps for Event Nest config
 
 **Related docs:** [Public API](/api-reference/public-api/) and [Exceptions](/api-reference/exceptions/).
 
-## Subscriptions are not discovered
+## Snapshots
+
+<h3 id="snapshot-config-pair">Incomplete snapshot configuration</h3>
+
+**Symptom:** Provider creation says both snapshot fields must be supplied.
+
+**Likely cause:** Only `snapshotStrategy` or only the adapter storage field was configured.
+
+**How to confirm:** For MongoDB inspect `snapshotStrategy` plus `snapshotCollection`; for PostgreSQL/SQL Server inspect `snapshotStrategy` plus `snapshotTableName`. This is enforced by the option union and repeated at runtime for sync and async registration.
+
+**Resolution:** Provide the pair or remove both to install `NoOpSnapshotStore`. There is no shared public snapshot-options object to configure separately.
+
+**Related docs:** [Configuration](/api-reference/configuration/) and [Exceptions](/api-reference/exceptions/).
+
+<h3 id="snapshot-aware">Aggregate is not snapshot-aware</h3>
+
+**Symptom:** `AggregateClassNotSnapshotAwareException` or `AggregateInstanceNotSnapshotAwareException` occurs when a strategy matches.
+
+**Likely cause:** The class omits numeric `snapshotRevision`, or the instance lacks callable `toSnapshot()` or `applySnapshot()` methods. A broad strategy can also match an aggregate not intended for snapshots.
+
+**How to confirm:** Check all three requirements independently: aggregate name, numeric class revision, and both instance methods. TypeScript `implements SnapshotAware` does not exist at runtime.
+
+**Resolution:** Complete `@AggregateRootConfig` and `SnapshotAware`, or compose the policy with `ForAggregateRootsStrategy` so only ready aggregates match.
+
+**Related docs:** [Decorators](/api-reference/decorators/), [Snapshot policies](/capabilities/snapshot-policies/), and [Exceptions](/api-reference/exceptions/).
+
+<h3 id="snapshot-strategy-constructor">Invalid snapshot strategy construction</h3>
+
+**Symptom:** Startup reports that count may not be less than 1 or that a composite strategy requires at least one strategy.
+
+**Likely cause:** `ForCountSnapshotStrategy` received `count < 1`, or `AllOfSnapshotStrategy`/`AnyOfSnapshotStrategy` received an empty array.
+
+**How to confirm:** Inspect the values used to construct the strategy, especially environment-derived counts and conditionally assembled arrays.
+
+**Resolution:** Use a positive count and at least one child strategy. Use `NoSnapshotStrategy` or omit the adapter snapshot pair when snapshots should be disabled.
+
+**Related docs:** [Public API](/api-reference/public-api/) and [Configuration](/api-reference/configuration/).
+
+<h3 id="snapshot-revision-mismatch">Snapshot revision mismatch</h3>
+
+**Symptom:** Direct `findWithSnapshot()` throws `SnapshotRevisionMismatchException` after a deployment.
+
+**Likely cause:** The aggregate's configured revision differs from the latest stored snapshot revision.
+
+**How to confirm:** Compare `@AggregateRootConfig({ snapshotRevision })` with the snapshot row/document revision. Also check whether mixed application versions are active.
+
+**Resolution:** Fall back to `findByAggregateRootId()` and full replay, then allow a new snapshot to be produced. `AggregateRepository.load()` already catches this one exception and performs the full replay; other snapshot errors are rethrown.
+
+**Related docs:** [Exceptions](/api-reference/exceptions/) and [Snapshot loading](/how-event-nest-works/snapshot-loading/).
+
+<h3 id="snapshot-load-version-zero">Snapshot load resumes at version 0</h3>
+
+**Symptom:** An aggregate loaded from a snapshot with no later events has correct state but its next commit conflicts, often expecting version 0.
+
+**Likely cause:** The factory ignored `aggregateRootVersion` returned by `findWithSnapshot()`. With no replayed events, `reconstitute()` cannot infer the snapshot's stream version from the event array.
+
+**How to confirm:** Log the read result and aggregate version immediately after factory construction. The built-in adapters return the snapshot version when the post-snapshot event list is empty.
+
+**Resolution:** Define the factory as `(id, events, snapshot, aggregateRootVersion)` and call `root.reconstitute(events, snapshot, aggregateRootVersion)`, or use `AggregateRepository` with a factory that forwards all arguments.
+
+**Related docs:** [Public API](/api-reference/public-api/) and [Snapshot loading](/how-event-nest-works/snapshot-loading/).
+
+## Subscriptions
+
+<h3 id="subscriptions-not-discovered">Handlers are not discovered</h3>
 
 **Symptom:** Event Nest logs that no subscriptions were discovered, or a particular event cannot be passed to subscriptions.
 
@@ -171,7 +204,7 @@ description: Source-aligned diagnosis and resolution steps for Event Nest config
 
 **Related docs:** [Decorators](/api-reference/decorators/) and [Configuration](/api-reference/configuration/).
 
-## A subscription failure did not fail `commit()`
+<h3 id="async-subscription-failure">Asynchronous failure does not reject <code>commit()</code></h3>
 
 **Symptom:** A handler logs an error, but `commit()` has already resolved.
 
@@ -183,7 +216,7 @@ description: Source-aligned diagnosis and resolution steps for Event Nest config
 
 **Related docs:** [Decorators](/api-reference/decorators/) and [Exceptions](/api-reference/exceptions/).
 
-## `commit()` throws `SubscriptionException` after data was saved
+<h3 id="subscription-exception-after-persistence"><code>SubscriptionException</code> after persistence</h3>
 
 **Symptom:** An awaited subscription fails and the caller assumes the event transaction rolled back.
 
@@ -195,7 +228,9 @@ description: Source-aligned diagnosis and resolution steps for Event Nest config
 
 **Related docs:** [Exceptions](/api-reference/exceptions/) and [Failure behaviour](/how-event-nest-works/failure-behaviour/).
 
-## Automatic SQL table creation does not work
+## Storage adapters
+
+<h3 id="sql-table-creation">SQL tables are not created</h3>
 
 **Symptom:** Tables remain absent, or bootstrap logs a DDL/permission failure.
 
@@ -207,7 +242,7 @@ description: Source-aligned diagnosis and resolution steps for Event Nest config
 
 **Related docs:** [Configuration](/api-reference/configuration/) and [Storage model](/storage/storage-model/).
 
-## MongoDB writes fail with a transaction error
+<h3 id="mongodb-transactions">MongoDB transaction failure</h3>
 
 **Symptom:** Save or purge fails with a message that transactions are unsupported or require a replica set.
 
@@ -219,7 +254,7 @@ description: Source-aligned diagnosis and resolution steps for Event Nest config
 
 **Related docs:** [MongoDB configuration](/api-reference/configuration/) and [Compatibility](/help/compatibility/).
 
-## MongoDB rejects an aggregate ID
+<h3 id="mongodb-aggregate-id">MongoDB rejects an aggregate ID</h3>
 
 **Symptom:** Reads, saves, or purges fail while constructing a MongoDB `ObjectId`.
 
@@ -231,7 +266,7 @@ description: Source-aligned diagnosis and resolution steps for Event Nest config
 
 **Related docs:** [Public API](/api-reference/public-api/) and [MongoDB configuration](/api-reference/configuration/).
 
-## PostgreSQL SSL connection fails
+<h3 id="postgresql-ssl">PostgreSQL SSL failure</h3>
 
 **Symptom:** TLS negotiation or certificate validation fails after setting `ssl`.
 
@@ -243,7 +278,7 @@ description: Source-aligned diagnosis and resolution steps for Event Nest config
 
 **Related docs:** [PostgreSQL configuration](/api-reference/configuration/) and [Compatibility](/help/compatibility/).
 
-## SQL Server configuration is rejected
+<h3 id="sql-server-configuration">SQL Server configuration rejection</h3>
 
 **Symptom:** Startup rejects identifiers, or reports that `port` and `instanceName` cannot both be provided.
 
@@ -254,15 +289,3 @@ description: Source-aligned diagnosis and resolution steps for Event Nest config
 **Resolution:** Remove schema prefixes from table fields, use legal SQL Server identifiers, and choose either `port` or `instanceName`. Configure TLS explicitly rather than disabling validation without understanding the risk.
 
 **Related docs:** [SQL Server configuration](/api-reference/configuration/) and [Compatibility](/help/compatibility/).
-
-## `EVENT_STORE` cannot be injected
-
-**Symptom:** Nest reports that it cannot resolve the `EVENT_STORE` dependency.
-
-**Likely cause:** A scoped `register`/`registerAsync` module is not imported where the consumer is declared, or an async factory dependency is not visible. Async option types do not support an `imports` field.
-
-**How to confirm:** Check whether registration used `forRoot*` (global) or `register*` (scoped), and whether every token in `inject` is already available in that module context.
-
-**Resolution:** Import the scoped dynamic module into the consumer's module, re-export it as needed, or use one global `forRoot*` registration. Make async factory dependencies global or otherwise visible before registration.
-
-**Related docs:** [Registration methods](/api-reference/configuration/) and [Public API](/api-reference/public-api/).

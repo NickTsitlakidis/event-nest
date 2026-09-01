@@ -1,6 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-labelledby="title">
   <title id="title">Event Nest</title>
-  <path fill="#2e7de9" d="M60 8 108 36v48L60 112 12 84V36z"/>
-  <path fill="none" stroke="#d9e5fb" stroke-linecap="round" stroke-width="9" d="M35 41h51M35 60h40M35 79h51"/>
-  <circle cx="31" cy="41" r="5" fill="#bb9af7"/><circle cx="79" cy="60" r="5" fill="#bb9af7"/><circle cx="31" cy="79" r="5" fill="#bb9af7"/>
+  <defs>
+    <linearGradient id="en-ring" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7aa2f7"/>
+      <stop offset="1" stop-color="#2e7de9"/>
+    </linearGradient>
+    <linearGradient id="en-event" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#bb9af7"/>
+      <stop offset="1" stop-color="#9d7cd8"/>
+    </linearGradient>
+  </defs>
+  <path d="M78 30.8A36 36 0 1 1 42 30.8" fill="none" stroke="url(#en-ring)" stroke-width="11" stroke-linecap="round"/>
+  <path d="M58.9 20L47.9 40.1L36.1 21.5Z" fill="#7aa2f7" stroke="#7aa2f7" stroke-width="4" stroke-linejoin="round"/>
+  <circle cx="60" cy="62" r="14" fill="url(#en-event)"/>
 </svg>

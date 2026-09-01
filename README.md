@@ -1,10 +1,10 @@
-# Event Nest
+# <img src="apps/docs/static/event-nest.svg" width="35" alt="" align="top"> Event Nest
 
 A collection of [NestJS](https://nestjs.com/) libraries for building event-sourced applications.
 
 ![build status](https://github.com/NickTsitlakidis/event-nest/actions/workflows/checks.yml/badge.svg)
 [![npm version](https://badge.fury.io/js/@event-nest%2Fcore.svg)](https://badge.fury.io/js/@event-nest%2Fcore)
-[![Coverage Status](https://coveralls.io/repos/github/NickTsitlakidis/event-nest/badge.svg?branch=master)](https://coveralls.io/github/NickTsitlakidis/event-nest?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/NickTsitlakidis/event-nest/badge.svg?branch=main)](https://coveralls.io/github/NickTsitlakidis/event-nest?branch=main)
 
 ## Documentation
 
@@ -42,7 +42,7 @@ Replace `@event-nest/postgresql pg` with `@event-nest/mongodb mongodb` or `@even
 
 ## Compatibility
 
-Event Nest 6.x requires Node.js 22 or later and supports NestJS 10 and 11. The adapters require MongoDB driver 7.x, PostgreSQL driver `^8.14.1`, or Tedious 20.x respectively. See the [compatibility reference](https://nicktsitlakidis.github.io/event-nest/help/compatibility/) for exact peer ranges and migration notes.
+Event Nest requires Node.js 22 or later and supports NestJS 10 and 11. See the [compatibility reference](https://nicktsitlakidis.github.io/event-nest/help/compatibility/) for exact driver peer ranges and migration notes.
 
 ## Project Status
 

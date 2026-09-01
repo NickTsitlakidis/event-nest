@@ -30,7 +30,7 @@ function plainText(markdown: string): string {
     return markdown
         .replace(/^---[\s\S]*?---/, "")
         .replaceAll(/<script[\s\S]*?<\/script>/g, " ")
-        .replaceAll(/```[\s\S]*?```/g, " ")
+        .replaceAll(/^```[^\n]*$/gm, " ")
         .replaceAll(/\[([^\]]+)]\([^)]+\)/g, "$1")
         .replaceAll(/<[^>]+>/g, " ")
         .replaceAll(/[#*`_[\](){}>|-]/g, " ")
