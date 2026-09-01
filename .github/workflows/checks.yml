@@ -41,6 +41,26 @@ jobs:
                         ${{ runner.os }}-pnpm-store-
             -   name: Install dependencies
                 run: pnpm install --frozen-lockfile
+            -   name: Check docs
+                run: pnpm nx run docs:check
+            -   name: Lint docs
+                run: pnpm nx run docs:lint
+            -   name: Build docs
+                run: pnpm nx run docs:build
+                env:
+                    BASE_PATH: /event-nest
+            -   name: Check docs links
+                run: pnpm nx run docs:links
+                env:
+                    BASE_PATH: /event-nest
+            -   name: Install docs browser
+                if: matrix.node-version == '22.x'
+                run: pnpm --filter @event-nest/docs exec playwright install --with-deps chromium
+            -   name: Check docs viewports
+                if: matrix.node-version == '22.x'
+                run: pnpm nx run docs:viewport
+                env:
+                    BASE_PATH: /event-nest
             -   name: Check core
                 run: pnpm nx run core:lint && pnpm nx run core:test
             -   name: Check mongodb

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 240" role="img" aria-labelledby="heroTitle">
+  <title id="heroTitle">Events flowing into an Event Nest aggregate that rebuilds state by replay</title>
+  <defs>
+    <linearGradient id="hero-ring" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7aa2f7"/>
+      <stop offset="1" stop-color="#2e7de9"/>
+    </linearGradient>
+    <linearGradient id="hero-event" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#bb9af7"/>
+      <stop offset="1" stop-color="#9d7cd8"/>
+    </linearGradient>
+  </defs>
+  <circle cx="160" cy="120" r="94" fill="#2e7de9" opacity="0.12"/>
+  <path fill="none" stroke="#7dcfff" stroke-width="3" stroke-linecap="round" opacity="0.4" d="M49 70Q76 76 96 93"/>
+  <path fill="none" stroke="#bb9af7" stroke-width="3" stroke-linecap="round" opacity="0.4" d="M38 120h52"/>
+  <path fill="none" stroke="#7aa2f7" stroke-width="3" stroke-linecap="round" opacity="0.4" d="M53 170Q78 165 96 147"/>
+  <path fill="none" stroke="#7dcfff" stroke-width="4" stroke-linecap="round" opacity="0.45" d="M12 70h16"/>
+  <path fill="none" stroke="#bb9af7" stroke-width="4" stroke-linecap="round" opacity="0.45" d="M2 120h14"/>
+  <path fill="none" stroke="#7aa2f7" stroke-width="4" stroke-linecap="round" opacity="0.45" d="M16 170h16"/>
+  <circle cx="40" cy="70" r="7" fill="#7dcfff"/>
+  <circle cx="28" cy="120" r="7" fill="#bb9af7"/>
+  <circle cx="44" cy="170" r="7" fill="#7aa2f7"/>
+  <path d="M183 82.2A46 46 0 1 1 137 82.2" fill="none" stroke="url(#hero-ring)" stroke-width="12" stroke-linecap="round"/>
+  <path d="M158 68.7L143.5 92.3L130.5 72.1Z" fill="#7aa2f7" stroke="#7aa2f7" stroke-width="5" stroke-linejoin="round"/>
+  <circle cx="160" cy="122" r="17" fill="url(#hero-event)"/>
+</svg>
