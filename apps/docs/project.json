@@ -22,6 +22,16 @@
                 "command": "node scripts/check-links.mjs ../../dist/apps/docs"
             }
         },
+        "viewport": {
+            "cache": true,
+            "dependsOn": ["build"],
+            "executor": "nx:run-commands",
+            "outputs": ["{workspaceRoot}/test-results/apps/docs/viewport"],
+            "options": {
+                "cwd": "apps/docs",
+                "command": "pnpm exec playwright test --config playwright.config.ts"
+            }
+        },
         "serve": {
             "continuous": true,
             "executor": "nx:run-commands",

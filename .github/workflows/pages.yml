@@ -48,6 +48,12 @@ jobs:
               run: pnpm nx run docs:links
               env:
                   BASE_PATH: /event-nest
+            - name: Install docs browser
+              run: pnpm --filter @event-nest/docs exec playwright install --with-deps chromium
+            - name: Check documentation viewports
+              run: pnpm nx run docs:viewport
+              env:
+                  BASE_PATH: /event-nest
             - name: Upload Pages artifact
               uses: actions/upload-pages-artifact@v3
               with:

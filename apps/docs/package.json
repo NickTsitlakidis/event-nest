@@ -7,6 +7,7 @@
         "prepare": "svelte-kit sync"
     },
     "devDependencies": {
+        "@playwright/test": "catalog:",
         "@sveltejs/adapter-static": "catalog:",
         "@sveltejs/kit": "catalog:",
         "@sveltejs/vite-plugin-svelte": "catalog:",

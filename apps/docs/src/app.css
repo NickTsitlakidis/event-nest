@@ -85,6 +85,10 @@ body {
     line-height: 1.72;
 }
 
+.theme-default--page-layout .page-title {
+    overflow-wrap: anywhere;
+}
+
 .theme-default--page-layout .content > p,
 .theme-default--page-layout .content > ul,
 .theme-default--page-layout .content > ol {
@@ -96,6 +100,11 @@ body {
     max-width: 100%;
     overflow-x: auto;
     border-collapse: collapse;
+}
+
+.theme-default--page-layout table :not(pre) > code {
+    white-space: nowrap;
+    word-break: normal;
 }
 
 .theme-default--page-layout th {
@@ -194,8 +203,14 @@ main:has(> .home-page) a:not(.svp-action) {
 }
 
 @media (max-width: 640px) {
+    .theme-default--page-layout .svp-code-block-wrapper {
+        box-sizing: border-box;
+        width: 100%;
+        margin-inline: 0;
+    }
+
     .theme-default--page-layout pre {
-        max-width: calc(100vw - 2rem);
+        max-width: 100%;
     }
 }
 

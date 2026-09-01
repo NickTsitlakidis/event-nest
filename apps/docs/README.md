@@ -26,10 +26,11 @@ pnpm nx check docs
 pnpm nx lint docs
 BASE_PATH=/event-nest pnpm nx build docs
 BASE_PATH=/event-nest pnpm nx links docs
+BASE_PATH=/event-nest pnpm nx viewport docs
 pnpm nx preview docs
 ```
 
-The `links` target depends on the production build and checks generated internal page, asset, and metadata links.
+The `links` target depends on the production build and checks generated internal page, asset, and metadata links. The `viewport` target also depends on the build and checks every generated page for horizontal overflow at mobile, tablet, and desktop widths. Install its Chromium runtime once with `pnpm --filter @event-nest/docs exec playwright install chromium`.
 
 ## Authoring conventions
 
