@@ -28,6 +28,7 @@ node_modules
 /.sass-cache
 /connect.lock
 /coverage
+/test-results
 /libpeerconnection.log
 npm-debug.log
 yarn-error.log
@@ -41,6 +42,8 @@ Thumbs.db
 
 .nx/cache
 .nx/workspace-data
+**/.sveltepress
+**/.svelte-kit
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 
