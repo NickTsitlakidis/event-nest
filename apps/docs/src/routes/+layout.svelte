@@ -40,10 +40,11 @@
 
     afterNavigate(() => {
         requestAnimationFrame(() => {
-            const header = document.querySelector("header .header-inner");
-            const navigation = header?.querySelector(".nav-links");
-            if (header && navigation) {
-                navigation.before(searchHost);
+            // Slot the search pill between the nav links and the icon controls.
+            const iconArea = document.querySelector("header .navbar-pc");
+            const firstIcon = iconArea?.querySelector(":scope > a, :scope > .toggle");
+            if (firstIcon) {
+                firstIcon.before(searchHost);
                 searchHost.classList.add("ready");
             }
         });
@@ -53,8 +54,8 @@
 <svelte:head>
     <link rel="canonical" href={canonicalUrl} />
     <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
+    <!-- og:title and twitter:title come per-page from page-layout.svelte. -->
     <meta property="og:site_name" content="Event Nest" />
-    <meta property="og:title" content="Event Nest documentation" />
     <meta
         property="og:description"
         content="Event sourcing primitives and persistence adapters for NestJS applications."
@@ -63,7 +64,6 @@
     <meta property="og:url" content={canonicalUrl} />
     <meta property="og:image" content={`https://nicktsitlakidis.github.io${base}/social-card.svg`} />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Event Nest documentation" />
     <meta
         name="twitter:description"
         content="Event sourcing primitives and persistence adapters for NestJS applications."

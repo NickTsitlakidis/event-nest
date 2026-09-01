@@ -3,7 +3,10 @@
 
     import { resolve } from "$app/paths";
 
-    // These destinations are added with the follow-up documentation content, so assert them until route types include them.
+    // SvelteKit's typed resolve() only accepts one concrete route per call and rejects a union of
+    // routes, so widen the signature once; every member of the union is a real route.
+    const resolveRoute = resolve as (route: Pathname) => string;
+
     const features = [
         {
             description: "Define named domain events, apply them to aggregate state, and replay persisted streams.",
@@ -35,7 +38,8 @@
 
 <nav class="features" aria-label="Explore Event Nest">
     {#each features as feature (feature.to)}
-        <a class="feature-item" href={resolve(feature.to as Pathname)}>
+        <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- resolveRoute is resolve() with a widened signature -->
+        <a class="feature-item" href={resolveRoute(feature.to)}>
             <span class="icon" aria-hidden="true">
                 {#if feature.icon === "aggregate"}
                     <svg

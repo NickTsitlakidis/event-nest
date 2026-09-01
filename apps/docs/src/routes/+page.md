@@ -1,6 +1,8 @@
 ---
 title: Event Sourcing for NestJS
-description: Event sourcing primitives and persistence adapters for building aggregate-based NestJS applications.
+description: Event sourcing primitives and persistence adapters for NestJS applications.
+# Theme 8.x only auto-detects the home layout on versioned sites; unversioned sites must opt in.
+home: true
 heroImage: /hero.svg
 actions:
   - label: Build your first aggregate
