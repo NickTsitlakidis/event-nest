@@ -1,13 +1,17 @@
 ---
 title: Compatibility
-description: Supported Node.js, NestJS, database driver, and package versions for Event Nest 6.0.0.
+description: Supported Node.js, NestJS, database driver, and package versions for the current Event Nest release.
 ---
 
-This matrix reflects the published 6.0.0 package manifests. Peer ranges describe supported consumer installations; the repository toolchain can be stricter.
+<script lang="ts">
+    import { CURRENT_VERSION } from "$lib/site";
+</script>
+
+This matrix reflects the published <code>{CURRENT_VERSION}</code> package manifests. Peer ranges describe supported consumer installations; the repository toolchain can be stricter.
 
 ## Runtime matrix
 
-| Component | Supported by Event Nest 6.0.0 | Notes |
+| Component | Supported version or range | Notes |
 | --- | --- | --- |
 | Node.js | `>=22` | All four published packages declare `>= 22`. Node 20 support was dropped in 6.0.0. |
 | Repository development Node.js | `>=22.13` | The monorepo root requires this for contributors and documentation builds; it is not the published consumer minimum. |
@@ -15,11 +19,11 @@ This matrix reflects the published 6.0.0 package manifests. Peer ranges describe
 | NestJS `@nestjs/core` | `^10.0.0 \|\| ^11.0.0` | Keep the Nest core/common majors aligned. |
 | `reflect-metadata` | `^0.1.12 \|\| ^0.2.0` | Required peer for decorator metadata. |
 | RxJS | `^7.2.0` | Required peer. |
-| MongoDB Node.js driver | `^7.0.0` | Required by `@event-nest/mongodb`; MongoDB 6.x drivers are outside the 6.0.0 range. |
+| MongoDB Node.js driver | `^7.0.0` | Required by `@event-nest/mongodb`; MongoDB 6.x drivers are outside the current supported range. |
 | PostgreSQL `pg` driver | `^8.14.1` | Semver range `>=8.14.1 <9.0.0`. |
 | SQL Server `tedious` driver | `^20.0.0` | Semver range `>=20.0.0 <21.0.0`. |
 
-Each adapter package depends on exactly `@event-nest/core` `6.0.0`. Keep Event Nest package versions aligned rather than mixing majors or minors.
+Each adapter package depends on exactly `@event-nest/core` <code>{CURRENT_VERSION}</code>. Keep Event Nest package versions aligned rather than mixing majors or minors.
 
 ## Adapter requirements
 
@@ -50,7 +54,7 @@ TypeScript is not a published peer dependency, so the repository's TypeScript ve
 
 ## Current deprecations
 
-| API | Status in 6.0.0 | Replacement | Removal |
+| API | Current status | Replacement | Removal |
 | --- | --- | --- | --- |
 | `@AggregateRootName("Name")` | Deprecated since 5.0.0, still exported | `@AggregateRootConfig({ name: "Name" })` | Planned for 7.x |
 

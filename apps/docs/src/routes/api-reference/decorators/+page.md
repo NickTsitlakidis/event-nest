@@ -5,6 +5,7 @@ description: Reference for Event Nest domain event, aggregate, replay, and subsc
 
 <script>
     import ApiSymbol from "$lib/components/api-symbol.svelte";
+    import { CURRENT_VERSION } from "$lib/site";
 </script>
 
 All decorators are exported from `@event-nest/core`. Import `reflect-metadata` as required by NestJS; decorator metadata drives persistence, replay, and subscription discovery.
@@ -70,7 +71,7 @@ The exported `getAggregateRootName()` and `getAggregateRootSnapshotRevision()` h
 function AggregateRootName(name: string): ClassDecorator
 ```
 
-This older decorator sets only the aggregate name. It remains exported in 6.0.0 for migration, but is deprecated in favor of `@AggregateRootConfig({ name })` and is planned for removal in 7.x.
+This older decorator sets only the aggregate name. It remains exported in <code>{CURRENT_VERSION}</code> for migration, but is deprecated in favor of `@AggregateRootConfig({ name })` and is planned for removal in 7.x.
 
 ```ts
 // Before

@@ -3,6 +3,10 @@ title: When to Use Event Nest
 description: Decide whether Event Nest and event sourcing fit your NestJS application's domain, storage, and operational needs.
 ---
 
+<script lang="ts">
+    import { CURRENT_VERSION } from "$lib/site";
+</script>
+
 Event Nest is useful when event sourcing is already a good fit for part of your domain. It removes repeated persistence and replay plumbing; it does not remove the modeling, migration, and operational costs of keeping an event history.
 
 ## A strong fit
@@ -67,7 +71,7 @@ Use event sourcing selectively rather than making it an application-wide default
 
 ## Compatibility and maturity
 
-The packages in this repository are currently version `6.0.0`. `@event-nest/core` declares support for NestJS 10 and 11 and requires Node.js 22 or newer. The repository includes unit and adapter integration tests.
+The packages in this repository are currently version <code>{CURRENT_VERSION}</code>. `@event-nest/core` declares support for NestJS 10 and 11 and requires Node.js 22 or newer. The repository includes unit and adapter integration tests.
 
 The project also states that it has **not been widely tested in production**. Version number and test coverage should not be interpreted as evidence of broad production adoption. Evaluate failure behavior, database requirements, observability, throughput, and recovery against your own workload before relying on it for critical systems.
 

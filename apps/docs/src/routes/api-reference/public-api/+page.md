@@ -1,9 +1,13 @@
 ---
 title: Public API
-description: Curated inventory of symbols exported by the Event Nest 6.0.0 package barrels.
+description: Curated inventory of symbols exported by the current Event Nest package barrels.
 ---
 
-This page lists symbols available from package-root imports in 6.0.0. It intentionally excludes implementation files that are not re-exported by a package's `src/index.ts`; importing those files by deep path is unsupported by each package's export map.
+<script lang="ts">
+    import { CURRENT_VERSION } from "$lib/site";
+</script>
+
+This page lists symbols available from package-root imports in <code>{CURRENT_VERSION}</code>. It intentionally excludes implementation files that are not re-exported by a package's `src/index.ts`; importing those files by deep path is unsupported by each package's export map.
 
 ## `@event-nest/core`
 

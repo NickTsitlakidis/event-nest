@@ -1,6 +1,6 @@
 ---
 title: Configuration
-description: Complete module registration and adapter option reference for Event Nest 6.0.0.
+description: Complete module registration and adapter option reference for Event Nest.
 ---
 
 Event Nest has one persistence module per adapter. Each module builds and exports an event store under the `EVENT_STORE` injection token. Snapshot storage is configured by each adapter; there is no shared public snapshot module-options type.
