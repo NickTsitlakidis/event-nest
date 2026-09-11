@@ -4,7 +4,9 @@ import { fileURLToPath } from "node:url";
 
 const outputDirectory = fileURLToPath(new URL("../../dist/apps/docs", import.meta.url));
 
-/** @type {import("@sveltejs/kit").Config} */
+/**
+@type {import("@sveltejs/kit").Config}
+*/
 const config = {
     extensions: [".svelte", ".md"],
     kit: {
