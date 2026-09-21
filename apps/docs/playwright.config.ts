@@ -14,7 +14,9 @@ export default defineConfig({
         trace: "retain-on-failure"
     },
     webServer: {
-        command: "pnpm exec vite preview --host 127.0.0.1 --port 4173",
+        // Invoke vite directly: `pnpm exec` (pnpm >= 11.27) spawns its child in a separate process group when no
+        // terminal is attached, so Playwright cannot kill the preview server and the run never exits.
+        command: "node node_modules/vite/bin/vite.js preview --host 127.0.0.1 --port 4173",
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,
         url: `${origin}${basePath || "/"}`
