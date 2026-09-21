@@ -14,7 +14,7 @@
         "type": "git",
         "url": "https://github.com/NickTsitlakidis/event-nest.git"
     },
-    "packageManager": "pnpm@11.10.0",
+    "packageManager": "pnpm@11.27.1",
     "engines": {
         "node": ">=22.13"
     },

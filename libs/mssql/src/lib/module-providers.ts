@@ -88,7 +88,7 @@ export class ModuleProviders {
                 useFactory: (knexConnection: knex.Knex, schemaConfiguration: SchemaConfiguration) => {
                     return new TableInitializer(
                         schemaConfiguration,
-                        isNil(options.ensureTablesExist) ? false : options.ensureTablesExist,
+                        options.ensureTablesExist ?? false,
                         knexConnection
                     );
                 }
@@ -155,11 +155,7 @@ export class ModuleProviders {
                 options: MSSQLModuleOptions,
                 schemaConfiguration: SchemaConfiguration
             ) => {
-                return new TableInitializer(
-                    schemaConfiguration,
-                    isNil(options.ensureTablesExist) ? false : options.ensureTablesExist,
-                    knexConnection
-                );
+                return new TableInitializer(schemaConfiguration, options.ensureTablesExist ?? false, knexConnection);
             }
         };
 

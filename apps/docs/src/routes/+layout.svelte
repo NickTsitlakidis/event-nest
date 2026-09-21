@@ -44,10 +44,12 @@
             // Slot the search pill between the nav links and the icon controls.
             const iconArea = document.querySelector("header .navbar-pc");
             const firstIcon = iconArea?.querySelector(":scope > a, :scope > .toggle");
-            if (firstIcon) {
-                firstIcon.before(searchHost);
-                searchHost.classList.add("ready");
+            if (!firstIcon) {
+                return;
             }
+
+            firstIcon.before(searchHost);
+            searchHost.classList.add("ready");
         });
     });
 </script>

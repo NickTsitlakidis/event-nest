@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/prefer-continue */
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 
@@ -51,8 +52,11 @@ for (const file of files) {
         const href = match[1];
         if (!isExternal(href)) {
             const target = targetFor(href, file);
-            if (!existsSync(target)) errors.push(`${file.replace(root, "")}: ${href}`);
-            else if (!hasAnchor(target, href)) errors.push(`${file.replace(root, "")}: missing anchor ${href}`);
+            if (!existsSync(target)) {
+                errors.push(`${file.replace(root, "")}: ${href}`);
+            } else if (!hasAnchor(target, href)) {
+                errors.push(`${file.replace(root, "")}: missing anchor ${href}`);
+            }
         }
     }
 }

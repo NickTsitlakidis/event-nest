@@ -32,34 +32,36 @@ export class DomainEventEmitter implements OnModuleDestroy {
     bindSubscriptions(injectorModules: Map<string, Module>) {
         injectorModules.forEach((module) => {
             module.providers.forEach((provider) => {
-                if (!provider.instance || !provider.instance.constructor) {
+                if (
+                    !provider.instance ||
+                    !provider.instance.constructor ||
+                    !isDomainEventSubscription(provider.instance as object)
+                ) {
                     return;
                 }
 
-                if (isDomainEventSubscription(provider.instance as object)) {
-                    const events = getEventsFromDomainEventSubscription(provider.instance as OnDomainEvent<unknown>);
-                    const isAsync = getSubscriptionAsyncType(provider.instance as OnDomainEvent<unknown>);
-                    if (isAsync) {
-                        events.forEach((event) => {
-                            const eventId = getEventId(event) as string;
-                            if (!this._asyncHandlers.has(eventId)) {
-                                this._asyncHandlers.set(eventId, []);
-                            }
+                const events = getEventsFromDomainEventSubscription(provider.instance as OnDomainEvent<unknown>);
+                const isAsync = getSubscriptionAsyncType(provider.instance as OnDomainEvent<unknown>);
+                if (isAsync) {
+                    events.forEach((event) => {
+                        const eventId = getEventId(event) as string;
+                        if (!this._asyncHandlers.has(eventId)) {
+                            this._asyncHandlers.set(eventId, []);
+                        }
 
-                            this._logger.debug(`Binding ${provider.instance?.constructor.name} to event ${eventId}`);
-                            this._asyncHandlers.get(eventId)?.push(provider.instance as OnDomainEvent<object>);
-                        });
-                    } else {
-                        events.forEach((event) => {
-                            const eventId = getEventId(event) as string;
-                            if (!this._syncHandlers.has(eventId)) {
-                                this._syncHandlers.set(eventId, []);
-                            }
+                        this._logger.debug(`Binding ${provider.instance?.constructor.name} to event ${eventId}`);
+                        this._asyncHandlers.get(eventId)?.push(provider.instance as OnDomainEvent<object>);
+                    });
+                } else {
+                    events.forEach((event) => {
+                        const eventId = getEventId(event) as string;
+                        if (!this._syncHandlers.has(eventId)) {
+                            this._syncHandlers.set(eventId, []);
+                        }
 
-                            this._logger.debug(`Binding ${provider.instance?.constructor.name} to event ${eventId}`);
-                            this._syncHandlers.get(eventId)?.push(provider.instance as OnDomainEvent<object>);
-                        });
-                    }
+                        this._logger.debug(`Binding ${provider.instance?.constructor.name} to event ${eventId}`);
+                        this._syncHandlers.get(eventId)?.push(provider.instance as OnDomainEvent<object>);
+                    });
                 }
             });
         });
