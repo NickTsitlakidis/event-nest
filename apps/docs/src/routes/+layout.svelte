@@ -72,6 +72,7 @@
         content="Event sourcing primitives and persistence adapters for NestJS applications."
     />
     <meta name="theme-color" content="#2e7de9" />
+    <meta name="google-site-verification" content="htIXtLKqxE-n7U1s_xHccKfvrcIvPmmweXrFoZ2iVlA" />
 </svelte:head>
 
 {@render children?.()}
