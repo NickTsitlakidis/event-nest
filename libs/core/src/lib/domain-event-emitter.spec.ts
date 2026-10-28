@@ -1,5 +1,5 @@
 import { createMock } from "@golevelup/ts-jest";
-import { InjectionToken } from "@nestjs/common";
+import { InjectionToken, Logger } from "@nestjs/common";
 import { Injectable } from "@nestjs/common/interfaces";
 import { InstanceWrapper } from "@nestjs/core/injector/instance-wrapper";
 import { Module } from "@nestjs/core/injector/module";
@@ -53,6 +53,14 @@ class WithMultiple implements OnDomainEvent<Event1 | Event2> {
         return Promise.resolve();
     }
 }
+const event2 = (eventId: string, version: number) => ({
+    aggregateRootId: "test",
+    eventId,
+    occurredAt: new Date(),
+    payload: new Event2(),
+    version
+});
+
 describe("DomainEventEmitter", () => {
     describe("onModuleDestroy", () => {
         test("stops calling subscriptions", () => {
@@ -131,6 +139,145 @@ describe("DomainEventEmitter", () => {
             ).rejects.toThrow(SubscriptionException);
 
             expect(syncSpy).toHaveBeenCalledTimes(1);
+        });
+
+        describe("when a subscription throws synchronously instead of rejecting", () => {
+            let errorLogSpy: jest.SpyInstance;
+            let debugLogSpy: jest.SpyInstance;
+
+            beforeEach(() => {
+                errorLogSpy = jest.spyOn(Logger.prototype, "error").mockImplementation(jest.fn());
+                debugLogSpy = jest.spyOn(Logger.prototype, "debug").mockImplementation(jest.fn());
+            });
+
+            afterEach(() => {
+                errorLogSpy.mockRestore();
+                debugLogSpy.mockRestore();
+            });
+
+            test("rejects with mapped exception for sync subscription when running sequentially", async () => {
+                const syncSubscription = new TestEvent2SyncSubscription();
+                const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>([
+                    [
+                        TestEvent2SyncSubscription,
+                        createMock<InstanceWrapper<Injectable>>({ instance: syncSubscription })
+                    ]
+                ]);
+                const injectorModules = new Map<string, Module>([
+                    ["test", createMock<Module>({ providers: providersMap })]
+                ]);
+                jest.spyOn(syncSubscription, "onDomainEvent").mockImplementation(() => {
+                    throw new Error("sync failure");
+                });
+
+                const emitter = new DomainEventEmitter(false);
+                emitter.bindSubscriptions(injectorModules);
+
+                let rejection: unknown;
+                try {
+                    await emitter.emitMultiple([event2("ev-id", 1)]);
+                } catch (error) {
+                    rejection = error;
+                }
+
+                expect(rejection).toBeInstanceOf(SubscriptionException);
+                expect((rejection as SubscriptionException).caughtError.message).toBe("sync failure");
+                expect((rejection as SubscriptionException).eventClassName).toBe("Event2");
+                expect((rejection as SubscriptionException).eventId).toBe("ev-id");
+                expect(errorLogSpy).toHaveBeenCalledWith("Error while emitting event Event2 : sync failure");
+            });
+
+            test("rejects with mapped exception for sync subscription when running concurrently", async () => {
+                const syncSubscription = new TestEvent2SyncSubscription();
+                const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>([
+                    [
+                        TestEvent2SyncSubscription,
+                        createMock<InstanceWrapper<Injectable>>({ instance: syncSubscription })
+                    ]
+                ]);
+                const injectorModules = new Map<string, Module>([
+                    ["test", createMock<Module>({ providers: providersMap })]
+                ]);
+                jest.spyOn(syncSubscription, "onDomainEvent").mockImplementation(() => {
+                    throw new Error("sync failure");
+                });
+
+                const emitter = new DomainEventEmitter(true);
+                emitter.bindSubscriptions(injectorModules);
+
+                let result: Promise<unknown> | undefined;
+                expect(() => {
+                    result = emitter.emitMultiple([event2("ev-id", 1)]);
+                }).not.toThrow();
+                await expect(result).rejects.toThrow(SubscriptionException);
+                expect(errorLogSpy).toHaveBeenCalledWith("Error while emitting event Event2 : sync failure");
+            });
+
+            test("logs error and stops the chain for async subscription when running sequentially", async () => {
+                const subscription1 = new TestEvent2Subscription();
+                const subscription2 = new TestSubscription();
+                const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>([
+                    [TestEvent2Subscription, createMock<InstanceWrapper<Injectable>>({ instance: subscription1 })],
+                    [TestSubscription, createMock<InstanceWrapper<Injectable>>({ instance: subscription2 })]
+                ]);
+                const injectorModules = new Map<string, Module>([
+                    ["test", createMock<Module>({ providers: providersMap })]
+                ]);
+                jest.spyOn(subscription1, "onDomainEvent").mockImplementation(() => {
+                    throw new Error("sync failure");
+                });
+                const laterSpy = jest.spyOn(subscription2, "onDomainEvent");
+
+                const emitter = new DomainEventEmitter(false);
+                emitter.bindSubscriptions(injectorModules);
+
+                let result: Promise<unknown> | undefined;
+                expect(() => {
+                    result = emitter.emitMultiple([
+                        event2("ev-id", 1),
+                        {
+                            aggregateRootId: "test",
+                            eventId: "ev-id2",
+                            occurredAt: new Date(),
+                            payload: new Event1("ev1"),
+                            version: 2
+                        }
+                    ]);
+                }).not.toThrow();
+                await expect(result).resolves.toBeUndefined();
+                await delay(50);
+
+                expect(errorLogSpy).toHaveBeenCalledWith("Error while emitting event Event2 : sync failure");
+                expect(debugLogSpy).toHaveBeenCalledWith(
+                    "Stopped sequential emission after subscription error for event Event2"
+                );
+                expect(laterSpy).not.toHaveBeenCalled();
+            });
+
+            test("logs error and resolves for async subscription when running concurrently", async () => {
+                const subscription = new TestEvent2Subscription();
+                const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>([
+                    [TestEvent2Subscription, createMock<InstanceWrapper<Injectable>>({ instance: subscription })]
+                ]);
+                const injectorModules = new Map<string, Module>([
+                    ["test", createMock<Module>({ providers: providersMap })]
+                ]);
+                jest.spyOn(subscription, "onDomainEvent").mockImplementation(() => {
+                    throw new Error("sync failure");
+                });
+
+                const emitter = new DomainEventEmitter(true);
+                emitter.bindSubscriptions(injectorModules);
+
+                let result: Promise<unknown> | undefined;
+                expect(() => {
+                    result = emitter.emitMultiple([event2("ev-id", 1)]);
+                }).not.toThrow();
+                await expect(result).resolves.toBeUndefined();
+                await delay(50);
+
+                expect(errorLogSpy).toHaveBeenCalledWith("Error while emitting event Event2 : sync failure");
+            });
         });
 
         test("waits for sync subscriptions when running concurrently", async () => {

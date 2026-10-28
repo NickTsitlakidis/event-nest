@@ -14,7 +14,7 @@ This matrix reflects the published <code>{CURRENT_VERSION}</code> package manife
 | Component | Supported version or range | Notes |
 | --- | --- | --- |
 | Node.js | `>=22` | All four published packages declare `>= 22`. Node 20 support was dropped in 6.0.0. |
-| Repository development Node.js | `>=24.9` | The monorepo root requires this for contributors because its test suites load the ESM-only NestJS 12 through Jest; it is not the published consumer minimum. |
+| Repository development Node.js | `>=22` (`>=24.9` for the NestJS 12 test suite) | The monorepo root requires Node 22 or later. Only running the test suites against the ESM-only NestJS 12 through Jest needs Node 24.9 or later; on Node 22, test against NestJS 10 or 11. |
 | NestJS `@nestjs/common` | `^10.0.0 \|\| ^11.0.0 \|\| ^12.0.0` | Peer of core and every adapter. Nest 9 support was dropped in 4.0.0. |
 | NestJS `@nestjs/core` | `^10.0.0 \|\| ^11.0.0 \|\| ^12.0.0` | Keep the Nest core/common majors aligned. NestJS 12 requires Node.js 22.12 or later; see below. |
 | `reflect-metadata` | `^0.1.12 \|\| ^0.2.0` | Required peer for decorator metadata. |
