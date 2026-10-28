@@ -6,20 +6,7 @@
     "tags": [],
     "targets": {
         "build": {
-            "executor": "@nx/webpack:webpack",
-            "outputs": ["{options.outputPath}"],
             "defaultConfiguration": "production",
-            "options": {
-                "target": "node",
-                "externalDependencies": "all",
-                "compiler": "tsc",
-                "outputPath": "dist/apps/example",
-                "main": "apps/example/src/main.ts",
-                "tsConfig": "apps/example/tsconfig.app.json",
-                "assets": ["apps/example/src/assets"],
-                "sourceMap": true,
-                "webpackConfig": "apps/example/webpack.config.js"
-            },
             "configurations": {
                 "development": {},
                 "production": {}

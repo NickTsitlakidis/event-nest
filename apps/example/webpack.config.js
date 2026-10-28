@@ -1,16 +1,9 @@
-const { composePlugins, withNx } = require("@nx/webpack");
+const { NxAppWebpackPlugin } = require("@nx/webpack/app-plugin");
 const path = require("node:path");
 
-// Nx plugins for webpack.
-module.exports = composePlugins(withNx(), (config) => {
-    // Resolve @event-nest/* workspace packages to their TypeScript source via the
-    // "event-nest-source" export condition, regardless of webpack mode.
-    config.resolve ??= {};
-    config.resolve.conditionNames = ["event-nest-source", "..."];
-
+module.exports = {
     // Bundle workspace libraries but leave installed Node packages to runtime.
-    config.externals = [
-        ...(Array.isArray(config.externals) ? config.externals : []),
+    externals: [
         ({ request }, callback) => {
             if (
                 request &&
@@ -24,7 +17,27 @@ module.exports = composePlugins(withNx(), (config) => {
 
             callback();
         }
-    ];
-
-    return config;
-});
+    ],
+    output: {
+        path: path.join(__dirname, "../../dist/apps/example")
+    },
+    plugins: [
+        new NxAppWebpackPlugin({
+            assets: ["./src/assets"],
+            compiler: "tsc",
+            externalDependencies: "all",
+            main: "./src/main.ts",
+            mergeExternals: true,
+            optimization: false,
+            outputHashing: "none",
+            sourceMap: true,
+            target: "node",
+            tsConfig: "./tsconfig.app.json"
+        })
+    ],
+    // Resolve @event-nest/* workspace packages to their TypeScript source via the
+    // "event-nest-source" export condition, regardless of webpack mode.
+    resolve: {
+        conditionNames: ["event-nest-source", "..."]
+    }
+};
