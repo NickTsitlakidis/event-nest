@@ -14,9 +14,9 @@ This matrix reflects the published <code>{CURRENT_VERSION}</code> package manife
 | Component | Supported version or range | Notes |
 | --- | --- | --- |
 | Node.js | `>=22` | All four published packages declare `>= 22`. Node 20 support was dropped in 6.0.0. |
-| Repository development Node.js | `>=22.13` | The monorepo root requires this for contributors and documentation builds; it is not the published consumer minimum. |
-| NestJS `@nestjs/common` | `^10.0.0 \|\| ^11.0.0` | Peer of core and every adapter. Nest 9 support was dropped in 4.0.0. |
-| NestJS `@nestjs/core` | `^10.0.0 \|\| ^11.0.0` | Keep the Nest core/common majors aligned. |
+| Repository development Node.js | `>=22` (`>=24.9` for the NestJS 12 test suite) | The monorepo root requires Node 22 or later. Only running the test suites against the ESM-only NestJS 12 through Jest needs Node 24.9 or later; on Node 22, test against NestJS 10 or 11. |
+| NestJS `@nestjs/common` | `^10.0.0 \|\| ^11.0.0 \|\| ^12.0.0` | Peer of core and every adapter. Nest 9 support was dropped in 4.0.0. |
+| NestJS `@nestjs/core` | `^10.0.0 \|\| ^11.0.0 \|\| ^12.0.0` | Keep the Nest core/common majors aligned. NestJS 12 requires Node.js 22.12 or later; see below. |
 | `reflect-metadata` | `^0.1.12 \|\| ^0.2.0` | Required peer for decorator metadata. |
 | RxJS | `^7.2.0` | Required peer. |
 | MongoDB Node.js driver | `^7.0.0` | Required by `@event-nest/mongodb`; MongoDB 6.x drivers are outside the current supported range. |
@@ -49,6 +49,8 @@ Each adapter package depends on exactly `@event-nest/core` <code>{CURRENT_VERSIO
 ## TypeScript and module format
 
 The packages publish CommonJS entry points and declarations through package-root exports. Import only from `@event-nest/core`, `@event-nest/mongodb`, `@event-nest/postgresql`, or `@event-nest/mssql`; deep source paths are not declared package exports.
+
+NestJS 12 ships as ESM-only. The Event Nest packages stay CommonJS and load NestJS 12 through Node.js `require(esm)`, which needs Node.js 22.12 or later. Applications that stay on CommonJS keep working; applications that run their tests with Jest need Node.js 24.9 or later and the `--experimental-vm-modules` flag to load NestJS 12. See the [NestJS migration guide](https://docs.nestjs.com/migration-guide) for details.
 
 TypeScript is not a published peer dependency, so the repository's TypeScript version is not a consumer support promise. Decorators must be compiled in a NestJS-compatible setup with metadata available at runtime.
 

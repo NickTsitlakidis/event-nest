@@ -89,16 +89,20 @@ export class DomainEventEmitter implements OnModuleDestroy {
         handler: OnDomainEvent<object>,
         rethrow = false
     ): (event: PublishedDomainEvent<object>) => Promise<unknown> {
-        return (event: PublishedDomainEvent<object>) => {
-            // eslint-disable-next-line unicorn/prefer-await
-            return handler.onDomainEvent(event).catch((error) => {
+        return async (event: PublishedDomainEvent<object>) => {
+            try {
+                // Awaiting inside the try block also catches handlers that throw synchronously before
+                // returning a promise, so every failure takes the same logging and mapping path.
+                return await handler.onDomainEvent(event);
+            } catch (error) {
                 this._logger.error(
-                    `Error while emitting event ${event.payload.constructor.name} : ${(error as any).message}`
+                    `Error while emitting event ${event.payload.constructor.name} : ${(error as Error).message}`
                 );
-                return rethrow
-                    ? Promise.reject(new SubscriptionException(error, event.payload.constructor.name, event.eventId))
-                    : Promise.resolve();
-            });
+                if (rethrow) {
+                    throw new SubscriptionException(error as Error, event.payload.constructor.name, event.eventId);
+                }
+                return;
+            }
         };
     }
 
@@ -175,7 +179,15 @@ export class DomainEventEmitter implements OnModuleDestroy {
                 concatMap((perEvent) => from(perEvent.promise())),
                 toArray()
             )
-            .subscribe({});
+            .subscribe({
+                // Each handler error is already logged in catchError. Without an error callback RxJS would
+                // rethrow the SubscriptionException asynchronously as an uncaught exception.
+                error: (error: SubscriptionException) => {
+                    this._logger.debug(
+                        `Stopped sequential emission after subscription error for event ${error.eventClassName}`
+                    );
+                }
+            });
         return Promise.resolve();
     }
 

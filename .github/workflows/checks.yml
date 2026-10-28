@@ -14,7 +14,19 @@ jobs:
         runs-on: ubuntu-latest
         strategy:
             matrix:
-                node-version: [ 22.x, 24.x ]
+                # "catalog" uses the NestJS version pinned in pnpm-workspace.yaml (currently 12). NestJS 12 is
+                # ESM-only and Jest can require() it only on Node.js 24.9+, so those legs run on 24 and 26.
+                # The older supported majors run on Node.js 22, the published minimum.
+                include:
+                    -   node-version: 24.x
+                        nest-version: catalog
+                    -   node-version: 26.x
+                        nest-version: catalog
+                    -   node-version: 22.x
+                        nest-version: 11
+                    -   node-version: 22.x
+                        nest-version: 10
+        name: Node ${{ matrix.node-version }} / NestJS ${{ matrix.nest-version }}
         steps:
             -   name: Checkout
                 uses: actions/checkout@v4
@@ -39,25 +51,35 @@ jobs:
                     key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
                     restore-keys: |
                         ${{ runner.os }}-pnpm-store-
+            -   name: Use NestJS ${{ matrix.nest-version }}
+                if: matrix.nest-version != 'catalog'
+                shell: bash
+                run: |
+                    sed -i -E 's/^(\s+"@nestjs\/(common|core|platform-express|testing)": )"[^"]+"/\1"^${{ matrix.nest-version }}.0.0"/' pnpm-workspace.yaml
+                    grep -E '"@nestjs/(common|core|platform-express|testing)"' pnpm-workspace.yaml
             -   name: Install dependencies
-                run: pnpm install --frozen-lockfile
+                run: pnpm install ${{ matrix.nest-version == 'catalog' && '--frozen-lockfile' || '--no-frozen-lockfile' }}
             -   name: Check docs
+                if: matrix.nest-version == 'catalog'
                 run: pnpm nx run docs:check
             -   name: Lint docs
+                if: matrix.nest-version == 'catalog'
                 run: pnpm nx run docs:lint
             -   name: Build docs
+                if: matrix.nest-version == 'catalog'
                 run: pnpm nx run docs:build
                 env:
                     BASE_PATH: /event-nest
             -   name: Check docs links
+                if: matrix.nest-version == 'catalog'
                 run: pnpm nx run docs:links
                 env:
                     BASE_PATH: /event-nest
             -   name: Install docs browser
-                if: matrix.node-version == '22.x'
+                if: matrix.nest-version == 'catalog' && matrix.node-version == '24.x'
                 run: pnpm --filter @event-nest/docs exec playwright install --with-deps chromium
             -   name: Check docs viewports
-                if: matrix.node-version == '22.x'
+                if: matrix.nest-version == 'catalog' && matrix.node-version == '24.x'
                 run: pnpm nx run docs:viewport
                 env:
                     BASE_PATH: /event-nest
@@ -78,4 +100,5 @@ jobs:
             -   name: Build postgresql
                 run: pnpm nx run postgresql:build
             -   name: Upload test coverage
+                if: matrix.nest-version == 'catalog'
                 uses: coverallsapp/github-action@8d6379e14d29928660c4ba802d8e85393440b329

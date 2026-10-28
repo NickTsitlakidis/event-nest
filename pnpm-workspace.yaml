@@ -9,19 +9,19 @@ catalogMode: strict
 catalog:
     "@eslint/js": "10.0.1"
     "@golevelup/ts-jest": "3.0.0"
-    "@nestjs/common": "11.2.7"
-    "@nestjs/core": "11.2.7"
-    "@nestjs/platform-express": "11.2.7"
+    "@nestjs/common": "12.3.2"
+    "@nestjs/core": "12.3.2"
+    "@nestjs/platform-express": "12.3.2"
     "@nestjs/schematics": "11.1.0"
-    "@nestjs/testing": "11.2.7"
-    "@nx/eslint": "23.3.0"
-    "@nx/eslint-plugin": "23.3.0"
-    "@nx/jest": "23.3.0"
-    "@nx/js": "23.3.0"
-    "@nx/nest": "23.3.0"
-    "@nx/node": "23.3.0"
-    "@nx/webpack": "23.3.0"
-    "@nx/workspace": "23.3.0"
+    "@nestjs/testing": "12.3.2"
+    "@nx/eslint": "24.0.2"
+    "@nx/eslint-plugin": "24.0.2"
+    "@nx/jest": "24.0.2"
+    "@nx/js": "24.0.2"
+    "@nx/nest": "24.0.2"
+    "@nx/node": "24.0.2"
+    "@nx/webpack": "24.0.2"
+    "@nx/workspace": "24.0.2"
     "@playwright/test": "1.64.0"
     "@sveltejs/adapter-static": "3.0.10"
     "@sveltejs/kit": "2.70.3"
@@ -51,7 +51,7 @@ catalog:
     "jest-util": "30.5.1"
     "knex": "^3.1.0"
     "mongodb": "^7.0.0"
-    "nx": "23.3.0"
+    "nx": "24.0.2"
     "pg": "^8.14.1"
     "prettier": "3.9.10"
     "prettier-plugin-svelte": "4.1.1"
@@ -69,6 +69,12 @@ catalog:
     "webpack": "5.111.1"
     "webpack-cli": "^7.0.0"
     "webpack-dev-server": "5.2.6"
+
+# @nx/nest still declares NestJS < 12 as its peer range; it is only used for generators and works with 12.
+peerDependencyRules:
+    allowedVersions:
+        "@nx/nest>@nestjs/common": "12"
+        "@nx/nest>@nestjs/core": "12"
 
 allowBuilds:
     "@nestjs/core": true

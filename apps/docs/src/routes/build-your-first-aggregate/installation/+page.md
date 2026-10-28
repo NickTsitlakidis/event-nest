@@ -9,7 +9,7 @@ description: Install Event Nest and configure its PostgreSQL event store in a Ne
     const tutorialPackages = ["@event-nest/core", "@event-nest/postgresql", "pg"];
 </script>
 
-This tutorial builds a small event-sourced `User` model backed by PostgreSQL. You need Node.js 22 or newer, a NestJS 10 or 11 application, and a PostgreSQL database that your application can reach.
+This tutorial builds a small event-sourced `User` model backed by PostgreSQL. You need Node.js 22 or newer, a NestJS 10, 11, or 12 application, and a PostgreSQL database that your application can reach.
 
 ## Install the packages
 
