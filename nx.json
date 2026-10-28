@@ -17,6 +17,12 @@
                 "{workspaceRoot}/jest.preset.js",
                 "{workspaceRoot}/jest-mongodb-config.js"
             ],
+            "options": {
+                "env": {
+                    "NODE_OPTIONS": "--experimental-vm-modules",
+                    "TS_NODE_COMPILER_OPTIONS": "{\"moduleResolution\":\"node10\",\"module\":\"commonjs\",\"customConditions\":null}"
+                }
+            },
             "cache": true
         },
         "@nx/js:tsc": {

@@ -43,6 +43,12 @@ We use [Jest](https://github.com/facebook/jest) to write tests. All changes must
 
 The PostgreSQL and MSSQL libraries use Testcontainers to run integration tests against real database instances. Docker must be running. MSSQL tests explicitly accept the Microsoft SQL Server container EULA in test setup.
 
+### NestJS versions
+
+The catalog in `pnpm-workspace.yaml` pins the NestJS version used for development to the latest supported major (currently 12). NestJS 12 ships as ESM-only, so Jest can load it only on Node.js 24.9 or later with `--experimental-vm-modules`. The Nx `test` targets set that flag automatically through `targetDefaults` in `nx.json`, so `pnpm nx test core` works as usual; just make sure you run Node.js 24.9 or later.
+
+The published packages also support NestJS 10 and 11, and CI runs the suites against those majors as separate matrix legs. To reproduce one locally, point the `@nestjs/common`, `@nestjs/core`, `@nestjs/platform-express`, and `@nestjs/testing` catalog entries at `^11.0.0` or `^10.0.0`, run `pnpm install --no-frozen-lockfile`, run the targets you need, and revert the catalog and lockfile afterwards.
+
 ## Code Style
 
 We use [Prettier](https://prettier.io/) and eslint. Your PR must pass linting:

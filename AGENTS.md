@@ -43,6 +43,7 @@ Testing dependencies:
 - PostgreSQL integration tests use Testcontainers -> Docker must be available/running.
 - MSSQL integration tests use Testcontainers and accept Microsoft's SQL Server container EULA -> Docker must be available/running.
 - MongoDB tests rely on jest-mongodb environment (`MONGO_URL` provided by test setup).
+- The catalog pins NestJS 12, which is ESM-only. Jest can load it only on Node >= 24.9 with `NODE_OPTIONS=--experimental-vm-modules`; the Nx `test` targets set the flag via `targetDefaults` in `nx.json`. NestJS 10 and 11 stay supported and are covered by CI matrix legs (see `CONTRIBUTING.md`).
 
 ## Canonical Commands
 

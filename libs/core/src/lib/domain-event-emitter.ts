@@ -175,7 +175,15 @@ export class DomainEventEmitter implements OnModuleDestroy {
                 concatMap((perEvent) => from(perEvent.promise())),
                 toArray()
             )
-            .subscribe({});
+            .subscribe({
+                // Each handler error is already logged in catchError. Without an error callback RxJS would
+                // rethrow the SubscriptionException asynchronously as an uncaught exception.
+                error: (error: SubscriptionException) => {
+                    this._logger.debug(
+                        `Stopped sequential emission after subscription error for event ${error.eventClassName}`
+                    );
+                }
+            });
         return Promise.resolve();
     }
 

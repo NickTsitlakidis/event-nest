@@ -16,7 +16,7 @@
     },
     "packageManager": "pnpm@11.27.1",
     "engines": {
-        "node": ">=22.13"
+        "node": ">=24.9"
     },
     "devDependencies": {
         "@eslint/js": "catalog:",

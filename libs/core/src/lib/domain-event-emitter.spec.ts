@@ -607,6 +607,12 @@ describe("DomainEventEmitter", () => {
             });
             expect(handleSpy).toHaveBeenCalledTimes(0);
             expect(handledParameters).toEqual([]);
+
+            // Wait for the failing subscription to settle and verify the chain stopped there. This also keeps
+            // the rejection inside the test instead of letting it escape after the suite has finished.
+            await delay(1500);
+            expect(handleSpy).toHaveBeenCalledTimes(0);
+            expect(handledParameters).toEqual([]);
         }, 10_000);
     });
 });
