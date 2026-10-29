@@ -4,6 +4,7 @@
     "license": "MIT",
     "description": "Event sourcing module for NestJS using Microsoft SQL Server",
     "author": "Nick Tsitlakidis",
+    "homepage": "https://nicktsitlakidis.github.io/event-nest/",
     "repository": {
         "type": "git",
         "url": "https://github.com/NickTsitlakidis/event-nest.git"

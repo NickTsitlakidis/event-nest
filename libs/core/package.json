@@ -13,6 +13,7 @@
         "sql",
         "postgresql"
     ],
+    "homepage": "https://nicktsitlakidis.github.io/event-nest/",
     "repository": {
         "type": "git",
         "url": "https://github.com/NickTsitlakidis/event-nest.git"
