@@ -209,8 +209,7 @@ describe("EventNestMongoDbModule", () => {
                 ]
             }).compile();
 
-            const app = module.createNestApplication();
-            await app.init();
+            await module.init();
 
             expect(emitter.bindSubscriptions).toHaveBeenCalledTimes(1);
             expect(emitter.bindSubscriptions).toHaveBeenCalledWith(module.get(ModulesContainer));

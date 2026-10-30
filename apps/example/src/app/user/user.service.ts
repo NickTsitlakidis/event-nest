@@ -1,6 +1,6 @@
 import { EVENT_STORE, type EventStore } from "@event-nest/core";
 import { Inject, Injectable } from "@nestjs/common";
-import { ObjectId } from "mongodb";
+import { randomUUID } from "node:crypto";
 
 import { User } from "./user";
 
@@ -9,7 +9,7 @@ export class UserService {
     constructor(@Inject(EVENT_STORE) private readonly _eventStore: EventStore) {}
 
     async createUser(name: string, email: string) {
-        const user = User.createNew(new ObjectId().toHexString(), name, email);
+        const user = User.createNew(randomUUID(), name, email);
         const userWithPublisher = this._eventStore.addPublisher(user);
         await userWithPublisher.commit();
         return user.id;
