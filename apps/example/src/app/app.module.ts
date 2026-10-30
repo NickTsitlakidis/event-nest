@@ -5,7 +5,7 @@ import {
     ForCountSnapshotStrategy,
     ForEventsSnapshotStrategy
 } from "@event-nest/core";
-import { EventNestMongoDbModule } from "@event-nest/mongodb";
+import { EventNestPostgreSQLModule } from "@event-nest/postgresql";
 import { Module } from "@nestjs/common";
 
 import { AppController } from "./app.controller";
@@ -19,14 +19,16 @@ import { UserService } from "./user/user.service";
 @Module({
     controllers: [AppController],
     imports: [
-        EventNestMongoDbModule.forRootAsync({
+        EventNestPostgreSQLModule.forRootAsync({
             useFactory: async () => {
                 return {
-                    aggregatesCollection: "aggregates-collection",
+                    aggregatesTableName: "aggregates",
                     concurrentSubscriptions: false,
-                    connectionUri: "mongodb://localhost:27017/example",
-                    eventsCollection: "events-collection",
-                    snapshotCollection: "snapshots-collection",
+                    connectionUri: "postgresql://postgres:postgres@localhost:5432/example",
+                    ensureTablesExist: true,
+                    eventsTableName: "events",
+                    // The adapter creates tables but never schemas, so "public" keeps a fresh database runnable.
+                    schemaName: "public",
                     snapshotStrategy: new AnyOfSnapshotStrategy([
                         new AllOfSnapshotStrategy([
                             new ForAggregateRootsStrategy({ aggregates: [Order] }),
@@ -36,7 +38,8 @@ import { UserService } from "./user/user.service";
                             new ForAggregateRootsStrategy({ aggregates: [User] }),
                             new ForCountSnapshotStrategy({ count: 10 })
                         ])
-                    ])
+                    ]),
+                    snapshotTableName: "snapshots"
                 };
             }
         }),

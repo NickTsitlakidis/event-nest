@@ -55,8 +55,8 @@ jobs:
                 if: matrix.nest-version != 'catalog'
                 shell: bash
                 run: |
-                    sed -i -E 's/^(\s+"@nestjs\/(common|core|platform-express|testing)": )"[^"]+"/\1"^${{ matrix.nest-version }}.0.0"/' pnpm-workspace.yaml
-                    grep -E '"@nestjs/(common|core|platform-express|testing)"' pnpm-workspace.yaml
+                    sed -i -E 's/^(\s+"@nestjs\/(common|core|testing)": )"[^"]+"/\1"^${{ matrix.nest-version }}.0.0"/' pnpm-workspace.yaml
+                    grep -E '"@nestjs/(common|core|testing)"' pnpm-workspace.yaml
             -   name: Install dependencies
                 run: pnpm install ${{ matrix.nest-version == 'catalog' && '--frozen-lockfile' || '--no-frozen-lockfile' }}
             -   name: Check docs

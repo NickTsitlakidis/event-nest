@@ -159,8 +159,7 @@ describe("EventNestMSSQLModule", () => {
                 imports: [EventNestMSSQLModule.register(options)]
             }).compile();
 
-            const app = module.createNestApplication();
-            await app.init();
+            await module.init();
 
             expect(emitter.bindSubscriptions).toHaveBeenCalledTimes(1);
             expect(emitter.bindSubscriptions).toHaveBeenCalledWith(module.get(ModulesContainer));
@@ -189,8 +188,7 @@ describe("EventNestMSSQLModule", () => {
                 imports: [EventNestMSSQLModule.registerAsync({ useFactory: () => options })]
             }).compile();
 
-            const app = module.createNestApplication();
-            await app.init();
+            await module.init();
 
             expect(emitter.bindSubscriptions).toHaveBeenCalledTimes(1);
             expect(emitter.bindSubscriptions).toHaveBeenCalledWith(module.get(ModulesContainer));
@@ -221,10 +219,8 @@ describe("EventNestMSSQLModule", () => {
                 imports: [EventNestMSSQLModule.register(options)]
             }).compile();
 
-            const app = module.createNestApplication();
-            app.enableShutdownHooks();
-            await app.init();
-            await app.close();
+            await module.init();
+            await module.close();
 
             expect(connection.destroy).toHaveBeenCalledTimes(1);
         });

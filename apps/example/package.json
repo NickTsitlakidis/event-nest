@@ -4,11 +4,11 @@
     "private": true,
     "dependencies": {
         "@event-nest/core": "workspace:*",
-        "@event-nest/mongodb": "workspace:*",
+        "@event-nest/postgresql": "workspace:*",
         "@nestjs/common": "catalog:",
         "@nestjs/core": "catalog:",
-        "@nestjs/platform-express": "catalog:",
-        "mongodb": "catalog:",
+        "@nestjs/platform-node": "catalog:",
+        "pg": "catalog:",
         "reflect-metadata": "catalog:",
         "rxjs": "catalog:",
         "tslib": "catalog:"

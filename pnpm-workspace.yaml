@@ -11,7 +11,7 @@ catalog:
     "@golevelup/ts-jest": "3.0.0"
     "@nestjs/common": "12.3.2"
     "@nestjs/core": "12.3.2"
-    "@nestjs/platform-express": "12.3.2"
+    "@nestjs/platform-node": "12.3.2"
     "@nestjs/schematics": "11.1.0"
     "@nestjs/testing": "12.3.2"
     "@nx/eslint": "24.0.2"
@@ -94,7 +94,6 @@ allowBuilds:
 minimumReleaseAgeExclude:
     - "@nestjs/common@11.1.28"
     - "@nestjs/core@11.1.28"
-    - "@nestjs/platform-express@11.1.28"
     - "@nestjs/testing@11.1.28"
     - "@types/node@22.20.1"
     - "webpack@5.109.1 || 5.110.3"
