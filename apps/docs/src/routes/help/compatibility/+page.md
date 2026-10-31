@@ -4,7 +4,7 @@ description: Supported Node.js, NestJS, database driver, and package versions fo
 ---
 
 <script lang="ts">
-    import { CURRENT_VERSION } from "$lib/site";
+    import { CURRENT_VERSION } from "#lib/site.js";
 </script>
 
 This matrix reflects the published <code>{CURRENT_VERSION}</code> package manifests. Peer ranges describe supported consumer installations; the repository toolchain can be stricter.

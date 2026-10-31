@@ -4,7 +4,7 @@ description: Curated inventory of symbols exported by the current Event Nest pac
 ---
 
 <script lang="ts">
-    import { CURRENT_VERSION } from "$lib/site";
+    import { CURRENT_VERSION } from "#lib/site.js";
 </script>
 
 This page lists symbols available from package-root imports in <code>{CURRENT_VERSION}</code>. It intentionally excludes implementation files that are not re-exported by a package's `src/index.ts`; importing those files by deep path is unsupported by each package's export map.

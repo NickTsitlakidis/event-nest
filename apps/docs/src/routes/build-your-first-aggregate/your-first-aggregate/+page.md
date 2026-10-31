@@ -4,7 +4,7 @@ description: Build and persist an event-sourced User aggregate with AggregateRep
 ---
 
 <script lang="ts">
-    import LoadCommitLifecycle from "$lib/diagrams/load-commit-lifecycle.svelte";
+    import LoadCommitLifecycle from "#lib/diagrams/load-commit-lifecycle.svelte";
 </script>
 
 This page completes a standalone `UserModule` on top of the PostgreSQL setup described in [Installation](/build-your-first-aggregate/installation/). The module defines immutable events, the aggregate, an `AggregateRepository` provider, and a service that creates and changes users.

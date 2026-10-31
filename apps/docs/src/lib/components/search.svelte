@@ -1,7 +1,9 @@
 <script lang="ts">
     /* eslint-disable unicorn/consistent-function-scoping, unicorn/no-top-level-assignment-in-function */
-    import { base } from "$app/paths";
+    import { resolve } from "$app/paths";
     import { onMount } from "svelte";
+
+    import { basePath } from "#lib/site.js";
 
     type IndexState = "error" | "loading" | "ready";
 
@@ -113,7 +115,7 @@
     async function loadIndex(): Promise<void> {
         indexState = "loading";
         try {
-            const response = await fetch(`${base}/search-index.json`);
+            const response = await fetch(resolve("/search-index.json"));
             if (!response.ok) {
                 throw new Error(`Search index request failed with status ${response.status}`);
             }
@@ -209,7 +211,7 @@
             {:else}
                 {#each results as { entry, excerpt }, index (entry.path)}
                     <a
-                        href={`${base}${entry.path}`}
+                        href={`${basePath()}${entry.path}`}
                         onclick={() => dialog.close()}
                         onkeydown={(event) => handleResultKeydown(event, index)}
                     >
@@ -242,11 +244,17 @@
         border-color: var(--en-border);
         background: var(--en-surface-muted);
     }
-    kbd {
+    /* Theme 8.6+ styles every kbd as a raised key; the shortcut hint stays a flat pill. */
+    .search-button kbd {
+        border: 0;
         border-radius: 0.3rem;
         background: color-mix(in srgb, var(--en-text-muted) 14%, transparent);
         padding: 0.1rem 0.35rem;
+        box-shadow: none;
+        color: inherit;
+        font-weight: inherit;
         font-size: 0.68rem;
+        line-height: inherit;
         font-family: inherit;
     }
     dialog {

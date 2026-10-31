@@ -15,8 +15,8 @@ actions:
 ---
 
 <script lang="ts">
-    import HomeFeatures from "$lib/components/home-features.svelte";
-    import PackageInstall from "$lib/components/package-install.svelte";
+    import HomeFeatures from "#lib/components/home-features.svelte";
+    import PackageInstall from "#lib/components/package-install.svelte";
 
     const quickstartPackages = ["@event-nest/core", "@event-nest/postgresql", "pg"];
 </script>

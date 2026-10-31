@@ -19,6 +19,9 @@ test("the search index keeps API symbols from code examples", async ({ request }
 
 test("search ranks relevant pages and supports keyboard navigation", async ({ page }) => {
     await page.goto(`${basePath}/storage/postgresql/`);
+    // The shortcut is registered on hydration, which SvelteKit finishes shortly after the load event;
+    // the search button only becomes visible once the layout has mounted.
+    await expect(page.getByRole("button", { name: "Search documentation" })).toBeVisible();
     await page.keyboard.press("Control+k");
 
     const dialog = page.getByRole("dialog", { name: "Search documentation" });

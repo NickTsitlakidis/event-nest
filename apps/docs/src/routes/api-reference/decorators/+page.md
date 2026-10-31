@@ -4,8 +4,8 @@ description: Reference for Event Nest domain event, aggregate, replay, and subsc
 ---
 
 <script>
-    import ApiSymbol from "$lib/components/api-symbol.svelte";
-    import { CURRENT_VERSION } from "$lib/site";
+    import ApiSymbol from "#lib/components/api-symbol.svelte";
+    import { CURRENT_VERSION } from "#lib/site.js";
 </script>
 
 All decorators are exported from `@event-nest/core`. Import `reflect-metadata` as required by NestJS; decorator metadata drives persistence, replay, and subscription discovery.

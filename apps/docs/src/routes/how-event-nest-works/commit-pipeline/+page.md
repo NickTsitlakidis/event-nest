@@ -4,7 +4,7 @@ description: The exact runtime order Event Nest follows from AggregateRoot.commi
 ---
 
 <script>
-    import CommitPipeline from "$lib/diagrams/commit-pipeline.svelte";
+    import CommitPipeline from "#lib/diagrams/commit-pipeline.svelte";
 </script>
 
 `AggregateRoot.commit()` coordinates one batch of uncommitted events. Persistence is the boundary in the middle of the pipeline: policy evaluation happens before it, while snapshot creation and subscription dispatch happen after it.

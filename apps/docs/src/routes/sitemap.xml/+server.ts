@@ -1,13 +1,13 @@
-import { base } from "$app/paths";
-import { SITE_ORIGIN } from "$lib/site";
 import { execFileSync } from "node:child_process";
+
+import { basePath, SITE_ORIGIN } from "#lib/site.js";
 
 const pages = import.meta.glob("/src/routes/**/+page.md", { eager: true, import: "default", query: "?raw" });
 
 export const prerender = true;
 
 export function GET(): Response {
-    const origin = `${SITE_ORIGIN}${base}`;
+    const origin = `${SITE_ORIGIN}${basePath()}`;
     const urls = Object.keys(pages)
         .map((file) => {
             const route = file.replace("/src/routes", "").replace("/+page.md", "/");

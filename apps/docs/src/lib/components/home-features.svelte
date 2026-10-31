@@ -1,45 +1,38 @@
 <script lang="ts">
-    import type { Pathname } from "$app/types";
-
     import { resolve } from "$app/paths";
-
-    // SvelteKit's typed resolve() only accepts one concrete route per call and rejects a union of
-    // routes, so widen the signature once; every member of the union is a real route.
-    const resolveRoute = resolve as (route: Pathname) => string;
 
     const features = [
         {
             description: "Define named domain events, apply them to aggregate state, and replay persisted streams.",
             icon: "aggregate",
             title: "Aggregate-first model",
-            to: "/core-model/aggregate-roots/"
+            to: "core-model/aggregate-roots/"
         },
         {
             description:
                 "Persist events with aggregate versions and reject conflicting writes through the storage adapter.",
             icon: "version",
             title: "Versioned commits",
-            to: "/core-model/event-streams-and-versions/"
+            to: "core-model/event-streams-and-versions/"
         },
         {
             description: "Reduce replay work with snapshot-aware aggregates and composable snapshot strategies.",
             icon: "snapshot",
             title: "Optional snapshots",
-            to: "/capabilities/snapshots/"
+            to: "capabilities/snapshots/"
         },
         {
             description: "MongoDB, PostgreSQL, and Microsoft SQL Server adapters expose the same EventStore contract.",
             icon: "storage",
             title: "Persistence adapters",
-            to: "/storage/storage-model/"
+            to: "storage/storage-model/"
         }
     ] as const;
 </script>
 
 <nav class="features" aria-label="Explore Event Nest">
     {#each features as feature (feature.to)}
-        <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- resolveRoute is resolve() with a widened signature -->
-        <a class="feature-item" href={resolveRoute(feature.to)}>
+        <a class="feature-item" href={resolve(feature.to)}>
             <span class="icon" aria-hidden="true">
                 {#if feature.icon === "aggregate"}
                     <svg

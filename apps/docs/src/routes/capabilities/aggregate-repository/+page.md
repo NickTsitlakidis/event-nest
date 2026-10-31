@@ -4,7 +4,7 @@ description: Load, reconstitute, connect, and save one aggregate type with Event
 ---
 
 <script lang="ts">
-    import SnapshotReplay from "$lib/diagrams/snapshot-replay.svelte";
+    import SnapshotReplay from "#lib/diagrams/snapshot-replay.svelte";
 </script>
 
 `AggregateRepository<T>` is a small wrapper around an `EventStore` for the usual load, mutate, and commit workflow. A repository is bound to one aggregate class and one factory function. It is a plain class, not a NestJS provider created automatically by Event Nest.

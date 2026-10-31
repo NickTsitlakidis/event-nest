@@ -7,8 +7,12 @@
     import ReportIssue from "./components/report-issue.svelte";
     import SeoTitle from "./components/seo-title.svelte";
 
-    let { children, fm, heroImage }: { children?: Snippet; fm: Record<string, unknown>; heroImage?: Snippet } =
-        $props();
+    let {
+        children,
+        fm,
+        heroImage,
+        titleAction
+    }: { children?: Snippet; fm: Record<string, unknown>; heroImage?: Snippet; titleAction?: Snippet } = $props();
 
     const isHome = $derived(page.route.id === "/");
     const showFeedback = $derived(!isHome && fm.layout !== false);
@@ -32,7 +36,7 @@
     {/if}
 {/snippet}
 
-<DefaultPageLayout fm={layoutFm} {heroImage} children={articleContent} />
+<DefaultPageLayout fm={layoutFm} {heroImage} {titleAction} children={articleContent} />
 
 {#if isHome && typeof fm.title === "string"}
     <SeoTitle title={`${fm.title} - Event Nest`} />

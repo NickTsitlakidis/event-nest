@@ -4,7 +4,7 @@ description: Install Event Nest and configure its PostgreSQL event store in a Ne
 ---
 
 <script lang="ts">
-    import PackageInstall from "$lib/components/package-install.svelte";
+    import PackageInstall from "#lib/components/package-install.svelte";
 
     const tutorialPackages = ["@event-nest/core", "@event-nest/postgresql", "pg"];
 </script>

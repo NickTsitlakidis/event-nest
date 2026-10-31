@@ -1,10 +1,15 @@
 /* eslint-disable perfectionist/sort-objects -- Navigation order is part of the documentation structure. */
+import adapter from "@sveltejs/adapter-static";
+import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 import { defaultTheme } from "@sveltepress/theme-default";
 import { sveltepress } from "@sveltepress/vite";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 
 const repository = "https://github.com/NickTsitlakidis/event-nest";
+
+// Deployment prefix ("/event-nest" on GitHub Pages); SvelteKit requires it to be empty or start with "/".
+const basePath = (process.env.BASE_PATH ?? "") as "" | `/${string}`;
 
 // The Get Started nav section spans two URL prefixes; both show the same flat page list.
 const getStartedSidebar = [
@@ -64,6 +69,9 @@ const theme = defaultTheme({
         { title: "How It Works", to: "/how-event-nest-works/commit-pipeline/" },
         { title: "Reference", to: "/api-reference/configuration/" }
     ],
+    // Theme 8.6+ renders its own local search unless told otherwise; the site ships a custom one
+    // (src/lib/components/search.svelte) that +layout.svelte slots into the header.
+    search: false,
     sidebar: {
         "/overview/": getStartedSidebar,
         "/build-your-first-aggregate/": getStartedSidebar,
@@ -130,12 +138,36 @@ const theme = defaultTheme({
 
 theme.pageLayout = fileURLToPath(new URL("src/lib/page-layout.svelte", import.meta.url));
 
+const outputDirectory = fileURLToPath(new URL("../../dist/apps/docs", import.meta.url));
+
 export default defineConfig({
     plugins: [
         sveltepress({
             siteConfig: {
                 description: "Event sourcing primitives and persistence adapters for NestJS applications.",
                 title: "Event Nest"
+            },
+            // SvelteKit 3 reads its configuration from the Vite plugin instead of svelte.config.js;
+            // sveltepress owns the SvelteKit plugin, so the options are forwarded through it.
+            svelteKitOptions: {
+                adapter: adapter({
+                    assets: outputDirectory,
+                    fallback: "404.html",
+                    pages: outputDirectory
+                }),
+                // Shiki puts tabindex="0" on <pre> so scrollable code blocks are keyboard-focusable,
+                // which trips a11y_no_noninteractive_tabindex on every markdown page with a code fence.
+                onwarn: (warning, defaultHandler) => {
+                    if (warning.code === "a11y_no_noninteractive_tabindex" && warning.filename?.endsWith(".md")) {
+                        return;
+                    }
+                    defaultHandler(warning);
+                },
+                paths: {
+                    base: basePath,
+                    relative: false
+                },
+                preprocess: [vitePreprocess()]
             },
             theme
         })

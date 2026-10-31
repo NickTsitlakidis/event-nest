@@ -1,10 +1,11 @@
 <script lang="ts">
     import { afterNavigate } from "$app/navigation";
-    import { base } from "$app/paths";
+    import { asset } from "$app/paths";
     import { page } from "$app/state";
-    import Search from "$lib/components/search.svelte";
-    import { SITE_ORIGIN } from "$lib/site";
     import { onMount } from "svelte";
+
+    import Search from "#lib/components/search.svelte";
+    import { SITE_ORIGIN } from "#lib/site.js";
 
     import "../app.css";
 
@@ -56,7 +57,7 @@
 
 <svelte:head>
     <link rel="canonical" href={canonicalUrl} />
-    <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
+    <link rel="icon" href={asset("favicon.svg")} type="image/svg+xml" />
     <!-- og:title and twitter:title come per-page from page-layout.svelte. -->
     <meta property="og:site_name" content="Event Nest" />
     <meta
@@ -65,7 +66,7 @@
     />
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonicalUrl} />
-    <meta property="og:image" content={`${SITE_ORIGIN}${base}/social-card.svg`} />
+    <meta property="og:image" content={`${SITE_ORIGIN}${asset("social-card.svg")}`} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta
         name="twitter:description"

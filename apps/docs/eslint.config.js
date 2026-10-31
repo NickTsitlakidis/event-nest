@@ -3,7 +3,6 @@ import { defineConfig } from "eslint/config";
 import ts from "typescript-eslint";
 
 import baseConfig from "../../eslint.config.js";
-import svelteConfig from "./svelte.config.js";
 
 export default defineConfig(
     baseConfig,
@@ -15,7 +14,8 @@ export default defineConfig(
             parserOptions: {
                 extraFileExtensions: [".svelte"],
                 parser: ts.parser,
-                svelteConfig
+                // SvelteKit 3 has no svelte.config.js; tell the parser this is still a Kit project.
+                svelteConfig: { kit: {} }
             }
         }
     },
@@ -23,6 +23,21 @@ export default defineConfig(
         files: ["src/routes/**/+*.{js,ts}"],
         rules: {
             "unicorn/consistent-boolean-name": "off"
+        }
+    },
+    {
+        // SvelteKit 3 replaced the $lib alias with the #lib subpath import; Nx resolves it to a file in
+        // this project and would otherwise demand a relative path.
+        files: ["src/**/*.{js,ts}"],
+        rules: {
+            "@nx/enforce-module-boundaries": [
+                "error",
+                {
+                    allow: ["#lib/*"],
+                    depConstraints: [{ onlyDependOnLibsWithTags: ["*"], sourceTag: "*" }],
+                    enforceBuildableLibDependency: true
+                }
+            ]
         }
     },
     {

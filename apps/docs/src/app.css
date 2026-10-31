@@ -101,11 +101,16 @@ body {
     max-width: 72ch;
 }
 
-.theme-default--page-layout table {
+/* Theme 8.6+ ships bordered, striped, 0.9em tables that clip their overflow; keep the flat full-size
+   tables the site shipped with (block + overflow-x keeps wide tables scrollable on phones). */
+html .theme-default--page-layout .content table {
     display: block;
     max-width: 100%;
     overflow-x: auto;
+    border: 0;
+    border-radius: 0;
     border-collapse: collapse;
+    font-size: inherit;
 }
 
 .theme-default--page-layout table :not(pre) > code {
@@ -113,8 +118,44 @@ body {
     word-break: normal;
 }
 
-.theme-default--page-layout th {
+html .theme-default--page-layout .content th,
+html .theme-default--page-layout .content td {
+    padding: 0.5rem 0.75rem;
+    border-right: 0;
+    border-bottom: 0;
+}
+
+html .theme-default--page-layout .content th {
+    border-bottom: 2px solid rgb(0 0 0 / 10%);
+    background: transparent;
+    color: inherit;
     text-align: left;
+}
+
+html.dark .theme-default--page-layout .content th {
+    border-bottom-color: rgb(255 255 255 / 12%);
+}
+
+html .theme-default--page-layout .content tr:nth-child(even),
+html .theme-default--page-layout .content tr:hover {
+    background: transparent;
+}
+
+/* Theme 8.6+ renders blockquotes italic behind a rose bar on a tinted background; restore the quiet
+   grey rule. */
+html .theme-default--page-layout .content blockquote {
+    padding: 0.25rem 0 0.25rem 1rem;
+    border-left: 3px solid #d1d5db;
+    border-radius: 0;
+    background: transparent;
+    color: #4b5563;
+    font-style: normal;
+}
+
+html.dark .theme-default--page-layout .content blockquote {
+    border-left-color: #52525b;
+    background: transparent;
+    color: #a1a1aa;
 }
 
 .theme-default--page-layout :not(pre) > code {
@@ -124,9 +165,17 @@ body {
     padding: 0.08rem 0.3rem;
 }
 
-/* Monospace runs optically larger than the body sans; keep inline code proportional everywhere. */
+/* Monospace runs optically larger than the body sans; keep inline code proportional everywhere.
+   Theme 8.6+ also paints inline code orange on a translucent chip; keep the neutral chip. */
 main :not(pre) > code {
     font-size: 0.85em;
+    color: #3f3f46;
+}
+
+html.dark main :not(pre) > code {
+    border-color: var(--en-border);
+    background: var(--en-code-bg);
+    color: #d4d4d8;
 }
 
 /* The compiled theme hardcodes light-mode colors on these; on the dark palette they fail WCAG AA
@@ -171,6 +220,11 @@ img[src$="event-nest.svg"] {
 
 img[src$="hero.svg"] {
     aspect-ratio: 13 / 12;
+}
+
+/* Theme 8.6+ no longer flags the sidebar brand link as active, which is what painted it in the accent. */
+.theme-default-sidebar a.brand {
+    color: var(--en-accent);
 }
 
 /* The theme's dark sidebar is near-black zinc; keep it recessed but on the palette's inset tone. */

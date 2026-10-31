@@ -4,7 +4,7 @@ description: Permanently delete an aggregate, its events, and its snapshots with
 ---
 
 <script lang="ts">
-    import Callout from "$lib/components/callout.svelte";
+    import Callout from "#lib/components/callout.svelte";
 </script>
 
 <Callout variant="danger" title="Permanent deletion">

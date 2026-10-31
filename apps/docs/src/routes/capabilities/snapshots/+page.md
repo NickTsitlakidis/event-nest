@@ -4,7 +4,7 @@ description: Configure, create, and replay optional aggregate snapshots without 
 ---
 
 <script lang="ts">
-    import SnapshotReplay from "$lib/diagrams/snapshot-replay.svelte";
+    import SnapshotReplay from "#lib/diagrams/snapshot-replay.svelte";
 </script>
 
 Snapshots are an optional read-performance optimization. They capture an aggregate's state at a committed stream version so reconstitution can start there instead of replaying the entire stream. Events remain the source of truth: creating a snapshot does not remove or replace any event.

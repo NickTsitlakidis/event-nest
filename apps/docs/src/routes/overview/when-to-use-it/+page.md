@@ -4,7 +4,7 @@ description: Decide whether Event Nest and event sourcing fit your NestJS applic
 ---
 
 <script lang="ts">
-    import { CURRENT_VERSION } from "$lib/site";
+    import { CURRENT_VERSION } from "#lib/site.js";
 </script>
 
 Event Nest is useful when event sourcing is already a good fit for part of your domain. It removes repeated persistence and replay plumbing; it does not remove the modeling, migration, and operational costs of keeping an event history.

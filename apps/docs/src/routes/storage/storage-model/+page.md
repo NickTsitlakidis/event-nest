@@ -4,7 +4,7 @@ description: Understand how Event Nest stores aggregate versions, immutable even
 ---
 
 <script lang="ts">
-    import StorageRelationship from "$lib/diagrams/storage-relationship.svelte";
+    import StorageRelationship from "#lib/diagrams/storage-relationship.svelte";
 </script>
 
 Every Event Nest adapter persists the same three logical record types. The physical names and database types are adapter configuration, but their roles do not change.

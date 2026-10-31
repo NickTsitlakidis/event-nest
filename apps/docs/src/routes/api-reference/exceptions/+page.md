@@ -4,7 +4,7 @@ description: Public Event Nest exception triggers, causes, and recovery guidance
 ---
 
 <script>
-    import ExceptionReference from "$lib/components/exception-reference.svelte";
+    import ExceptionReference from "#lib/components/exception-reference.svelte";
 </script>
 
 Only the exception classes re-exported by `@event-nest/core` are listed as public API. Catch the narrow exception you can recover from; let invalid model/configuration errors fail fast.
