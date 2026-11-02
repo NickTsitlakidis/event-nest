@@ -29,7 +29,6 @@
         "@nx/js": "catalog:",
         "@nx/nest": "catalog:",
         "@nx/node": "catalog:",
-        "@nx/webpack": "catalog:",
         "@nx/workspace": "catalog:",
         "@shelf/jest-mongodb": "catalog:",
         "@testcontainers/mssqlserver": "catalog:",
@@ -56,10 +55,7 @@
         "ts-jest": "catalog:",
         "ts-node": "catalog:",
         "typescript": "catalog:",
-        "typescript-eslint": "catalog:",
-        "webpack": "catalog:",
-        "webpack-cli": "catalog:",
-        "webpack-dev-server": "catalog:"
+        "typescript-eslint": "catalog:"
     },
     "dependencies": {
         "@nestjs/common": "catalog:",

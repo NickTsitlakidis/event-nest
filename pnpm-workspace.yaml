@@ -20,7 +20,6 @@ catalog:
   "@nx/js": "24.0.2"
   "@nx/nest": "24.0.2"
   "@nx/node": "24.0.2"
-  "@nx/webpack": "24.0.2"
   "@nx/workspace": "24.0.2"
   "@playwright/test": "1.64.1"
   "@sveltejs/adapter-static": "4.0.1"
@@ -66,9 +65,6 @@ catalog:
   "typescript": "6.0.3"
   "typescript-eslint": "8.72.1"
   "vite": "8.3.5"
-  "webpack": "5.112.2"
-  "webpack-cli": "^7.0.0"
-  "webpack-dev-server": "5.2.7"
 
 # @nx/nest still declares NestJS < 12 as its peer range; it is only used for generators and works with 12.
 peerDependencyRules:
@@ -93,7 +89,6 @@ allowBuilds:
 # existed; the entries become no-ops once the versions are >24h old and can be removed.
 minimumReleaseAgeExclude:
   - "@types/node@22.20.1"
-  - "webpack@5.109.1 || 5.110.3"
   - "@jsonjoy.com/fs-node@4.66.0"
   - "@jsonjoy.com/fs-snapshot@4.66.0"
   - "@typescript-eslint/eslint-plugin@8.66.0"

@@ -57,14 +57,6 @@
     },
     "plugins": [
         {
-            "plugin": "@nx/webpack/plugin",
-            "include": ["apps/example/webpack.config.js"],
-            "options": {
-                "buildTargetName": "build",
-                "serveTargetName": "webpack-serve"
-            }
-        },
-        {
             "plugin": "@nx/eslint/plugin",
             "options": {
                 "targetName": "lint"

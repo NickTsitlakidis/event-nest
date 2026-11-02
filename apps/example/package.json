@@ -12,5 +12,8 @@
         "reflect-metadata": "catalog:",
         "rxjs": "catalog:",
         "tslib": "catalog:"
+    },
+    "devDependencies": {
+        "vite": "catalog:"
     }
 }
