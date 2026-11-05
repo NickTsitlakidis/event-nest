@@ -77,7 +77,6 @@ allowBuilds:
   "@parcel/watcher": false
   "@swc/core": false
   "cpu-features": true
-  "less": true
   "mongodb-memory-server": true
   "nx": true
   "protobufjs": true
@@ -85,62 +84,3 @@ allowBuilds:
   "ssh2": true
   "unrs-resolver": true
 
-# These exact versions were pinned before the pnpm 11 minimumReleaseAge guard
-# existed; the entries become no-ops once the versions are >24h old and can be removed.
-minimumReleaseAgeExclude:
-  - "@types/node@22.20.1"
-  - "@jsonjoy.com/fs-node@4.66.0"
-  - "@jsonjoy.com/fs-snapshot@4.66.0"
-  - "@typescript-eslint/eslint-plugin@8.66.0"
-  - "@typescript-eslint/parser@8.66.0"
-  - "@typescript-eslint/project-service@8.66.0"
-  - "@typescript-eslint/scope-manager@8.66.0"
-  - "@typescript-eslint/tsconfig-utils@8.66.0"
-  - "@typescript-eslint/type-utils@8.66.0"
-  - "@typescript-eslint/types@8.66.0"
-  - "@typescript-eslint/typescript-estree@8.66.0"
-  - "@typescript-eslint/utils@8.66.0"
-  - "@typescript-eslint/visitor-keys@8.66.0"
-  - "typescript-eslint@8.66.0"
-  - "@sveltejs/load-config@0.2.2"
-  - "svelte-check@4.7.5"
-  - "vite@8.2.1 || 8.3.0"
-  - "@jest/console@30.5.1"
-  - "@jest/core@30.5.1"
-  - "@jest/environment@30.5.1"
-  - "@jest/expect-utils@30.5.1"
-  - "@jest/expect@30.5.1"
-  - "@jest/fake-timers@30.5.1"
-  - "@jest/globals@30.5.1"
-  - "@jest/reporters@30.5.1"
-  - "@jest/snapshot-utils@30.5.1"
-  - "@jest/test-result@30.5.1"
-  - "@jest/test-sequencer@30.5.1"
-  - "@jest/transform@30.5.1"
-  - "@jest/types@30.5.1"
-  - "babel-jest@30.5.1"
-  - "expect@30.5.1"
-  - "jest-changed-files@30.5.1"
-  - "jest-circus@30.5.1"
-  - "jest-cli@30.5.1"
-  - "jest-config@30.5.1"
-  - "jest-diff@30.5.1"
-  - "jest-each@30.5.1"
-  - "jest-environment-node@30.5.1"
-  - "jest-haste-map@30.5.1"
-  - "jest-leak-detector@30.5.1"
-  - "jest-matcher-utils@30.5.1"
-  - "jest-message-util@30.5.1"
-  - "jest-mock@30.5.1"
-  - "jest-resolve-dependencies@30.5.1"
-  - "jest-resolve@30.5.1"
-  - "jest-runner@30.5.1"
-  - "jest-runtime@30.5.1"
-  - "jest-snapshot@30.5.1"
-  - "jest-util@30.5.1"
-  - "jest-validate@30.5.1"
-  - "jest-watcher@30.5.1"
-  - "jest-worker@30.5.1"
-  - "jest@30.5.1"
-  - "pretty-format@30.5.1"
-  - eslint@10.14.0
