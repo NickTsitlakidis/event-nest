@@ -4,6 +4,7 @@ import ts from "typescript-eslint";
 
 import baseConfig from "../../eslint.config.js";
 
+// eslint-disable-next-line unicorn/no-top-level-side-effects
 export default defineConfig(
     baseConfig,
     svelte.configs.recommended,

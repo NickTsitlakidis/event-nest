@@ -9,7 +9,7 @@ module.exports = [
     ...nx.configs["flat/typescript"],
     ...nx.configs["flat/javascript"],
     perfectionist.configs["recommended-natural"],
-    eslintPluginUnicorn.configs["flat/recommended"],
+    eslintPluginUnicorn.configs["recommended"],
     {
         ignores: ["**/.svelte-kit", "**/.sveltepress", "**/dist"]
     },
@@ -53,6 +53,7 @@ module.exports = [
             "unicorn/consistent-class-member-order": "off",
             "unicorn/name-replacements": "off",
             "unicorn/no-abusive-eslint-disable": "off",
+            "unicorn/no-asterisk-prefix-in-documentation-comments": "off",
             "unicorn/no-for-each": "off",
             "unicorn/no-for-loop": "warn",
             "unicorn/no-static-only-class": "off",
@@ -69,11 +70,12 @@ module.exports = [
             "@typescript-eslint/no-explicit-any": "off",
             "@typescript-eslint/no-non-null-assertion": "off",
             "unicorn/max-nested-calls": "off",
+            "unicorn/no-unnecessary-parameters": "off",
             "unicorn/prevent-abbreviations": "off"
         }
     },
     {
-        files: ["**/*.config.js", "**/eslint.config.js"],
+        files: ["**/*.config.{js,ts}", "**/eslint.config.js"],
         rules: {
             "unicorn/prefer-module": "off"
         }

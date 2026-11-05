@@ -140,6 +140,7 @@ theme.pageLayout = fileURLToPath(new URL("src/lib/page-layout.svelte", import.me
 
 const outputDirectory = fileURLToPath(new URL("../../dist/apps/docs", import.meta.url));
 
+// eslint-disable-next-line unicorn/no-top-level-side-effects
 export default defineConfig({
     plugins: [
         sveltepress({

@@ -23,7 +23,7 @@ function findGeneratedRoutes(directory = buildDirectory): string[] {
         }
 
         const relativeDirectory = path.relative(buildDirectory, directory).split(path.sep).join("/");
-        return [relativeDirectory ? `/${relativeDirectory}/` : "/"];
+        return relativeDirectory ? `/${relativeDirectory}/` : "/";
     });
 }
 

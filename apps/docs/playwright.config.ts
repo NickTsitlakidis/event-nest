@@ -3,6 +3,7 @@ import { defineConfig } from "@playwright/test";
 const basePath = process.env.BASE_PATH ?? "";
 const origin = "http://127.0.0.1:4173";
 
+// eslint-disable-next-line unicorn/no-top-level-side-effects
 export default defineConfig({
     forbidOnly: Boolean(process.env.CI),
     outputDir: "../../test-results/apps/docs/viewport",

@@ -1,9 +1,9 @@
 <script lang="ts">
     import { page } from "$app/state";
 
-    const repoUrl = "https://github.com/NickTsitlakidis/event-nest";
+    const repositoryUrl = "https://github.com/NickTsitlakidis/event-nest";
     const issueUrl = $derived(
-        `${repoUrl}/issues/new?labels=documentation&title=${encodeURIComponent(`Docs: ${page.url.pathname}`)}`
+        `${repositoryUrl}/issues/new?labels=documentation&title=${encodeURIComponent(`Docs: ${page.url.pathname}`)}`
     );
 </script>
 
