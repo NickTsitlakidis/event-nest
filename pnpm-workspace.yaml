@@ -9,18 +9,18 @@ catalogMode: strict
 catalog:
   "@eslint/js": "10.0.1"
   "@golevelup/ts-jest": "3.0.0"
-  "@nestjs/common": "12.3.2"
-  "@nestjs/core": "12.3.2"
-  "@nestjs/platform-node": "12.3.2"
+  "@nestjs/common": "12.3.3"
+  "@nestjs/core": "12.3.3"
+  "@nestjs/platform-node": "12.3.3"
   "@nestjs/schematics": "12.0.12"
-  "@nestjs/testing": "12.3.2"
-  "@nx/eslint": "24.0.2"
-  "@nx/eslint-plugin": "24.0.2"
-  "@nx/jest": "24.0.2"
-  "@nx/js": "24.0.2"
-  "@nx/nest": "24.0.2"
-  "@nx/node": "24.0.2"
-  "@nx/workspace": "24.0.2"
+  "@nestjs/testing": "12.3.3"
+  "@nx/eslint": "24.0.4"
+  "@nx/eslint-plugin": "24.0.4"
+  "@nx/jest": "24.0.4"
+  "@nx/js": "24.0.4"
+  "@nx/nest": "24.0.4"
+  "@nx/node": "24.0.4"
+  "@nx/workspace": "24.0.4"
   "@playwright/test": "1.64.1"
   "@sveltejs/adapter-static": "4.0.1"
   "@sveltejs/kit": "3.1.1"
@@ -50,21 +50,21 @@ catalog:
   "jest-util": "30.5.1"
   "knex": "^3.1.0"
   "mongodb": "^7.0.0"
-  "nx": "24.0.2"
+  "nx": "24.0.4"
   "pg": "^8.14.1"
   "prettier": "3.9.10"
   "prettier-plugin-svelte": "4.1.1"
   "reflect-metadata": "0.2.2"
   "rxjs": "^7.8.0"
   "svelte": "5.57.3"
-  "svelte-check": "4.7.7"
+  "svelte-check": "4.7.8"
   "ts-jest": "29.4.15"
   "tedious": "20.3.8"
   "ts-node": "10.9.2"
   "tslib": "^2.3.0"
   "typescript": "6.0.3"
   "typescript-eslint": "8.72.1"
-  "vite": "8.3.5"
+  "vite": "8.3.6"
 
 # @nx/nest still declares NestJS < 12 as its peer range; it is only used for generators and works with 12.
 peerDependencyRules:
@@ -84,3 +84,5 @@ allowBuilds:
   "ssh2": true
   "unrs-resolver": true
 
+minimumReleaseAgeExclude:
+  - vite@8.3.6
