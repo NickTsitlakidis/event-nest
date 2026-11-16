@@ -10,6 +10,8 @@ import { EventNestException } from "./event-nest-exception";
  * By catching this exception, you can decide how to handle the situation.
  */
 export class EventConcurrencyException extends EventNestException {
+    static readonly code = CoreErrorCodes.EVENT_CONCURRENCY_ISSUE;
+
     constructor(
         readonly aggregateRootId: string,
         readonly storedVersion: number,
@@ -17,7 +19,7 @@ export class EventConcurrencyException extends EventNestException {
     ) {
         super(
             EventConcurrencyException.name,
-            CoreErrorCodes.EVENT_CONCURRENCY_ISSUE,
+            EventConcurrencyException.code,
             `Concurrency issue for aggregate ${aggregateRootId}. Expected ${expectedVersion}. Stored ${storedVersion}`
         );
     }

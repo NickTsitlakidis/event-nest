@@ -6,13 +6,15 @@ import { EventNestException } from "./event-nest-exception";
  * when event-nest tries to generate multiple ids and the number of generated ids does not match the expected number.
  */
 export class IdGenerationException extends EventNestException {
+    static readonly code = CoreErrorCodes.ID_GENERATION_FAILURE;
+
     constructor(
         readonly idsLength: number,
         readonly expectedLength: number
     ) {
         super(
             IdGenerationException.name,
-            CoreErrorCodes.ID_GENERATION_FAILURE,
+            IdGenerationException.code,
             `Unexpected mismatch of required ids. Generated: ${idsLength}, expected: ${expectedLength}`
         );
     }

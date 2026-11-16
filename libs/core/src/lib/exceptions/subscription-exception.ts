@@ -6,6 +6,8 @@ import { EventNestException } from "./event-nest-exception";
  * The caught error, the event class name and the event id are stored in the exception.
  */
 export class SubscriptionException extends EventNestException {
+    static readonly code = CoreErrorCodes.SUBSCRIPTION_FAILURE;
+
     constructor(
         readonly caughtError: Error,
         readonly eventClassName: string,
@@ -13,7 +15,7 @@ export class SubscriptionException extends EventNestException {
     ) {
         super(
             SubscriptionException.name,
-            CoreErrorCodes.SUBSCRIPTION_FAILURE,
+            SubscriptionException.code,
             `Error while running subscriptions for event ${eventClassName} with id ${eventId}`
         );
     }

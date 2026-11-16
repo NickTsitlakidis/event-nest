@@ -11,6 +11,7 @@ describe("EventConcurrencyException", () => {
         expect(exception).toBeInstanceOf(Error);
         expect(exception.name).toBe("EventConcurrencyException");
         expect(exception.errorCode).toBe(CoreErrorCodes.EVENT_CONCURRENCY_ISSUE);
+        expect(exception.errorCode).toBe(EventConcurrencyException.code);
         expect(exception.message).toBe("Concurrency issue for aggregate aggregate-123. Expected 5. Stored 4");
     });
 

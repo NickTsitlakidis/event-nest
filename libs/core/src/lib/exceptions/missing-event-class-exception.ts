@@ -6,10 +6,12 @@ import { EventNestException } from "./event-nest-exception";
  * provided event class is null or undefined.
  */
 export class MissingEventClassException extends EventNestException {
+    static readonly code = CoreErrorCodes.MISSING_EVENT_CLASS;
+
     constructor() {
         super(
             MissingEventClassException.name,
-            CoreErrorCodes.MISSING_EVENT_CLASS,
+            MissingEventClassException.code,
             `@ApplyEvent decorator was used with a null or undefined event class. This may be a problem with your imports.`
         );
     }

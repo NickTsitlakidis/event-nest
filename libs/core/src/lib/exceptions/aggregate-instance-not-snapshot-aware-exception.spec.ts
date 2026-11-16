@@ -11,6 +11,7 @@ describe("AggregateInstanceNotSnapshotAwareException", () => {
         expect(exception).toBeInstanceOf(Error);
         expect(exception.name).toBe("AggregateInstanceNotSnapshotAwareException");
         expect(exception.errorCode).toBe(CoreErrorCodes.AGGREGATE_INSTANCE_NOT_SNAPSHOT_AWARE);
+        expect(exception.errorCode).toBe(AggregateInstanceNotSnapshotAwareException.code);
         expect(exception.message).toBe(
             "The snapshot should be created, but OrderAggregate doesn't implement SnapshotAware interface correctly\n. Did you forget to implement .toSnapshot() or .applySnapshot()?"
         );

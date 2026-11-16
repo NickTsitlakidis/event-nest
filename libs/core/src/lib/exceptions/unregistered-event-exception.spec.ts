@@ -11,6 +11,7 @@ describe("UnregisteredEventException", () => {
         expect(exception).toBeInstanceOf(Error);
         expect(exception.name).toBe("UnregisteredEventException");
         expect(exception.errorCode).toBe(CoreErrorCodes.UNREGISTERED_EVENT);
+        expect(exception.errorCode).toBe(UnregisteredEventException.code);
         expect(exception.message).toBe(
             "OrderPlaced is not registered to be processed. Use the @DomainEvent decorator to register it."
         );

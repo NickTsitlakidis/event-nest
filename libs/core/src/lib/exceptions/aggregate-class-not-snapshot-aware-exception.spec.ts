@@ -11,6 +11,7 @@ describe("AggregateClassNotSnapshotAwareException", () => {
         expect(exception).toBeInstanceOf(Error);
         expect(exception.name).toBe("AggregateClassNotSnapshotAwareException");
         expect(exception.errorCode).toBe(CoreErrorCodes.AGGREGATE_CLASS_NOT_SNAPSHOT_AWARE);
+        expect(exception.errorCode).toBe(AggregateClassNotSnapshotAwareException.code);
         expect(exception.message).toBe(
             "Missing snapshot revision for aggregate root: OrderAggregate\n. Did you forget to add snapshotRevision in AggregateRootConfig?"
         );

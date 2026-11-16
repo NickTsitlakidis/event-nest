@@ -11,6 +11,7 @@ describe("IdGenerationException", () => {
         expect(exception).toBeInstanceOf(Error);
         expect(exception.name).toBe("IdGenerationException");
         expect(exception.errorCode).toBe(CoreErrorCodes.ID_GENERATION_FAILURE);
+        expect(exception.errorCode).toBe(IdGenerationException.code);
         expect(exception.message).toBe("Unexpected mismatch of required ids. Generated: 2, expected: 3");
     });
 });

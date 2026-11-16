@@ -11,6 +11,7 @@ describe("EventNameConflictException", () => {
         expect(exception).toBeInstanceOf(Error);
         expect(exception.name).toBe("EventNameConflictException");
         expect(exception.errorCode).toBe(CoreErrorCodes.EVENT_NAME_CONFLICT);
+        expect(exception.errorCode).toBe(EventNameConflictException.code);
         expect(exception.message).toBe("OrderPlaced is already registered as RegisteredEvent. Use another name");
     });
 });

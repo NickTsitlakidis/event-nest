@@ -11,6 +11,7 @@ describe("InvalidAggregateRootVersionException", () => {
         expect(exception).toBeInstanceOf(Error);
         expect(exception.name).toBe("InvalidAggregateRootVersionException");
         expect(exception.errorCode).toBe(CoreErrorCodes.INVALID_AGGREGATE_ROOT_VERSION);
+        expect(exception.errorCode).toBe(InvalidAggregateRootVersionException.code);
         expect(exception.message).toBe("Invalid aggregateRootVersion: -1. It must be a non-negative integer.");
     });
 });

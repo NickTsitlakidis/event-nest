@@ -11,6 +11,7 @@ describe("SubscriptionException", () => {
         expect(exception).toBeInstanceOf(Error);
         expect(exception.name).toBe("SubscriptionException");
         expect(exception.errorCode).toBe(CoreErrorCodes.SUBSCRIPTION_FAILURE);
+        expect(exception.errorCode).toBe(SubscriptionException.code);
         expect(exception.message).toBe("Error while running subscriptions for event OrderPlaced with id event-123");
     });
 

@@ -11,6 +11,7 @@ describe("UnknownEventVersionException", () => {
         expect(exception).toBeInstanceOf(Error);
         expect(exception.name).toBe("UnknownEventVersionException");
         expect(exception.errorCode).toBe(CoreErrorCodes.UNKNOWN_EVENT_VERSION);
+        expect(exception.errorCode).toBe(UnknownEventVersionException.code);
         expect(exception.message).toBe(
             "Unable to set version of event event-123 for aggregate root with id aggregate-123"
         );

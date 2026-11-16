@@ -11,6 +11,7 @@ describe("UnknownEventException", () => {
         expect(exception).toBeInstanceOf(Error);
         expect(exception.name).toBe("UnknownEventException");
         expect(exception.errorCode).toBe(CoreErrorCodes.UNKNOWN_EVENT);
+        expect(exception.errorCode).toBe(UnknownEventException.code);
         expect(exception.message).toBe(
             "Found unknown events for aggregate root aggregate-123. Unregistered : UnregisteredEvent. Missing apply method: MissingHandlerEvent"
         );
