@@ -1,3 +1,6 @@
+import { CoreErrorCodes } from "./core-error-codes.enum";
+import { EventNestException } from "./event-nest-exception";
+
 /**
  * Thrown during event persistence if there's a concurrency issue.
  * Concurrency issues are detected if the expected version of an aggregate root is different from the version stored in the database.
@@ -6,8 +9,18 @@
  *
  * By catching this exception, you can decide how to handle the situation.
  */
-export class EventConcurrencyException extends Error {
-    constructor(aggregateRootId: string, databaseVersion: number, version: number) {
-        super(`Concurrency issue for aggregate ${aggregateRootId}. Expected ${version}. Stored ${databaseVersion}`);
+export class EventConcurrencyException extends EventNestException {
+    static readonly code = CoreErrorCodes.EVENT_CONCURRENCY_ISSUE;
+
+    constructor(
+        readonly aggregateRootId: string,
+        readonly storedVersion: number,
+        readonly expectedVersion: number
+    ) {
+        super(
+            EventConcurrencyException.name,
+            EventConcurrencyException.code,
+            `Concurrency issue for aggregate ${aggregateRootId}. Expected ${expectedVersion}. Stored ${storedVersion}`
+        );
     }
 }

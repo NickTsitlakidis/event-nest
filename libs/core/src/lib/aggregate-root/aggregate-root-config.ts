@@ -9,7 +9,7 @@ export interface AggregateRootConfigParameters {
      */
     name: string;
     /**
-     * Optinal snapshot revision number that's used for snapshot optimization.
+     * Optional snapshot revision number that's used for snapshot optimization.
      */
     snapshotRevision?: number;
 }
@@ -45,8 +45,8 @@ export function getAggregateRootName(targetClass: AggregateRootClass<unknown>): 
 }
 
 /**
- * Used to obtain the snapshotRevision number attached to AggregateRoot class by getting it's metadata
- * Uses function overloading, because it's already known that SnapshotAwareAggregateRoot has snasphotRevision defined
+ * Used to obtain the snapshotRevision number attached to AggregateRoot class by getting its metadata
+ * Uses function overloading, because it's already known that SnapshotAwareAggregateRoot has snapshotRevision defined
  *
  * @param aggregateRootClass - the AggregateRootClass
  * @returns snapshotRevision from provided {@link AggregateRootConfigParameters} or undefined if not present

@@ -86,9 +86,28 @@ The helper functions are public because the barrel exports their source module, 
 
 `ForCountSnapshotStrategy` evaluates the aggregate's current version plus the whole uncommitted batch, so crossing one or more thresholds in one commit still creates one snapshot.
 
-### Public exceptions
+### Exceptions
 
-`AggregateClassNotSnapshotAwareException`, `AggregateInstanceNotSnapshotAwareException`, `EventConcurrencyException`, `EventNameConflictException`, `MissingAggregateRootNameException`, `SnapshotRevisionMismatchException`, `SubscriptionException`, and `UnknownEventException` are public. See [exceptions](/api-reference/exceptions/).
+| Export | Kind | Purpose |
+| --- | --- | --- |
+| `EventNestException` | Class | Base class of every Event Nest exception; sets `name` and exposes `errorCode`. |
+| `isEventNestException` | Type guard | Recognises Event Nest exceptions by a global symbol brand; optionally matches an error code or any exception class with a static `code` and narrows to it. |
+| `CoreErrorCodes` | Enum | Stable string codes (`en_1001` to `en_1013`) for the core exceptions. |
+| `AggregateClassNotSnapshotAwareException` | Class | Snapshot path reached a class without `snapshotRevision`. |
+| `AggregateInstanceNotSnapshotAwareException` | Class | Snapshot path reached an instance without callable snapshot methods. |
+| `EventConcurrencyException` | Class | Expected and stored aggregate versions differ. |
+| `EventNameConflictException` | Class | Duplicate event name or alias at registration. |
+| `IdGenerationException` | Class | Store returned the wrong number of event IDs. |
+| `InvalidAggregateRootVersionException` | Class | `reconstitute` received a version that is not a non-negative safe integer. |
+| `MissingAggregateRootNameException` | Class | Aggregate class has no name metadata. |
+| `MissingEventClassException` | Class | `@ApplyEvent` received `null` or `undefined`. |
+| `SnapshotRevisionMismatchException` | Class | Stored snapshot revision differs from the class revision. |
+| `SubscriptionException` | Class | An awaited subscription rejected after persistence. |
+| `UnknownEventException` | Class | Replay met an unregistered name or a missing apply method. |
+| `UnknownEventVersionException` | Class | A saved event could not be matched to assign its version. |
+| `UnregisteredEventException` | Class | `append` received an event without `@DomainEvent`. |
+
+See [exceptions](/api-reference/exceptions/) for codes, fields, and recovery guidance.
 
 ### Utility exports
 

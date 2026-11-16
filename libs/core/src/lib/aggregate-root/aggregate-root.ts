@@ -2,6 +2,7 @@ import { Logger } from "@nestjs/common";
 import { isNil, uniq } from "es-toolkit";
 
 import { getEventClass, isRegistered } from "../domain-event-registrations";
+import { InvalidAggregateRootVersionException } from "../exceptions/invalid-aggregate-root-version-exception";
 import { SubscriptionException } from "../exceptions/subscription-exception";
 import { UnknownEventException } from "../exceptions/unknown-event-exception";
 import { UnregisteredEventException } from "../exceptions/unregistered-event-exception";
@@ -121,6 +122,7 @@ export abstract class AggregateRoot {
      * (no events after the snapshot) still end up with the correct version.
      * @throws AggregateInstanceNotSnapshotAwareException if a snapshot is provided but the aggregate is not snapshot-aware
      * @throws UnknownEventException if an event is not known
+     * @throws InvalidAggregateRootVersionException if aggregateRootVersion is not a non-negative safe integer
      */
     reconstitute<Snapshot = unknown>(events: Array<StoredEvent>, snapshot?: Snapshot, aggregateRootVersion?: number) {
         const startedAt = Date.now();
@@ -155,9 +157,7 @@ export abstract class AggregateRoot {
             }
         } else {
             if (!Number.isSafeInteger(aggregateRootVersion) || aggregateRootVersion < 0) {
-                throw new Error(
-                    `Invalid aggregateRootVersion: ${aggregateRootVersion}. It must be a non-negative integer.`
-                );
+                throw new InvalidAggregateRootVersionException(aggregateRootVersion);
             }
             this._version = aggregateRootVersion;
         }

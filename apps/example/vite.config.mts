@@ -1,5 +1,6 @@
 import { defaultServerConditions, defineConfig } from "vite";
 
+// eslint-disable-next-line unicorn/no-top-level-side-effects
 export default defineConfig({
     build: {
         emptyOutDir: true,

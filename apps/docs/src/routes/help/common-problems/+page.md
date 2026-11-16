@@ -50,7 +50,7 @@ Use the exact error name or start with the part of Event Nest that is failing.
 
 **How to confirm:** Verify the runtime class has the decorator and that the file is included in the application startup graph. Registration is process-local and keyed by constructor identity for writes.
 
-**Resolution:** Decorate the event with a globally unique persisted name and import its defining module before using it. The thrown class is internal `UnregisteredEventException` and is not a public package export.
+**Resolution:** Decorate the event with a globally unique persisted name and import its defining module before using it. The thrown class is `UnregisteredEventException`, code `en_1012`.
 
 **Related docs:** [Decorators](/api-reference/decorators/) and [Exceptions](/api-reference/exceptions/).
 
@@ -74,7 +74,7 @@ Use the exact error name or start with the part of Event Nest that is failing.
 
 **How to confirm:** Log or test the imported constructor before the aggregate class declaration and inspect import cycles. This fails when the decorator factory runs, not during event replay.
 
-**Resolution:** Correct the import or break the cycle while retaining the same event class identity. The thrown `MissingEventClassException` is internal and cannot be imported from the public barrel.
+**Resolution:** Correct the import or break the cycle while retaining the same event class identity. The thrown class is `MissingEventClassException`, code `en_1008`.
 
 **Related docs:** [Decorators](/api-reference/decorators/) and [Exceptions](/api-reference/exceptions/).
 

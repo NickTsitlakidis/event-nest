@@ -1,28 +1,22 @@
+import { CoreErrorCodes } from "./core-error-codes.enum";
+import { EventNestException } from "./event-nest-exception";
+
 /**
  * Exception thrown when an error occurs while running subscriptions for an event.
  * The caught error, the event class name and the event id are stored in the exception.
  */
-export class SubscriptionException extends Error {
-    private readonly _caughtError: Error;
-    private readonly _eventClassName: string;
-    private readonly _eventId: string;
+export class SubscriptionException extends EventNestException {
+    static readonly code = CoreErrorCodes.SUBSCRIPTION_FAILURE;
 
-    constructor(caughtError: Error, eventClassName: string, eventId: string) {
-        super(`Error while running subscriptions for event ${eventClassName} with id ${eventId}`);
-        this._caughtError = caughtError;
-        this._eventClassName = eventClassName;
-        this._eventId = eventId;
-    }
-
-    get caughtError(): Error {
-        return this._caughtError;
-    }
-
-    get eventClassName(): string {
-        return this._eventClassName;
-    }
-
-    get eventId(): string {
-        return this._eventId;
+    constructor(
+        readonly caughtError: Error,
+        readonly eventClassName: string,
+        readonly eventId: string
+    ) {
+        super(
+            SubscriptionException.name,
+            SubscriptionException.code,
+            `Error while running subscriptions for event ${eventClassName} with id ${eventId}`
+        );
     }
 }
