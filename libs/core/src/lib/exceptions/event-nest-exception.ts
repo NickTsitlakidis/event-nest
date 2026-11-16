@@ -32,8 +32,8 @@ export class EventNestException extends Error {
 }
 
 /**
- * Checks if the provided value is an Event Nest exception. The check relies on a global symbol brand instead of
- * `instanceof`, so it also works when multiple copies of `@event-nest/core` are installed.
+ * Checks if the provided value is an Event Nest exception. The check relies on a global symbol brand and a string
+ * `errorCode` instead of `instanceof`, so it also works when multiple copies of `@event-nest/core` are installed.
  * @param error The value to check, typically the value received in a catch block
  */
 export function isEventNestException(error: unknown): error is EventNestException;
@@ -55,7 +55,10 @@ export function isEventNestException<T extends EventNestException>(
 ): error is T;
 export function isEventNestException(error: unknown, codeOrClass?: EventNestExceptionClass | string): boolean {
     const isBranded =
-        isObject(error) && isNotNil(error) && (error as Record<PropertyKey, unknown>)[EVENT_NEST_ERROR] === true;
+        isObject(error) &&
+        isNotNil(error) &&
+        (error as Record<PropertyKey, unknown>)[EVENT_NEST_ERROR] === true &&
+        isString((error as Record<PropertyKey, unknown>)["errorCode"]);
     if (!isBranded || codeOrClass === undefined) {
         return isBranded;
     }

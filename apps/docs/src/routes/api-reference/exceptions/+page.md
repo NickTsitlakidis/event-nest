@@ -116,7 +116,7 @@ description: Event Nest exception classes, their stable error codes, exposed fie
     ];
 </script>
 
-Every exception thrown by `@event-nest/core` extends `EventNestException`, which itself extends `Error`. Catch the narrow exception you can recover from; let invalid model/configuration errors fail fast.
+Every exception class exported by `@event-nest/core` extends `EventNestException`, which itself extends `Error`. Module option validation and snapshot strategy validation throw plain `Error` at bootstrap, before any command is handled; those are not covered by the guard below. Catch the narrow exception you can recover from; let invalid model/configuration errors fail fast.
 
 ## Common shape
 
@@ -165,23 +165,26 @@ A NestJS exception filter can map codes to HTTP responses the same way:
 
 ```typescript
 import { EventConcurrencyException, isEventNestException } from "@event-nest/core";
-import { ArgumentsHost, Catch, ConflictException, ExceptionFilter } from "@nestjs/common";
+import { ArgumentsHost, Catch, ConflictException } from "@nestjs/common";
+import { BaseExceptionFilter } from "@nestjs/core";
 
 @Catch()
-export class EventNestExceptionFilter implements ExceptionFilter {
+export class EventNestExceptionFilter extends BaseExceptionFilter {
     catch(exception: unknown, host: ArgumentsHost) {
         if (isEventNestException(exception, EventConcurrencyException)) {
-            throw new ConflictException({
+            exception = new ConflictException({
                 aggregateRootId: exception.aggregateRootId,
                 code: exception.errorCode,
                 expectedVersion: exception.expectedVersion,
                 storedVersion: exception.storedVersion
             });
         }
-        throw exception;
+        super.catch(exception, host);
     }
 }
 ```
+
+The filter replaces the matched exception and delegates to Nest's base filter, which writes the HTTP response for any adapter. Exceptions thrown from inside a filter are not routed back through the filter chain, so a filter must respond rather than rethrow. Register it with `app.useGlobalFilters(new EventNestExceptionFilter(app.get(HttpAdapterHost).httpAdapter))`.
 
 ## Error codes
 

@@ -41,10 +41,24 @@ describe("isEventNestException", () => {
     });
 
     test("returns true for an object branded by another copy of the package", () => {
-        const foreignError = Object.assign(new Error("foreign"), { [Symbol.for("@event-nest/error")]: true });
+        const foreignError = Object.assign(new Error("foreign"), {
+            errorCode: "en_1001",
+            [Symbol.for("@event-nest/error")]: true
+        });
 
         expect(foreignError).not.toBeInstanceOf(EventNestException);
         expect(isEventNestException(foreignError)).toBe(true);
+    });
+
+    test("returns false for a branded object without a string error code", () => {
+        expect(
+            isEventNestException(Object.assign(new Error("test"), { [Symbol.for("@event-nest/error")]: true }))
+        ).toBe(false);
+        expect(
+            isEventNestException(
+                Object.assign(new Error("test"), { errorCode: 1001, [Symbol.for("@event-nest/error")]: true })
+            )
+        ).toBe(false);
     });
 
     test("returns false for a plain Error", () => {

@@ -91,8 +91,7 @@ The helper functions are public because the barrel exports their source module, 
 | Export | Kind | Purpose |
 | --- | --- | --- |
 | `EventNestException` | Class | Base class of every Event Nest exception; sets `name` and exposes `errorCode`. |
-| `isEventNestException` | Type guard | Recognises Event Nest exceptions by a global symbol brand; optionally matches an error code or an exception class and narrows to it. |
-| `EventNestExceptionClass<T>` | Type | Shape of an exception class with a static `code`, accepted by `isEventNestException`. |
+| `isEventNestException` | Type guard | Recognises Event Nest exceptions by a global symbol brand; optionally matches an error code or any exception class with a static `code` and narrows to it. |
 | `CoreErrorCodes` | Enum | Stable string codes (`en_1001` to `en_1013`) for the core exceptions. |
 | `AggregateClassNotSnapshotAwareException` | Class | Snapshot path reached a class without `snapshotRevision`. |
 | `AggregateInstanceNotSnapshotAwareException` | Class | Snapshot path reached an instance without callable snapshot methods. |
