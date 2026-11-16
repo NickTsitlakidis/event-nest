@@ -72,6 +72,12 @@ peerDependencyRules:
         "@nx/nest>@nestjs/common": "12"
         "@nx/nest>@nestjs/core": "12"
 
+# @typespec/ts-http-runtime 0.3.10 (via tedious -> @azure/*) moved to the ESM-only http(s)-proxy-agent 9.
+# Jest can require() ESM only on Node.js 24.9+, so the mssql tests break on the Node.js 22 CI legs.
+# Remove this once Node.js 22 is no longer tested.
+overrides:
+    "@typespec/ts-http-runtime": "0.3.9"
+
 allowBuilds:
     "@nestjs/core": true
     "@parcel/watcher": false
