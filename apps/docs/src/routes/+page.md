@@ -17,11 +17,19 @@ actions:
 <script lang="ts">
     import HomeFeatures from "#lib/components/home-features.svelte";
     import PackageInstall from "#lib/components/package-install.svelte";
+    import { CURRENT_VERSION } from "#lib/site.js";
 
     const quickstartPackages = ["@event-nest/core", "@event-nest/postgresql", "pg"];
 </script>
 
 <HomeFeatures />
+
+## What's new in {CURRENT_VERSION}
+
+- **NestJS 12 support**, alongside NestJS 10 and 11. See [compatibility](/help/compatibility/) for Node.js and module-format requirements.
+- **Structured error handling** with stable error codes, typed exception guards, and readonly diagnostic fields. See the [exception reference](/api-reference/exceptions/) for examples.
+
+Upgrading from 6.1? Read the [upgrade notes](/help/compatibility/#Upgrading-to-this-release) and the [6.2.0 release notes](https://github.com/NickTsitlakidis/event-nest/releases/tag/v6.2.0).
 
 <div style="margin-top: 3rem; margin-bottom: 3rem">
 

@@ -11,4 +11,4 @@ export function basePath(): string {
     return resolve("/").replace(/\/$/, "");
 }
 
-export const CURRENT_VERSION = "6.1.0";
+export const CURRENT_VERSION = "6.2.0";

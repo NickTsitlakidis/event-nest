@@ -135,6 +135,7 @@ Use `isEventNestException` instead of `instanceof`. It accepts an optional secon
 
 ```typescript
 import { CoreErrorCodes, EventConcurrencyException, isEventNestException } from "@event-nest/core";
+import { ConflictException } from "@nestjs/common";
 
 try {
     await repository.save(user);
@@ -159,14 +160,14 @@ try {
 }
 ```
 
-All three forms first check the symbol brand and then compare the instance's `errorCode`. The class form reads the static `code` of the class you pass, so it never relies on `instanceof` and still narrows to that class.
+All three forms check the symbol brand and require a string `errorCode`. When a second argument is supplied, the guard also compares that code with the requested code or the class's static `code`. The class form never relies on `instanceof` and still narrows to that class.
 
 A NestJS exception filter can map codes to HTTP responses the same way:
 
 ```typescript
 import { EventConcurrencyException, isEventNestException } from "@event-nest/core";
 import { ArgumentsHost, Catch, ConflictException } from "@nestjs/common";
-import { BaseExceptionFilter } from "@nestjs/core";
+import { BaseExceptionFilter, HttpAdapterHost } from "@nestjs/core";
 
 @Catch()
 export class EventNestExceptionFilter extends BaseExceptionFilter {

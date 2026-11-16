@@ -54,6 +54,16 @@ NestJS 12 ships as ESM-only. The Event Nest packages stay CommonJS and load Nest
 
 TypeScript is not a published peer dependency, so the repository's TypeScript version is not a consumer support promise. Decorators must be compiled in a NestJS-compatible setup with metadata available at runtime.
 
+## Upgrading to this release
+
+To upgrade from 6.1.0, update `@event-nest/core` and your adapter packages together to `6.2.0`. NestJS 10 and 11 remain supported; adopting NestJS 12 is optional. If you upgrade to NestJS 12, align `@nestjs/common` and `@nestjs/core` and follow the Node.js and ESM requirements above.
+
+Version 6.2.0 adds structured exceptions through `EventNestException`, `CoreErrorCodes`, and `isEventNestException`. Replace error-message parsing with stable error-code checks, or pass an exception class to the guard for typed access to diagnostic fields. Existing exception classes remain exported. See [matching exceptions](/api-reference/exceptions/#Matching-exceptions) for application and HTTP-filter examples.
+
+Invalid explicit aggregate versions passed to `AggregateRoot.reconstitute()` now throw `InvalidAggregateRootVersionException`. Forward the `aggregateRootVersion` returned by the store unchanged; it must be a non-negative safe integer.
+
+See the [6.2.0 release notes](https://github.com/NickTsitlakidis/event-nest/releases/tag/v6.2.0) for the release summary.
+
 ## Current deprecations
 
 | API | Current status | Replacement | Removal |
