@@ -13,6 +13,7 @@ export * from "./lib/exceptions/aggregate-class-not-snapshot-aware-exception";
 export * from "./lib/exceptions/aggregate-instance-not-snapshot-aware-exception";
 export * from "./lib/exceptions/event-concurrency-exception";
 export * from "./lib/exceptions/event-name-conflict-exception";
+export * from "./lib/exceptions/invalid-aggregate-root-version-exception";
 export * from "./lib/exceptions/missing-aggregate-root-name-exception";
 export * from "./lib/exceptions/snapshot-revision-mismatch-exception";
 export * from "./lib/exceptions/subscription-exception";

@@ -2,6 +2,7 @@ import { Logger } from "@nestjs/common";
 
 import { DomainEvent } from "../domain-event";
 import { AggregateInstanceNotSnapshotAwareException } from "../exceptions/aggregate-instance-not-snapshot-aware-exception";
+import { InvalidAggregateRootVersionException } from "../exceptions/invalid-aggregate-root-version-exception";
 import { SubscriptionException } from "../exceptions/subscription-exception";
 import { UnknownEventException } from "../exceptions/unknown-event-exception";
 import { UnregisteredEventException } from "../exceptions/unregistered-event-exception";
@@ -216,8 +217,16 @@ describe("AggregateRoot", () => {
         ])("throws when aggregateRootVersion is %s (%s)", (invalidVersion) => {
             const entity = new TestRoot("id1");
 
-            expect(() => entity.reconstitute([], undefined, invalidVersion as number)).toThrow(
-                `Invalid aggregateRootVersion: ${invalidVersion}. It must be a non-negative integer.`
+            let caughtError: unknown;
+            try {
+                entity.reconstitute([], undefined, invalidVersion as number);
+            } catch (error) {
+                caughtError = error;
+            }
+
+            expect(caughtError).toBeInstanceOf(InvalidAggregateRootVersionException);
+            expect((caughtError as Error).message).toBe(
+                `InvalidAggregateRootVersionException (1013): Invalid aggregateRootVersion: ${invalidVersion}. It must be a non-negative integer.`
             );
         });
 
