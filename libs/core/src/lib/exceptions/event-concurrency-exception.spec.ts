@@ -12,7 +12,7 @@ describe("EventConcurrencyException", () => {
         expect(exception.errorName).toBe("EventConcurrencyException");
         expect(exception.errorCode).toBe(CoreErrorCodes.EVENT_CONCURRENCY_ISSUE);
         expect(exception.message).toBe(
-            "EventConcurrencyException (1002): Concurrency issue for aggregate aggregate-123. Expected 5. Stored 4"
+            "EventConcurrencyException (en_1002): Concurrency issue for aggregate aggregate-123. Expected 5. Stored 4"
         );
     });
 });

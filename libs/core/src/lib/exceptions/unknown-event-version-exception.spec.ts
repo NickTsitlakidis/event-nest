@@ -12,7 +12,7 @@ describe("UnknownEventVersionException", () => {
         expect(exception.errorName).toBe("UnknownEventVersionException");
         expect(exception.errorCode).toBe(CoreErrorCodes.UNKNOWN_EVENT_VERSION);
         expect(exception.message).toBe(
-            "UnknownEventVersionException (1011): Unable to set version of event event-123 for aggregate root with id aggregate-123"
+            "UnknownEventVersionException (en_1011): Unable to set version of event event-123 for aggregate root with id aggregate-123"
         );
     });
 });

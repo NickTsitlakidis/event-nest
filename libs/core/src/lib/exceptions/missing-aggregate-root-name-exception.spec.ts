@@ -12,7 +12,7 @@ describe("MissingAggregateRootNameException", () => {
         expect(exception.errorName).toBe("MissingAggregateRootNameException");
         expect(exception.errorCode).toBe(CoreErrorCodes.MISSING_AGGREGATE_ROOT_NAME);
         expect(exception.message).toBe(
-            "MissingAggregateRootNameException (1007): OrderAggregate is not decorated with @AggregateRootName. Use the decorator to set the name of the aggregate root"
+            "MissingAggregateRootNameException (en_1007): OrderAggregate is not decorated with @AggregateRootName. Use the decorator to set the name of the aggregate root"
         );
     });
 });

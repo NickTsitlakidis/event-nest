@@ -12,7 +12,7 @@ describe("EventNameConflictException", () => {
         expect(exception.errorName).toBe("EventNameConflictException");
         expect(exception.errorCode).toBe(CoreErrorCodes.EVENT_NAME_CONFLICT);
         expect(exception.message).toBe(
-            "EventNameConflictException (1005): OrderPlaced is already registered as RegisteredEvent. Use another name"
+            "EventNameConflictException (en_1005): OrderPlaced is already registered as RegisteredEvent. Use another name"
         );
     });
 });

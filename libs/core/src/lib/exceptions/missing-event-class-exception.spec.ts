@@ -12,7 +12,7 @@ describe("MissingEventClassException", () => {
         expect(exception.errorName).toBe("MissingEventClassException");
         expect(exception.errorCode).toBe(CoreErrorCodes.MISSING_EVENT_CLASS);
         expect(exception.message).toBe(
-            "MissingEventClassException (1008): @ApplyEvent decorator was used with a null or undefined event class. This may be a problem with your imports."
+            "MissingEventClassException (en_1008): @ApplyEvent decorator was used with a null or undefined event class. This may be a problem with your imports."
         );
     });
 });

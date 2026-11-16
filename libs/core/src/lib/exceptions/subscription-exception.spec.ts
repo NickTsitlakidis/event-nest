@@ -12,7 +12,7 @@ describe("SubscriptionException", () => {
         expect(exception.errorName).toBe("SubscriptionException");
         expect(exception.errorCode).toBe(CoreErrorCodes.SUBSCRIPTION_FAILURE);
         expect(exception.message).toBe(
-            "SubscriptionException (1009): Error while running subscriptions for event OrderPlaced with id event-123"
+            "SubscriptionException (en_1009): Error while running subscriptions for event OrderPlaced with id event-123"
         );
     });
 
