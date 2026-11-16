@@ -432,7 +432,7 @@ importers:
   libs/mongodb:
     dependencies:
       '@event-nest/core':
-        specifier: 6.1.0
+        specifier: 6.2.0
         version: link:../core
       es-toolkit:
         specifier: 'catalog:'
@@ -466,7 +466,7 @@ importers:
   libs/mssql:
     dependencies:
       '@event-nest/core':
-        specifier: 6.1.0
+        specifier: 6.2.0
         version: link:../core
       es-toolkit:
         specifier: 'catalog:'
@@ -506,7 +506,7 @@ importers:
   libs/postgresql:
     dependencies:
       '@event-nest/core':
-        specifier: 6.1.0
+        specifier: 6.2.0
         version: link:../core
       es-toolkit:
         specifier: 'catalog:'

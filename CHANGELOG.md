@@ -1,3 +1,14 @@
+## 6.2.0 (2026-11-16)
+
+### 🚀 Features
+
+- **core, mongodb, postgresql:** Add support for nest 12.x ([#70](https://github.com/NickTsitlakidis/event-nest/pull/70))
+- **core:** Improved error handling with error codes, guards and exposed properties from exceptions ([#73](https://github.com/NickTsitlakidis/event-nest/pull/73))
+
+### Contributors
+  
+- Nick Tsitlakidis
+
 ## 6.1.0 (2026-09-01)
 
 ### 🚀 Features
