@@ -1,19 +1,36 @@
 <script lang="ts">
-    let { cause, name, resolution, trigger }: { cause: string; name: string; resolution: string; trigger: string } =
-        $props();
+    export type ExceptionEntry = {
+        cause: string;
+        code: string;
+        fields?: string;
+        name: string;
+        resolution: string;
+        trigger: string;
+    };
+
+    let { items }: { items: ExceptionEntry[] } = $props();
 </script>
 
-<article class="exception">
-    <h3><code>{name}</code></h3>
-    <dl>
-        <dt>Trigger</dt>
-        <dd>{trigger}</dd>
-        <dt>Typical cause</dt>
-        <dd>{cause}</dd>
-        <dt>Response</dt>
-        <dd>{resolution}</dd>
-    </dl>
-</article>
+{#each items as item (item.name)}
+    <article class="exception">
+        <h3>
+            <code>{item.name}</code>
+            <span class="code">{item.code}</span>
+        </h3>
+        <dl>
+            <dt>Trigger</dt>
+            <dd>{item.trigger}</dd>
+            <dt>Typical cause</dt>
+            <dd>{item.cause}</dd>
+            <dt>Response</dt>
+            <dd>{item.resolution}</dd>
+            {#if item.fields}
+                <dt>Fields</dt>
+                <dd><code>{item.fields}</code></dd>
+            {/if}
+        </dl>
+    </article>
+{/each}
 
 <style>
     .exception {
@@ -24,6 +41,15 @@
     }
     h3 {
         margin-top: 0;
+        display: flex;
+        align-items: baseline;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+    }
+    .code {
+        font-size: 0.8rem;
+        font-weight: 400;
+        opacity: 0.75;
     }
     dl {
         display: grid;
@@ -35,6 +61,9 @@
     }
     dd {
         margin: 0;
+    }
+    dd > code {
+        display: inline-block;
     }
     @media (max-width: 520px) {
         dl {

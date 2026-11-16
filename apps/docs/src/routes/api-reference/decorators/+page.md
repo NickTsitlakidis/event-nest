@@ -103,7 +103,7 @@ private applyUserRenamed(event: UserRenamed): void {
 - Replay sorts stored events by `aggregateRootVersion`, resolves each stored event name to its registered class, and invokes the method whose metadata references that class.
 - The method may be non-public, but it must exist and be callable at runtime.
 - A stored name with no `@DomainEvent` registration, or a registered event with no matching `@ApplyEvent` method, produces `UnknownEventException`.
-- Passing `null` or `undefined` as the class throws an internal `MissingEventClassException`, commonly caused by a circular or incorrect import. That exception is not exported from the package barrel.
+- Passing `null` or `undefined` as the class throws `MissingEventClassException`, commonly caused by a circular or incorrect import.
 - Application code must apply state changes when creating a new event as well as append it. `@ApplyEvent` is used automatically during reconstitution, not automatically by `append()`.
 
 ## `@DomainEventSubscription`
