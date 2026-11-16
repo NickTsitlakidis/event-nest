@@ -1,88 +1,103 @@
 packages:
-  - "apps/*"
-  - "libs/*"
+    - "apps/*"
+    - "libs/*"
 
 linkWorkspacePackages: true
 sharedWorkspaceLockfile: true
 catalogMode: strict
 
 catalog:
-  "@eslint/js": "10.0.1"
-  "@golevelup/ts-jest": "3.0.0"
-  "@nestjs/common": "12.3.3"
-  "@nestjs/core": "12.3.3"
-  "@nestjs/platform-node": "12.3.3"
-  "@nestjs/schematics": "12.0.12"
-  "@nestjs/testing": "12.3.3"
-  "@nx/eslint": "24.0.4"
-  "@nx/eslint-plugin": "24.0.4"
-  "@nx/jest": "24.0.4"
-  "@nx/js": "24.0.4"
-  "@nx/nest": "24.0.4"
-  "@nx/node": "24.0.4"
-  "@nx/workspace": "24.0.4"
-  "@playwright/test": "1.64.1"
-  "@sveltejs/adapter-static": "4.0.1"
-  "@sveltejs/kit": "3.1.1"
-  "@sveltejs/vite-plugin-svelte": "7.3.1"
-  "@sveltepress/theme-default": "8.11.0"
-  "@sveltepress/vite": "1.10.0"
-  "@shelf/jest-mongodb": "6.0.2"
-  "@testcontainers/mssqlserver": "12.2.1"
-  "@testcontainers/postgresql": "12.2.1"
-  "@types/jest": "30.0.0"
-  "@types/node": "22.20.5"
-  "@typescript-eslint/eslint-plugin": "8.72.1"
-  "@typescript-eslint/parser": "8.72.1"
-  "@typescript-eslint/utils": "8.72.1"
-  "class-transformer": "^0.5.1"
-  "es-toolkit": "^1.45.1"
-  "eslint": "10.14.0"
-  "eslint-config-prettier": "10.1.8"
-  "eslint-plugin-perfectionist": "5.13.0"
-  "eslint-plugin-prettier": "5.5.7"
-  "eslint-plugin-svelte": "3.23.1"
-  "eslint-plugin-unicorn": "77.0.0"
-  "expect-type": "1.4.0"
-  "husky": "9.1.7"
-  "jest": "30.5.2"
-  "jest-environment-node": "30.5.2"
-  "jest-util": "30.5.1"
-  "knex": "^3.1.0"
-  "mongodb": "^7.0.0"
-  "nx": "24.0.4"
-  "pg": "^8.14.1"
-  "prettier": "3.9.10"
-  "prettier-plugin-svelte": "4.1.1"
-  "reflect-metadata": "0.2.2"
-  "rxjs": "^7.8.0"
-  "svelte": "5.57.3"
-  "svelte-check": "4.7.8"
-  "ts-jest": "29.4.15"
-  "tedious": "20.3.8"
-  "ts-node": "10.9.2"
-  "tslib": "^2.3.0"
-  "typescript": "6.0.3"
-  "typescript-eslint": "8.72.1"
-  "vite": "8.3.6"
+    "@eslint/js": "10.0.1"
+    "@golevelup/ts-jest": "3.0.0"
+    "@nestjs/common": "12.5.1"
+    "@nestjs/core": "12.5.1"
+    "@nestjs/platform-node": "12.5.1"
+    "@nestjs/schematics": "12.0.13"
+    "@nestjs/testing": "12.5.1"
+    "@nx/eslint": "24.0.6"
+    "@nx/eslint-plugin": "24.0.6"
+    "@nx/jest": "24.0.6"
+    "@nx/js": "24.0.6"
+    "@nx/nest": "24.0.6"
+    "@nx/node": "24.0.6"
+    "@nx/workspace": "24.0.6"
+    "@playwright/test": "1.65.1"
+    "@sveltejs/adapter-static": "4.0.1"
+    "@sveltejs/kit": "3.2.0"
+    "@sveltejs/vite-plugin-svelte": "7.3.1"
+    "@sveltepress/theme-default": "8.11.1"
+    "@sveltepress/vite": "1.10.0"
+    "@shelf/jest-mongodb": "6.0.2"
+    "@testcontainers/mssqlserver": "12.2.1"
+    "@testcontainers/postgresql": "12.2.1"
+    "@types/jest": "30.0.0"
+    "@types/node": "22.20.5"
+    "@typescript-eslint/eslint-plugin": "8.73.0"
+    "@typescript-eslint/parser": "8.73.0"
+    "@typescript-eslint/utils": "8.73.0"
+    "class-transformer": "^0.5.1"
+    "es-toolkit": "^1.45.1"
+    "eslint": "10.15.0"
+    "eslint-config-prettier": "10.1.8"
+    "eslint-plugin-perfectionist": "5.13.0"
+    "eslint-plugin-prettier": "5.5.7"
+    "eslint-plugin-svelte": "3.24.1"
+    "eslint-plugin-unicorn": "77.0.0"
+    "expect-type": "1.4.0"
+    "husky": "9.1.7"
+    "jest": "30.5.2"
+    "jest-environment-node": "30.5.2"
+    "jest-util": "30.5.1"
+    "knex": "^3.1.0"
+    "mongodb": "^7.0.0"
+    "nx": "24.0.6"
+    "pg": "^8.14.1"
+    "prettier": "3.10.1"
+    "prettier-plugin-svelte": "4.1.1"
+    "reflect-metadata": "0.2.2"
+    "rxjs": "^7.8.0"
+    "svelte": "5.57.3"
+    "svelte-check": "4.7.8"
+    "ts-jest": "29.4.15"
+    "tedious": "20.3.9"
+    "ts-node": "10.9.2"
+    "tslib": "^2.3.0"
+    "typescript": "6.0.3"
+    "typescript-eslint": "8.73.0"
+    "vite": "8.3.8"
 
 # @nx/nest still declares NestJS < 12 as its peer range; it is only used for generators and works with 12.
 peerDependencyRules:
-  allowedVersions:
-    "@nx/nest>@nestjs/common": "12"
-    "@nx/nest>@nestjs/core": "12"
+    allowedVersions:
+        "@nx/nest>@nestjs/common": "12"
+        "@nx/nest>@nestjs/core": "12"
 
 allowBuilds:
-  "@nestjs/core": true
-  "@parcel/watcher": false
-  "@swc/core": false
-  "cpu-features": true
-  "mongodb-memory-server": true
-  "nx": true
-  "protobufjs": true
-  "sharp": true
-  "ssh2": true
-  "unrs-resolver": true
+    "@nestjs/core": true
+    "@parcel/watcher": false
+    "@swc/core": false
+    "cpu-features": true
+    "mongodb-memory-server": true
+    "nx": true
+    "protobufjs": true
+    "sharp": true
+    "ssh2": true
+    "unrs-resolver": true
 
 minimumReleaseAgeExclude:
-  - vite@8.3.6
+    - vite@8.3.6
+    - "@nestjs/common@12.5.1"
+    - "@nestjs/core@12.5.1"
+    - "@nestjs/platform-node@12.5.1"
+    - "@nestjs/testing@12.5.1"
+    - "@typescript-eslint/eslint-plugin@8.73.0"
+    - "@typescript-eslint/parser@8.73.0"
+    - "@typescript-eslint/project-service@8.73.0"
+    - "@typescript-eslint/scope-manager@8.73.0"
+    - "@typescript-eslint/tsconfig-utils@8.73.0"
+    - "@typescript-eslint/type-utils@8.73.0"
+    - "@typescript-eslint/types@8.73.0"
+    - "@typescript-eslint/typescript-estree@8.73.0"
+    - "@typescript-eslint/utils@8.73.0"
+    - "@typescript-eslint/visitor-keys@8.73.0"
+    - typescript-eslint@8.73.0
