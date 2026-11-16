@@ -5,7 +5,7 @@ import { EventNestException } from "./event-nest-exception";
  * Exception thrown when an aggregate root is missing the @AggregateRootName decorator
  */
 export class MissingAggregateRootNameException extends EventNestException {
-    constructor(aggregateRootClassName: string) {
+    constructor(readonly aggregateRootClassName: string) {
         super(
             MissingAggregateRootNameException.name,
             CoreErrorCodes.MISSING_AGGREGATE_ROOT_NAME,

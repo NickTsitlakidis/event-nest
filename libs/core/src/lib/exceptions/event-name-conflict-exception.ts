@@ -5,11 +5,11 @@ import { EventNestException } from "./event-nest-exception";
  * Thrown when the name of an event is already used for another event.
  */
 export class EventNameConflictException extends EventNestException {
-    constructor(name: string) {
+    constructor(readonly eventName: string) {
         super(
             EventNameConflictException.name,
             CoreErrorCodes.EVENT_NAME_CONFLICT,
-            `${name} is already registered as RegisteredEvent. Use another name`
+            `${eventName} is already registered as RegisteredEvent. Use another name`
         );
     }
 }

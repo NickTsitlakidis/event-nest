@@ -9,11 +9,9 @@ describe("SubscriptionException", () => {
         expect(exception).toBeInstanceOf(SubscriptionException);
         expect(exception).toBeInstanceOf(EventNestException);
         expect(exception).toBeInstanceOf(Error);
-        expect(exception.errorName).toBe("SubscriptionException");
+        expect(exception.name).toBe("SubscriptionException");
         expect(exception.errorCode).toBe(CoreErrorCodes.SUBSCRIPTION_FAILURE);
-        expect(exception.message).toBe(
-            "SubscriptionException (en_1009): Error while running subscriptions for event OrderPlaced with id event-123"
-        );
+        expect(exception.message).toBe("Error while running subscriptions for event OrderPlaced with id event-123");
     });
 
     test("exposes the caught error, event class name, and event id", () => {

@@ -5,7 +5,7 @@ import { EventNestException } from "./event-nest-exception";
  * Thrown when an aggregate root is reconstituted with an invalid authoritative version.
  */
 export class InvalidAggregateRootVersionException extends EventNestException {
-    constructor(aggregateRootVersion: number) {
+    constructor(readonly aggregateRootVersion: number) {
         super(
             InvalidAggregateRootVersionException.name,
             CoreErrorCodes.INVALID_AGGREGATE_ROOT_VERSION,

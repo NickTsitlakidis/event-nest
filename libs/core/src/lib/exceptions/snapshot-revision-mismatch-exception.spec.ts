@@ -9,10 +9,10 @@ describe("SnapshotRevisionMismatchException", () => {
         expect(exception).toBeInstanceOf(SnapshotRevisionMismatchException);
         expect(exception).toBeInstanceOf(EventNestException);
         expect(exception).toBeInstanceOf(Error);
-        expect(exception.errorName).toBe("SnapshotRevisionMismatchException");
+        expect(exception.name).toBe("SnapshotRevisionMismatchException");
         expect(exception.errorCode).toBe(CoreErrorCodes.SNAPSHOT_REVISION_MISMATCH);
         expect(exception.message).toBe(
-            "SnapshotRevisionMismatchException (en_1001): The snapshotRevision on OrderAggregate doesn't match the latest stored snapshot.\n             Please, check that the snapshotRevision defined in AggregateRootConfig is correclty configured."
+            "The snapshotRevision on OrderAggregate doesn't match the latest stored snapshot.\n             Please, check that the snapshotRevision defined in AggregateRootConfig is correctly configured."
         );
     });
 });

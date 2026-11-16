@@ -6,20 +6,19 @@ const EVENT_NEST_ERROR: unique symbol = Symbol.for("@event-nest/error");
 export class EventNestException extends Error {
     readonly [EVENT_NEST_ERROR] = true;
 
+    /**
+     * @param errorName The exception class name. It is assigned to the standard `name` property so that loggers and
+     * stack traces show the concrete exception instead of `Error`.
+     * @param errorCode The stable error code of the exception. Codes are the contract to match on; messages may change.
+     * @param message The human-readable description
+     */
     constructor(
-        private _errorName: string,
-        private _errorCode: string,
+        errorName: string,
+        readonly errorCode: string,
         message: string
     ) {
-        super(`${_errorName} (${_errorCode}): ${message}`);
-    }
-
-    get errorCode(): string {
-        return this._errorCode;
-    }
-
-    get errorName(): string {
-        return this._errorName;
+        super(message);
+        this.name = errorName;
     }
 }
 

@@ -9,10 +9,10 @@ describe("UnknownEventException", () => {
         expect(exception).toBeInstanceOf(UnknownEventException);
         expect(exception).toBeInstanceOf(EventNestException);
         expect(exception).toBeInstanceOf(Error);
-        expect(exception.errorName).toBe("UnknownEventException");
+        expect(exception.name).toBe("UnknownEventException");
         expect(exception.errorCode).toBe(CoreErrorCodes.UNKNOWN_EVENT);
         expect(exception.message).toBe(
-            "UnknownEventException (en_1010): Found unknown events for aggregate root aggregate-123. Unregistered : UnregisteredEvent. Missing apply method: MissingHandlerEvent"
+            "Found unknown events for aggregate root aggregate-123. Unregistered : UnregisteredEvent. Missing apply method: MissingHandlerEvent"
         );
     });
 
@@ -20,7 +20,7 @@ describe("UnknownEventException", () => {
         const exception = new UnknownEventException([], [], "aggregate-123");
 
         expect(exception.message).toBe(
-            "UnknownEventException (en_1010): Found unknown events for aggregate root aggregate-123. Unregistered : . Missing apply method: "
+            "Found unknown events for aggregate root aggregate-123. Unregistered : . Missing apply method: "
         );
     });
 
@@ -32,7 +32,7 @@ describe("UnknownEventException", () => {
         );
 
         expect(exception.message).toBe(
-            "UnknownEventException (en_1010): Found unknown events for aggregate root aggregate-123. Unregistered : UnregisteredEvent1, UnregisteredEvent2. Missing apply method: MissingHandlerEvent1, MissingHandlerEvent2"
+            "Found unknown events for aggregate root aggregate-123. Unregistered : UnregisteredEvent1, UnregisteredEvent2. Missing apply method: MissingHandlerEvent1, MissingHandlerEvent2"
         );
     });
 });

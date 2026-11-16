@@ -9,10 +9,10 @@ describe("AggregateClassNotSnapshotAwareException", () => {
         expect(exception).toBeInstanceOf(AggregateClassNotSnapshotAwareException);
         expect(exception).toBeInstanceOf(EventNestException);
         expect(exception).toBeInstanceOf(Error);
-        expect(exception.errorName).toBe("AggregateClassNotSnapshotAwareException");
+        expect(exception.name).toBe("AggregateClassNotSnapshotAwareException");
         expect(exception.errorCode).toBe(CoreErrorCodes.AGGREGATE_CLASS_NOT_SNAPSHOT_AWARE);
         expect(exception.message).toBe(
-            "AggregateClassNotSnapshotAwareException (en_1003): Missing snapshot revision for aggregate root: OrderAggregate\n. Did you forget to add snapshotRevision in AggregateRootConfig?"
+            "Missing snapshot revision for aggregate root: OrderAggregate\n. Did you forget to add snapshotRevision in AggregateRootConfig?"
         );
     });
 
@@ -20,7 +20,7 @@ describe("AggregateClassNotSnapshotAwareException", () => {
         const exception = new AggregateClassNotSnapshotAwareException();
 
         expect(exception.message).toBe(
-            "AggregateClassNotSnapshotAwareException (en_1003): Missing snapshot revision for aggregate root: undefined\n. Did you forget to add snapshotRevision in AggregateRootConfig?"
+            "Missing snapshot revision for aggregate root: undefined\n. Did you forget to add snapshotRevision in AggregateRootConfig?"
         );
     });
 });

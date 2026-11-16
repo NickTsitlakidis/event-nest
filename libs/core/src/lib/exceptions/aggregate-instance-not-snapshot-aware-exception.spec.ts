@@ -9,10 +9,10 @@ describe("AggregateInstanceNotSnapshotAwareException", () => {
         expect(exception).toBeInstanceOf(AggregateInstanceNotSnapshotAwareException);
         expect(exception).toBeInstanceOf(EventNestException);
         expect(exception).toBeInstanceOf(Error);
-        expect(exception.errorName).toBe("AggregateInstanceNotSnapshotAwareException");
+        expect(exception.name).toBe("AggregateInstanceNotSnapshotAwareException");
         expect(exception.errorCode).toBe(CoreErrorCodes.AGGREGATE_INSTANCE_NOT_SNAPSHOT_AWARE);
         expect(exception.message).toBe(
-            "AggregateInstanceNotSnapshotAwareException (en_1004): The snasphot should be created, but OrderAggregate doesn't implement SnapshotAware interface correctly\n. Did you forget to implement .toSnapshot() or .applySnapshot()?"
+            "The snapshot should be created, but OrderAggregate doesn't implement SnapshotAware interface correctly\n. Did you forget to implement .toSnapshot() or .applySnapshot()?"
         );
     });
 
@@ -20,7 +20,7 @@ describe("AggregateInstanceNotSnapshotAwareException", () => {
         const exception = new AggregateInstanceNotSnapshotAwareException();
 
         expect(exception.message).toBe(
-            "AggregateInstanceNotSnapshotAwareException (en_1004): The snasphot should be created, but undefined doesn't implement SnapshotAware interface correctly\n. Did you forget to implement .toSnapshot() or .applySnapshot()?"
+            "The snapshot should be created, but undefined doesn't implement SnapshotAware interface correctly\n. Did you forget to implement .toSnapshot() or .applySnapshot()?"
         );
     });
 });

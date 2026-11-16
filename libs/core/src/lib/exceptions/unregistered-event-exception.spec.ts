@@ -9,10 +9,10 @@ describe("UnregisteredEventException", () => {
         expect(exception).toBeInstanceOf(UnregisteredEventException);
         expect(exception).toBeInstanceOf(EventNestException);
         expect(exception).toBeInstanceOf(Error);
-        expect(exception.errorName).toBe("UnregisteredEventException");
+        expect(exception.name).toBe("UnregisteredEventException");
         expect(exception.errorCode).toBe(CoreErrorCodes.UNREGISTERED_EVENT);
         expect(exception.message).toBe(
-            "UnregisteredEventException (en_1012): OrderPlaced is not registered to be processed. Use the @DomainEvent decorator to register it."
+            "OrderPlaced is not registered to be processed. Use the @DomainEvent decorator to register it."
         );
     });
 });

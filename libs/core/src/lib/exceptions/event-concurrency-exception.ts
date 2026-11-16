@@ -10,11 +10,15 @@ import { EventNestException } from "./event-nest-exception";
  * By catching this exception, you can decide how to handle the situation.
  */
 export class EventConcurrencyException extends EventNestException {
-    constructor(aggregateRootId: string, databaseVersion: number, version: number) {
+    constructor(
+        readonly aggregateRootId: string,
+        readonly storedVersion: number,
+        readonly expectedVersion: number
+    ) {
         super(
             EventConcurrencyException.name,
             CoreErrorCodes.EVENT_CONCURRENCY_ISSUE,
-            `Concurrency issue for aggregate ${aggregateRootId}. Expected ${version}. Stored ${databaseVersion}`
+            `Concurrency issue for aggregate ${aggregateRootId}. Expected ${expectedVersion}. Stored ${storedVersion}`
         );
     }
 }
