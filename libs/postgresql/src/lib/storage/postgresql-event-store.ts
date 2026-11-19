@@ -12,13 +12,16 @@ import {
     StoredEvent
 } from "@event-nest/core";
 import { Logger } from "@nestjs/common";
-import { isNil, maxBy } from "es-toolkit";
+import { isNil, isNotNil, maxBy } from "es-toolkit";
+import { isObject } from "es-toolkit/compat";
 import { knex } from "knex";
 import { randomUUID } from "node:crypto";
 
 import { SchemaConfiguration } from "../schema-configuration";
 import { AggregateRootRow } from "./aggregate-root-row";
 import { EventRow } from "./event-row";
+
+const UNIQUE_VIOLATION_CODE = "23505";
 
 export class PostgreSQLEventStore extends AbstractEventStore {
     private readonly _logger: Logger;
@@ -234,6 +237,15 @@ export class PostgreSQLEventStore extends AbstractEventStore {
             });
         } catch (error) {
             this._logger.error("Unable to complete transaction for aggregate root with id : " + aggregate.id);
+            // Two first commits of the same aggregate both try to insert its row and the slower one hits the
+            // primary key. That is a version conflict for the caller, unlike a duplicate that leaves the
+            // stored version as expected, for example a reused event id.
+            if (isObject(error) && isNotNil(error) && "code" in error && error.code === UNIQUE_VIOLATION_CODE) {
+                const storedVersion = await this.findAggregateRootVersion(aggregate.id);
+                if (storedVersion !== expectedVersion) {
+                    throw new EventConcurrencyException(aggregate.id, storedVersion, expectedVersion);
+                }
+            }
             throw error;
         }
         aggregate.version = committedVersion;
