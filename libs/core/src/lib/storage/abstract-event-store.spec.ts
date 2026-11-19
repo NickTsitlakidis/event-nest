@@ -217,6 +217,32 @@ describe("AbstractEventStore", () => {
             expect(eventEmitter.emitMultiple).toHaveBeenCalledTimes(1);
         });
 
+        test("publisher assigns the generated ids to the events in generation order", async () => {
+            const store = new TestStore();
+            jest.spyOn(store, "generateEntityId")
+                .mockResolvedValueOnce("id-1")
+                .mockResolvedValueOnce("id-2")
+                .mockResolvedValueOnce("id-3");
+            const entity = store.addPublisher(new TestEntity());
+            eventEmitter.emitMultiple.mockResolvedValue("whatever");
+
+            await entity.publish(
+                ["first", "second", "third"].map((value) => ({
+                    aggregateRootId: "id",
+                    occurredAt: new Date(),
+                    payload: new TestEvent(value)
+                }))
+            );
+
+            expect(store.savedEvents.map((event) => event.id)).toEqual(["id-1", "id-2", "id-3"]);
+            const [emitted] = eventEmitter.emitMultiple.mock.calls[0];
+            expect(emitted.map((event) => [event.eventId, (event.payload as TestEvent).someProperty])).toEqual([
+                ["id-1", "first"],
+                ["id-2", "second"],
+                ["id-3", "third"]
+            ]);
+        });
+
         test("publisher calls snapshotStore.shouldCreateSnapshot with aggregate", async () => {
             const snapshotStore = createMock<AbstractSnapshotStore>({
                 shouldCreateSnapshot: jest.fn().mockReturnValue(false)

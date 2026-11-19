@@ -56,8 +56,8 @@ export abstract class AbstractEventStore implements EventStore {
             const published: Array<PublishedDomainEvent<object>> = [];
             const storedEvents: Array<StoredEvent> = [];
 
-            for (const event of events) {
-                const id = ids.pop() as string;
+            for (const [index, event] of events.entries()) {
+                const id = ids[index];
                 storedEvents.push(
                     StoredEvent.fromPublishedEvent(
                         id,
