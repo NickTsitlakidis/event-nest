@@ -26,10 +26,10 @@ actions:
 
 ## What's new in {CURRENT_VERSION}
 
-- **NestJS 12 support**, alongside NestJS 10 and 11. See [compatibility](/help/compatibility/) for Node.js and module-format requirements.
-- **Structured error handling** with stable error codes, typed exception guards, and readonly diagnostic fields. See the [exception reference](/api-reference/exceptions/) for examples.
+- **More reliable subscriptions and replay**: singleton subscription instances are bound once, and stacked `@ApplyEvent` decorators work on the same method.
+- **Persistence fixes**: event IDs retain their generated order, missing aggregate versions are checked in MongoDB and PostgreSQL, and concurrent PostgreSQL first commits report a concurrency conflict.
 
-Upgrading from 6.1? Read the [upgrade notes](/help/compatibility/#Upgrading-to-this-release) and the [6.2.0 release notes](https://github.com/NickTsitlakidis/event-nest/releases/tag/v6.2.0).
+Read the [upgrade notes](/help/compatibility/#Upgrading-to-this-release) and the [6.2.1 release notes](https://github.com/NickTsitlakidis/event-nest/releases/tag/v6.2.1). Version 6.2 also introduced [NestJS 12 support](/help/compatibility/) and [structured error handling](/api-reference/exceptions/).
 
 <div style="margin-top: 3rem; margin-bottom: 3rem">
 

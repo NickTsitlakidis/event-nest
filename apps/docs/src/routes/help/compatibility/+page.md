@@ -14,7 +14,7 @@ This matrix reflects the published <code>{CURRENT_VERSION}</code> package manife
 | Component | Supported version or range | Notes |
 | --- | --- | --- |
 | Node.js | `>=22` | All four published packages declare `>= 22`. Node 20 support was dropped in 6.0.0. |
-| Repository development Node.js | `>=22` (`>=24.9` for the NestJS 12 test suite) | The monorepo root requires Node 22 or later. Only running the test suites against the ESM-only NestJS 12 through Jest needs Node 24.9 or later; on Node 22, test against NestJS 10 or 11. |
+| Repository development Node.js | `>=22.13` (`>=24.9` for the NestJS 12 test suite) | Only running the test suites against the ESM-only NestJS 12 through Jest needs Node 24.9 or later; on Node 22, test against NestJS 10 or 11. |
 | NestJS `@nestjs/common` | `^10.0.0 \|\| ^11.0.0 \|\| ^12.0.0` | Peer of core and every adapter. Nest 9 support was dropped in 4.0.0. |
 | NestJS `@nestjs/core` | `^10.0.0 \|\| ^11.0.0 \|\| ^12.0.0` | Keep the Nest core/common majors aligned. NestJS 12 requires Node.js 22.12 or later; see below. |
 | `reflect-metadata` | `^0.1.12 \|\| ^0.2.0` | Required peer for decorator metadata. |
@@ -23,7 +23,7 @@ This matrix reflects the published <code>{CURRENT_VERSION}</code> package manife
 | PostgreSQL `pg` driver | `^8.14.1` | Semver range `>=8.14.1 <9.0.0`. |
 | SQL Server `tedious` driver | `^20.0.0` | Semver range `>=20.0.0 <21.0.0`. |
 
-Each adapter package depends on exactly `@event-nest/core` <code>{CURRENT_VERSION}</code>. Keep Event Nest package versions aligned rather than mixing majors or minors.
+Each adapter package depends on exactly `@event-nest/core` <code>{CURRENT_VERSION}</code>. Keep Event Nest package versions aligned, including patch versions.
 
 ## Adapter requirements
 
@@ -56,13 +56,15 @@ TypeScript is not a published peer dependency, so the repository's TypeScript ve
 
 ## Upgrading to this release
 
-To upgrade from 6.1.0, update `@event-nest/core` and your adapter packages together to `6.2.0`. NestJS 10 and 11 remain supported; adopting NestJS 12 is optional. If you upgrade to NestJS 12, align `@nestjs/common` and `@nestjs/core` and follow the Node.js and ESM requirements above.
+Update `@event-nest/core` and your adapter packages together to <code>{CURRENT_VERSION}</code>. Version 6.2.1 fixes event ID assignment, stacked replay decorators, subscription discovery, and concurrency checks in MongoDB and PostgreSQL. Review subscription providers: request-scoped and transient providers, including providers with non-static dependency trees, are skipped; use singleton providers instead.
+
+When upgrading from 6.1.0, note that NestJS 10 and 11 remain supported; adopting NestJS 12 is optional. If you upgrade to NestJS 12, align `@nestjs/common` and `@nestjs/core` and follow the Node.js and ESM requirements above.
 
 Version 6.2.0 adds structured exceptions through `EventNestException`, `CoreErrorCodes`, and `isEventNestException`. Replace error-message parsing with stable error-code checks, or pass an exception class to the guard for typed access to diagnostic fields. Existing exception classes remain exported. See [matching exceptions](/api-reference/exceptions/#Matching-exceptions) for application and HTTP-filter examples.
 
 Invalid explicit aggregate versions passed to `AggregateRoot.reconstitute()` now throw `InvalidAggregateRootVersionException`. Forward the `aggregateRootVersion` returned by the store unchanged; it must be a non-negative safe integer.
 
-See the [6.2.0 release notes](https://github.com/NickTsitlakidis/event-nest/releases/tag/v6.2.0) for the release summary.
+See the [6.2.1 release notes](https://github.com/NickTsitlakidis/event-nest/releases/tag/v6.2.1) and, when upgrading from 6.1, the [6.2.0 release notes](https://github.com/NickTsitlakidis/event-nest/releases/tag/v6.2.0).
 
 ## Current deprecations
 

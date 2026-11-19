@@ -44,10 +44,6 @@ Replace `@event-nest/postgresql pg` with `@event-nest/mongodb mongodb` or `@even
 
 Event Nest requires Node.js 22 or later and supports NestJS 10, 11, and 12. See the [compatibility reference](https://nicktsitlakidis.github.io/event-nest/help/compatibility/) for exact driver peer ranges and migration notes.
 
-## Project Status
-
-The project has automated unit and integration coverage but has not yet been widely tested in production. Evaluate its persistence, failure-recovery, and operational behavior against your application's requirements.
-
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for local setup and contribution guidance.

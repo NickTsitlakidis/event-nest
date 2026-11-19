@@ -30,6 +30,8 @@ When a stream is loaded without a snapshot, `reconstitute()` sorts events by ver
 
 The aggregate's current version is also the expected storage version. A PostgreSQL commit locks the aggregate row in a transaction and compares that expected value with the stored value. If they differ, the transaction throws `EventConcurrencyException` and stores none of that commit's events.
 
+MongoDB and PostgreSQL also reject a nonzero expected version when the aggregate row is missing. PostgreSQL reports an `EventConcurrencyException` when concurrent first commits compete to create the same aggregate.
+
 For example, two requests load version 6:
 
 1. Request A commits one event. Storage advances to version 7.

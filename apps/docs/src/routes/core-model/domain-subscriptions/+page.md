@@ -36,6 +36,8 @@ export class UserModule {}
 
 The class must have the decorator, implement an `onDomainEvent` function, and be instantiated in a Nest module's `providers`. Event Nest scans the Nest module container and binds matching providers during application bootstrap.
 
+Subscriptions must be singleton providers with static dependency trees. Request-scoped and transient providers, including providers that depend on request-scoped providers, are skipped with a warning. If the same subscription instance is exposed through multiple provider tokens, it is bound only once per event.
+
 The handler receives the original domain payload plus committed metadata:
 
 ```ts

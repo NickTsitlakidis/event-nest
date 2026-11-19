@@ -73,6 +73,4 @@ Use event sourcing selectively rather than making it an application-wide default
 
 The packages in this repository are currently version <code>{CURRENT_VERSION}</code>. `@event-nest/core` declares support for NestJS 10, 11, and 12 and requires Node.js 22 or newer. The repository includes unit and adapter integration tests.
 
-The project also states that it has **not been widely tested in production**. Version number and test coverage should not be interpreted as evidence of broad production adoption. Evaluate failure behavior, database requirements, observability, throughput, and recovery against your own workload before relying on it for critical systems.
-
 Review the exact [Scope and Limitations](/overview/scope-and-limitations/), then [build your first aggregate](/build-your-first-aggregate/installation/) if the fit is sound.

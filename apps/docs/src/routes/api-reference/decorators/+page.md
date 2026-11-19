@@ -91,7 +91,7 @@ The name stored in existing events does not need to change for this decorator-on
 function ApplyEvent(eventClass: Class<unknown>): PropertyDecorator
 ```
 
-Marks an aggregate method as the replay handler for exactly one event class.
+Marks an aggregate method as a replay handler for an event class. Stack decorators to handle multiple event classes with the same method.
 
 ```ts
 @ApplyEvent(UserRenamed)
@@ -102,6 +102,7 @@ private applyUserRenamed(event: UserRenamed): void {
 
 - Replay sorts stored events by `aggregateRootVersion`, resolves each stored event name to its registered class, and invokes the method whose metadata references that class.
 - The method may be non-public, but it must exist and be callable at runtime.
+- Repeating the same event class on a method does not register it twice. An overridden method replaces the parent method's event registrations.
 - A stored name with no `@DomainEvent` registration, or a registered event with no matching `@ApplyEvent` method, produces `UnknownEventException`.
 - Passing `null` or `undefined` as the class throws `MissingEventClassException`, commonly caused by a circular or incorrect import.
 - Application code must apply state changes when creating a new event as well as append it. `@ApplyEvent` is used automatically during reconstitution, not automatically by `append()`.
@@ -135,7 +136,7 @@ export class UserProjection implements OnDomainEvent<UserRenamed> {
 | `eventClasses` | None | Classes to subscribe to. Duplicate class references are removed while preserving first occurrence order. |
 | `isAsync` | `true` | `true` normally detaches the handler from `commit()`; failures are logged. `false` makes dispatch wait and wraps failures in public `SubscriptionException`. |
 
-Subscription providers are bound when the adapter module runs `onApplicationBootstrap`. A decorated class that is not registered as a Nest provider, or one without a callable `onDomainEvent`, is not bound.
+Subscription providers are bound when the adapter module runs `onApplicationBootstrap`. A decorated class that is not registered as a Nest provider, or one without a callable `onDomainEvent`, is not bound. Only singleton providers with static dependency trees are supported; request-scoped and transient providers are skipped with a warning. The same instance is bound once per event even if exposed through multiple provider tokens.
 
 Persistence happens before dispatch. A `SubscriptionException` never means that event storage was rolled back, and `AggregateRoot.commit()` clears uncommitted events for that exception to prevent accidental duplicate persistence.
 
