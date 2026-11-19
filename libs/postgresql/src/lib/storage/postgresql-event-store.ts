@@ -182,6 +182,14 @@ export class PostgreSQLEventStore extends AbstractEventStore {
 
                 let currentVersion: number;
                 if (isNil(aggregateInDatabase)) {
+                    // A missing aggregate can only be created by a caller that also believes it is new.
+                    // Any other expected version means the aggregate was purged or never existed.
+                    if (expectedVersion !== 0) {
+                        this._logger.error(
+                            `Version conflict detected for aggregate ${aggregate.id}. Expected ${expectedVersion} but the aggregate does not exist`
+                        );
+                        throw new EventConcurrencyException(aggregate.id, -1, expectedVersion);
+                    }
                     this._logger.debug(`Aggregate ${aggregate.id} does not exist. Will save it`);
                     await trx(this._schemaConfiguration.schemaAwareAggregatesTable).insert({
                         id: aggregate.id,

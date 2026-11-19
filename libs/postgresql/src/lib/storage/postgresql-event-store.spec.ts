@@ -444,9 +444,30 @@ describe("PostgreSQLEventStore", () => {
             expect(root.version).toBe(5);
         });
 
+        test("throws when the aggregate does not exist and the expected version is not 0", async () => {
+            const rootId = randomUUID();
+            const root = new StoredAggregateRoot(rootId, 5);
+
+            const saving = eventStore.save(
+                [StoredEvent.fromPublishedEvent(randomUUID(), rootId, "Test", new SqlEvent1(), new Date())],
+                root
+            );
+
+            await expect(saving).rejects.toBeInstanceOf(EventConcurrencyException);
+            await expect(saving).rejects.toMatchObject({ expectedVersion: 5, storedVersion: -1 });
+
+            const events = await knexConnection(schema + ".es-events").select("*");
+            expect(events.length).toBe(0);
+
+            const aggregates = await knexConnection(schema + ".es-aggregates").select("*");
+            expect(aggregates.length).toBe(0);
+
+            expect(root.version).toBe(5);
+        });
+
         test("saves new aggregate with its event", async () => {
             const rootId = randomUUID();
-            const root = new StoredAggregateRoot(rootId, 1);
+            const root = new StoredAggregateRoot(rootId, 0);
 
             const events = [StoredEvent.fromPublishedEvent(randomUUID(), rootId, "Test", new SqlEvent2(), new Date())];
 

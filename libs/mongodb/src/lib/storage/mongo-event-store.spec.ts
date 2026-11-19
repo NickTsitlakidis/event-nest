@@ -228,8 +228,32 @@ describe("MongoEventStore", () => {
             expect(ag.version).toBe(7);
         });
 
+        test("throws when the aggregate does not exist and the expected version is not 0", async () => {
+            const ag = new StoredAggregateRoot(new ObjectId().toHexString(), 5);
+
+            const stored = StoredEvent.fromPublishedEvent(
+                new ObjectId().toHexString(),
+                ag.id,
+                "Test",
+                new TestEvent1(),
+                new Date()
+            );
+            const saving = eventStore.save([stored], ag);
+
+            await expect(saving).rejects.toBeInstanceOf(EventConcurrencyException);
+            await expect(saving).rejects.toMatchObject({ expectedVersion: 5, storedVersion: -1 });
+
+            const eventsCount = await eventsCollection.countDocuments();
+            expect(eventsCount).toBe(0);
+
+            const aggregatesCount = await aggregatesCollection.countDocuments();
+            expect(aggregatesCount).toBe(0);
+
+            expect(ag.version).toBe(5);
+        });
+
         test("saves new aggregate with its event", async () => {
-            const ag = new StoredAggregateRoot(new ObjectId().toHexString(), 1);
+            const ag = new StoredAggregateRoot(new ObjectId().toHexString(), 0);
 
             const events = [
                 StoredEvent.fromPublishedEvent(
