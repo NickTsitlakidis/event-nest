@@ -1,6 +1,6 @@
 {
     "name": "@event-nest/mssql",
-    "version": "6.2.0",
+    "version": "6.2.1",
     "license": "MIT",
     "description": "Event sourcing module for NestJS using Microsoft SQL Server",
     "author": "Nick Tsitlakidis",
@@ -38,7 +38,7 @@
         "tedious": "^20.0.0"
     },
     "dependencies": {
-        "@event-nest/core": "6.2.0",
+        "@event-nest/core": "6.2.1",
         "es-toolkit": "catalog:",
         "knex": "catalog:",
         "tslib": "catalog:"

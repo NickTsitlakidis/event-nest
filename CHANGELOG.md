@@ -1,3 +1,17 @@
+## 6.2.1 (2026-11-19)
+
+### 🩹 Fixes
+
+- **core:** Skip non-singleton subscriptions and bind each subscription instance once ([5a9a3de](https://github.com/NickTsitlakidis/event-nest/commit/5a9a3de))
+- **core:** Event id assignment respects ordering of generated ids ([9b5abdb](https://github.com/NickTsitlakidis/event-nest/commit/9b5abdb))
+- **core:** Support stacked ApplyEvent decorators on the same method ([c29b63c](https://github.com/NickTsitlakidis/event-nest/commit/c29b63c))
+- **mongodb,postgresql:** Throw error if an aggregate root is missing but the expected version does not reflect it. ([e940a9e](https://github.com/NickTsitlakidis/event-nest/commit/e940a9e))
+- **postgresql:** Throw EventConcurrencyException for concurrent first commits of an aggregate ([24ac598](https://github.com/NickTsitlakidis/event-nest/commit/24ac598))
+
+### Contributors
+
+- Nick Tsitlakidis
+
 ## 6.2.0 (2026-11-16)
 
 ### 🚀 Features
