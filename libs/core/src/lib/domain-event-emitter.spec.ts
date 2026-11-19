@@ -1,6 +1,6 @@
 import { createMock } from "@golevelup/ts-jest";
-import { InjectionToken, Logger } from "@nestjs/common";
-import { Injectable } from "@nestjs/common/interfaces";
+import { Inject, Injectable, InjectionToken, Logger, Provider, Scope } from "@nestjs/common";
+import { ModulesContainer, NestFactory } from "@nestjs/core";
 import { InstanceWrapper } from "@nestjs/core/injector/instance-wrapper";
 import { Module } from "@nestjs/core/injector/module";
 import { delay } from "es-toolkit";
@@ -61,16 +61,147 @@ const event2 = (eventId: string, version: number) => ({
     version
 });
 
+const singletonProvider = (instance: object) =>
+    createMock<InstanceWrapper>({ instance, isDependencyTreeStatic: () => true, isTransient: false });
+
+const createContext = (providers: Array<Provider>) =>
+    NestFactory.createApplicationContext({ module: class TestModule {}, providers }, { logger: false });
+
+const emitEvent1 = (emitter: DomainEventEmitter) =>
+    emitter.emitMultiple([
+        {
+            aggregateRootId: "test",
+            eventId: "ev-id",
+            occurredAt: new Date(),
+            payload: new Event1("test"),
+            version: 1
+        }
+    ]);
+
 describe("DomainEventEmitter", () => {
+    describe("bindSubscriptions", () => {
+        @Injectable()
+        class Dependency {
+            readonly value = "injected";
+        }
+
+        test("binds a subscription instance once when it is also provided through an alias", async () => {
+            const handled: Array<unknown> = [];
+
+            @DomainEventSubscription({ eventClasses: [Event1], isAsync: false })
+            @Injectable()
+            class AliasedSubscription implements OnDomainEvent<Event1> {
+                onDomainEvent(event: unknown): Promise<unknown> {
+                    handled.push(event);
+                    return Promise.resolve();
+                }
+            }
+
+            const app = await createContext([
+                AliasedSubscription,
+                { provide: "ALIASED_SUBSCRIPTION", useExisting: AliasedSubscription }
+            ]);
+            const emitter = new DomainEventEmitter();
+            emitter.bindSubscriptions(app.get(ModulesContainer));
+
+            await emitEvent1(emitter);
+            await app.close();
+
+            expect(handled).toHaveLength(1);
+        });
+
+        test("binds a singleton subscription with its injected dependencies", async () => {
+            const handled: Array<string> = [];
+
+            @DomainEventSubscription({ eventClasses: [Event1], isAsync: false })
+            @Injectable()
+            class SingletonSubscription implements OnDomainEvent<Event1> {
+                constructor(@Inject(Dependency) private readonly _dependency: Dependency) {}
+
+                onDomainEvent(): Promise<unknown> {
+                    handled.push(this._dependency.value);
+                    return Promise.resolve();
+                }
+            }
+
+            const app = await createContext([Dependency, SingletonSubscription]);
+            const emitter = new DomainEventEmitter();
+            emitter.bindSubscriptions(app.get(ModulesContainer));
+
+            await emitEvent1(emitter);
+            await app.close();
+
+            expect(handled).toEqual(["injected"]);
+        });
+
+        test.each([
+            ["request-scoped", Scope.REQUEST],
+            ["transient", Scope.TRANSIENT]
+        ])("skips a %s subscription and logs a warning", async (_, scope) => {
+            const handled: Array<unknown> = [];
+
+            @DomainEventSubscription({ eventClasses: [Event1], isAsync: false })
+            @Injectable({ scope })
+            class ScopedSubscription implements OnDomainEvent<Event1> {
+                constructor(@Inject(Dependency) private readonly _dependency: Dependency) {}
+
+                onDomainEvent(): Promise<unknown> {
+                    handled.push(this._dependency);
+                    return Promise.resolve();
+                }
+            }
+
+            const warnSpy = jest.spyOn(Logger.prototype, "warn").mockImplementation();
+            const app = await createContext([Dependency, ScopedSubscription]);
+            const emitter = new DomainEventEmitter();
+            emitter.bindSubscriptions(app.get(ModulesContainer));
+
+            await emitEvent1(emitter);
+            await app.close();
+
+            expect(handled).toEqual([]);
+            expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("Skipping ScopedSubscription"));
+        });
+
+        test("skips a singleton subscription that depends on a request-scoped provider", async () => {
+            const handled: Array<unknown> = [];
+
+            @Injectable({ scope: Scope.REQUEST })
+            class RequestDependency {}
+
+            @DomainEventSubscription({ eventClasses: [Event1], isAsync: false })
+            @Injectable()
+            class BubbledSubscription implements OnDomainEvent<Event1> {
+                constructor(@Inject(RequestDependency) private readonly _dependency: RequestDependency) {}
+
+                onDomainEvent(): Promise<unknown> {
+                    handled.push(this._dependency);
+                    return Promise.resolve();
+                }
+            }
+
+            const warnSpy = jest.spyOn(Logger.prototype, "warn").mockImplementation();
+            const app = await createContext([RequestDependency, BubbledSubscription]);
+            const emitter = new DomainEventEmitter();
+            emitter.bindSubscriptions(app.get(ModulesContainer));
+
+            await emitEvent1(emitter);
+            await app.close();
+
+            expect(handled).toEqual([]);
+            expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("Skipping BubbledSubscription"));
+        });
+    });
+
     describe("onModuleDestroy", () => {
         test("stops calling subscriptions", () => {
             const emitter = new DomainEventEmitter();
 
             const asyncSubscription = new TestEvent2Subscription();
             const syncSubscription = new TestEvent2SyncSubscription();
-            const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>([
-                [TestEvent2Subscription, createMock<InstanceWrapper<Injectable>>({ instance: asyncSubscription })],
-                [TestEvent2SyncSubscription, createMock<InstanceWrapper<Injectable>>({ instance: syncSubscription })]
+            const providersMap = new Map<InjectionToken, InstanceWrapper>([
+                [TestEvent2Subscription, singletonProvider(asyncSubscription)],
+                [TestEvent2SyncSubscription, singletonProvider(syncSubscription)]
             ]);
             const injectorModules = new Map<string, Module>([
                 ["test", createMock<Module>({ providers: providersMap })]
@@ -112,8 +243,8 @@ describe("DomainEventEmitter", () => {
         test("throws mapped exception when sync subscription throws", async () => {
             const syncSubscription = new TestEvent2SyncSubscription();
 
-            const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>([
-                [TestEvent2SyncSubscription, createMock<InstanceWrapper<Injectable>>({ instance: syncSubscription })]
+            const providersMap = new Map<InjectionToken, InstanceWrapper>([
+                [TestEvent2SyncSubscription, singletonProvider(syncSubscription)]
             ]);
             const injectorModules = new Map<string, Module>([
                 ["test", createMock<Module>({ providers: providersMap })]
@@ -157,11 +288,8 @@ describe("DomainEventEmitter", () => {
 
             test("rejects with mapped exception for sync subscription when running sequentially", async () => {
                 const syncSubscription = new TestEvent2SyncSubscription();
-                const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>([
-                    [
-                        TestEvent2SyncSubscription,
-                        createMock<InstanceWrapper<Injectable>>({ instance: syncSubscription })
-                    ]
+                const providersMap = new Map<InjectionToken, InstanceWrapper>([
+                    [TestEvent2SyncSubscription, singletonProvider(syncSubscription)]
                 ]);
                 const injectorModules = new Map<string, Module>([
                     ["test", createMock<Module>({ providers: providersMap })]
@@ -189,11 +317,8 @@ describe("DomainEventEmitter", () => {
 
             test("rejects with mapped exception for sync subscription when running concurrently", async () => {
                 const syncSubscription = new TestEvent2SyncSubscription();
-                const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>([
-                    [
-                        TestEvent2SyncSubscription,
-                        createMock<InstanceWrapper<Injectable>>({ instance: syncSubscription })
-                    ]
+                const providersMap = new Map<InjectionToken, InstanceWrapper>([
+                    [TestEvent2SyncSubscription, singletonProvider(syncSubscription)]
                 ]);
                 const injectorModules = new Map<string, Module>([
                     ["test", createMock<Module>({ providers: providersMap })]
@@ -216,9 +341,9 @@ describe("DomainEventEmitter", () => {
             test("logs error and stops the chain for async subscription when running sequentially", async () => {
                 const subscription1 = new TestEvent2Subscription();
                 const subscription2 = new TestSubscription();
-                const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>([
-                    [TestEvent2Subscription, createMock<InstanceWrapper<Injectable>>({ instance: subscription1 })],
-                    [TestSubscription, createMock<InstanceWrapper<Injectable>>({ instance: subscription2 })]
+                const providersMap = new Map<InjectionToken, InstanceWrapper>([
+                    [TestEvent2Subscription, singletonProvider(subscription1)],
+                    [TestSubscription, singletonProvider(subscription2)]
                 ]);
                 const injectorModules = new Map<string, Module>([
                     ["test", createMock<Module>({ providers: providersMap })]
@@ -256,8 +381,8 @@ describe("DomainEventEmitter", () => {
 
             test("logs error and resolves for async subscription when running concurrently", async () => {
                 const subscription = new TestEvent2Subscription();
-                const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>([
-                    [TestEvent2Subscription, createMock<InstanceWrapper<Injectable>>({ instance: subscription })]
+                const providersMap = new Map<InjectionToken, InstanceWrapper>([
+                    [TestEvent2Subscription, singletonProvider(subscription)]
                 ]);
                 const injectorModules = new Map<string, Module>([
                     ["test", createMock<Module>({ providers: providersMap })]
@@ -284,9 +409,9 @@ describe("DomainEventEmitter", () => {
             const syncSubscription = new TestEvent2SyncSubscription();
             const asyncSubscription = new TestSubscription();
 
-            const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>([
-                [TestEvent2SyncSubscription, createMock<InstanceWrapper<Injectable>>({ instance: syncSubscription })],
-                [TestSubscription, createMock<InstanceWrapper<Injectable>>({ instance: asyncSubscription })]
+            const providersMap = new Map<InjectionToken, InstanceWrapper>([
+                [TestEvent2SyncSubscription, singletonProvider(syncSubscription)],
+                [TestSubscription, singletonProvider(asyncSubscription)]
             ]);
             const injectorModules = new Map<string, Module>([
                 ["test", createMock<Module>({ providers: providersMap })]
@@ -348,9 +473,9 @@ describe("DomainEventEmitter", () => {
             const syncSubscription = new TestEvent2SyncSubscription();
             const asyncSubscription = new TestSubscription();
 
-            const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>([
-                [TestEvent2SyncSubscription, createMock<InstanceWrapper<Injectable>>({ instance: syncSubscription })],
-                [TestSubscription, createMock<InstanceWrapper<Injectable>>({ instance: asyncSubscription })]
+            const providersMap = new Map<InjectionToken, InstanceWrapper>([
+                [TestEvent2SyncSubscription, singletonProvider(syncSubscription)],
+                [TestSubscription, singletonProvider(asyncSubscription)]
             ]);
             const injectorModules = new Map<string, Module>([
                 ["test", createMock<Module>({ providers: providersMap })]
@@ -410,9 +535,9 @@ describe("DomainEventEmitter", () => {
             const event2Subscription = new TestEvent2Subscription();
             const event1Subscription = new TestSubscription();
 
-            const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>([
-                [TestEvent2Subscription, createMock<InstanceWrapper<Injectable>>({ instance: event2Subscription })],
-                [TestSubscription, createMock<InstanceWrapper<Injectable>>({ instance: event1Subscription })]
+            const providersMap = new Map<InjectionToken, InstanceWrapper>([
+                [TestEvent2Subscription, singletonProvider(event2Subscription)],
+                [TestSubscription, singletonProvider(event1Subscription)]
             ]);
             const injectorModules = new Map<string, Module>([
                 ["test", createMock<Module>({ providers: providersMap })]
@@ -476,9 +601,9 @@ describe("DomainEventEmitter", () => {
             const subscription1 = new TestSubscription();
             const subscription2 = new WithMultiple();
 
-            const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>([
-                [TestSubscription, createMock<InstanceWrapper<Injectable>>({ instance: subscription1 })],
-                [WithMultiple, createMock<InstanceWrapper<Injectable>>({ instance: subscription2 })]
+            const providersMap = new Map<InjectionToken, InstanceWrapper>([
+                [TestSubscription, singletonProvider(subscription1)],
+                [WithMultiple, singletonProvider(subscription2)]
             ]);
             const injectorModules = new Map<string, Module>([
                 ["test", createMock<Module>({ providers: providersMap })]
@@ -537,8 +662,8 @@ describe("DomainEventEmitter", () => {
 
         test("returns when events have no bound subscriptions", async () => {
             const subscription1 = new TestSubscription();
-            const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>([
-                [TestSubscription, createMock<InstanceWrapper<Injectable>>({ instance: subscription1 })]
+            const providersMap = new Map<InjectionToken, InstanceWrapper>([
+                [TestSubscription, singletonProvider(subscription1)]
             ]);
             const injectorModules = new Map<string, Module>([
                 ["test", createMock<Module>({ providers: providersMap })]
@@ -573,8 +698,8 @@ describe("DomainEventEmitter", () => {
 
         test("ignores events without handlers", async () => {
             const subscription1 = new TestSubscription();
-            const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>([
-                [TestSubscription, createMock<InstanceWrapper<Injectable>>({ instance: subscription1 })]
+            const providersMap = new Map<InjectionToken, InstanceWrapper>([
+                [TestSubscription, singletonProvider(subscription1)]
             ]);
             const injectorModules = new Map<string, Module>([
                 ["test", createMock<Module>({ providers: providersMap })]
@@ -617,9 +742,9 @@ describe("DomainEventEmitter", () => {
         test("emits sequentially when flag is set", async () => {
             const subscription1 = new TestSubscription();
             const subscription2 = new TestEvent2Subscription();
-            const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>([
-                [TestEvent2Subscription, createMock<InstanceWrapper<Injectable>>({ instance: subscription2 })],
-                [TestSubscription, createMock<InstanceWrapper<Injectable>>({ instance: subscription1 })]
+            const providersMap = new Map<InjectionToken, InstanceWrapper>([
+                [TestEvent2Subscription, singletonProvider(subscription2)],
+                [TestSubscription, singletonProvider(subscription1)]
             ]);
             const injectorModules = new Map<string, Module>([
                 ["test", createMock<Module>({ providers: providersMap })]
@@ -692,9 +817,9 @@ describe("DomainEventEmitter", () => {
         test("stops on error when running sequentially", async () => {
             const subscription1 = new TestSubscription();
             const subscription2 = new TestEvent2Subscription();
-            const providersMap = new Map<InjectionToken, InstanceWrapper<Injectable>>([
-                [TestEvent2Subscription, createMock<InstanceWrapper<Injectable>>({ instance: subscription2 })],
-                [TestSubscription, createMock<InstanceWrapper<Injectable>>({ instance: subscription1 })]
+            const providersMap = new Map<InjectionToken, InstanceWrapper>([
+                [TestEvent2Subscription, singletonProvider(subscription2)],
+                [TestSubscription, singletonProvider(subscription1)]
             ]);
             const injectorModules = new Map<string, Module>([
                 ["test", createMock<Module>({ providers: providersMap })]
