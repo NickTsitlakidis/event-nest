@@ -12,7 +12,7 @@ export function getDecoratedPropertyKey(entity: AggregateRoot, eventClass: Class
 
     const matchingKey = metadataKeys.find((metadataKey) => {
         const metadata = Reflect.getMetadata(metadataKey, entity);
-        return metadata.eventClass === eventClass;
+        return metadata?.eventClasses?.includes(eventClass);
     });
 
     if (!matchingKey) {
