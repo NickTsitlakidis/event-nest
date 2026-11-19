@@ -325,6 +325,46 @@ describe("MongoEventStore", () => {
             expect(storedEvents).toHaveLength(1);
             expect(storedEvents[0].aggregateRootVersion).toBe(6);
         });
+
+        test("two concurrent first saves of a new aggregate: one wins, the other throws", async () => {
+            const aggregateId = new ObjectId().toHexString();
+
+            const ag1 = new StoredAggregateRoot(aggregateId, 0);
+            const ag2 = new StoredAggregateRoot(aggregateId, 0);
+
+            const event1 = StoredEvent.fromPublishedEvent(
+                new ObjectId().toHexString(),
+                aggregateId,
+                "Test",
+                new TestEvent1(),
+                new Date()
+            );
+            const event2 = StoredEvent.fromPublishedEvent(
+                new ObjectId().toHexString(),
+                aggregateId,
+                "Test",
+                new TestEvent2(),
+                new Date()
+            );
+
+            const results = await Promise.allSettled([eventStore.save([event1], ag1), eventStore.save([event2], ag2)]);
+
+            const fulfilled = results.filter((r) => r.status === "fulfilled");
+            const rejected = results.filter((r) => r.status === "rejected");
+
+            expect(fulfilled).toHaveLength(1);
+            expect(rejected).toHaveLength(1);
+            expect((rejected[0] as PromiseRejectedResult).reason).toBeInstanceOf(EventConcurrencyException);
+
+            const storedAggregate = await aggregatesCollection.findOne({ _id: new ObjectId(aggregateId) });
+            expect(storedAggregate?.version).toBe(1);
+
+            expect([ag1.version, ag2.version].toSorted((a, b) => a - b)).toEqual([0, 1]);
+
+            const storedEvents = await eventsCollection.find({ aggregateRootId: aggregateId }).toArray();
+            expect(storedEvents).toHaveLength(1);
+            expect(storedEvents[0].aggregateRootVersion).toBe(1);
+        });
     });
 
     describe("findByAggregateRootIds", () => {

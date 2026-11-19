@@ -105,5 +105,13 @@ describe("apply-event.decorator", () => {
             expect(getDecoratedPropertyKey(entity, Event1)).toBe("processTestEvent");
             expect(getDecoratedPropertyKey(entity, Event2)).toBeUndefined();
         });
+
+        test("ignores metadata of another library even when it looks like ApplyEvent metadata", () => {
+            const entity = new TestEntity();
+            Reflect.defineMetadata("some-other-library", { eventClasses: [Event2], key: "other" }, entity);
+            Reflect.defineMetadata(Symbol("some-other-library"), { eventClasses: [Event2], key: "other" }, entity);
+            expect(getDecoratedPropertyKey(entity, Event1)).toBe("processTestEvent");
+            expect(getDecoratedPropertyKey(entity, Event2)).toBeUndefined();
+        });
     });
 });

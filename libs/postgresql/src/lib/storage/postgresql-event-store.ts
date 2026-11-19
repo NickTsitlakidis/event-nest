@@ -12,16 +12,13 @@ import {
     StoredEvent
 } from "@event-nest/core";
 import { Logger } from "@nestjs/common";
-import { isNil, isNotNil, maxBy } from "es-toolkit";
-import { isObject } from "es-toolkit/compat";
+import { isNil, maxBy } from "es-toolkit";
 import { knex } from "knex";
 import { randomUUID } from "node:crypto";
 
 import { SchemaConfiguration } from "../schema-configuration";
 import { AggregateRootRow } from "./aggregate-root-row";
 import { EventRow } from "./event-row";
-
-const UNIQUE_VIOLATION_CODE = "23505";
 
 export class PostgreSQLEventStore extends AbstractEventStore {
     private readonly _logger: Logger;
@@ -194,10 +191,26 @@ export class PostgreSQLEventStore extends AbstractEventStore {
                         throw new EventConcurrencyException(aggregate.id, -1, expectedVersion);
                     }
                     this._logger.debug(`Aggregate ${aggregate.id} does not exist. Will save it`);
-                    await trx(this._schemaConfiguration.schemaAwareAggregatesTable).insert({
-                        id: aggregate.id,
-                        version: 0
-                    });
+                    const inserted = await trx<AggregateRootRow>(this._schemaConfiguration.schemaAwareAggregatesTable)
+                        .insert({ id: aggregate.id, version: 0 })
+                        .onConflict("id")
+                        .ignore()
+                        .returning("id");
+                    // Nothing is inserted when another transaction created the aggregate after the lookup
+                    // above. Its row was invisible to that lookup, so it is read again here.
+                    if (inserted.length === 0) {
+                        const created = await trx<AggregateRootRow>(
+                            this._schemaConfiguration.schemaAwareAggregatesTable
+                        )
+                            .select("version")
+                            .where("id", aggregate.id)
+                            .first();
+                        const storedVersion = created?.version ?? -1;
+                        this._logger.error(
+                            `Version conflict detected for aggregate ${aggregate.id}. Expected ${expectedVersion}. Stored ${storedVersion}`
+                        );
+                        throw new EventConcurrencyException(aggregate.id, storedVersion, expectedVersion);
+                    }
                     currentVersion = 0;
                 } else {
                     currentVersion = aggregateInDatabase.version;
@@ -237,15 +250,6 @@ export class PostgreSQLEventStore extends AbstractEventStore {
             });
         } catch (error) {
             this._logger.error("Unable to complete transaction for aggregate root with id : " + aggregate.id);
-            // Two first commits of the same aggregate both try to insert its row and the slower one hits the
-            // primary key. That is a version conflict for the caller, unlike a duplicate that leaves the
-            // stored version as expected, for example a reused event id.
-            if (isObject(error) && isNotNil(error) && "code" in error && error.code === UNIQUE_VIOLATION_CODE) {
-                const storedVersion = await this.findAggregateRootVersion(aggregate.id);
-                if (storedVersion !== expectedVersion) {
-                    throw new EventConcurrencyException(aggregate.id, storedVersion, expectedVersion);
-                }
-            }
             throw error;
         }
         aggregate.version = committedVersion;

@@ -645,6 +645,36 @@ describe("PostgreSQLEventStore", () => {
             expect(root.version).toBe(0);
         });
 
+        test("rethrows a unique violation when the first save of an aggregate reuses an event id", async () => {
+            const eventId = randomUUID();
+            const otherRootId = randomUUID();
+
+            await eventStore.save(
+                [StoredEvent.fromPublishedEvent(eventId, otherRootId, "Test", new SqlEvent1(), new Date())],
+                new StoredAggregateRoot(otherRootId, 0)
+            );
+
+            const rootId = randomUUID();
+            const root = new StoredAggregateRoot(rootId, 0);
+            const saving = eventStore.save(
+                [StoredEvent.fromPublishedEvent(eventId, rootId, "Test", new SqlEvent2(), new Date())],
+                root
+            );
+
+            await expect(saving).rejects.toMatchObject({ code: "23505" });
+            await expect(saving).rejects.not.toBeInstanceOf(EventConcurrencyException);
+
+            const storedAggregate = await knexConnection<AggregateRootRow>(schema + ".es-aggregates")
+                .where("id", rootId)
+                .first();
+            expect(storedAggregate).toBeUndefined();
+
+            const storedEvents = await knexConnection<EventRow>(schema + ".es-events").select("*");
+            expect(storedEvents).toHaveLength(1);
+
+            expect(root.version).toBe(0);
+        });
+
         test("rethrows a unique violation that is not a version conflict", async () => {
             const rootId = randomUUID();
             const eventId = randomUUID();
