@@ -228,8 +228,32 @@ describe("MongoEventStore", () => {
             expect(ag.version).toBe(7);
         });
 
+        test("throws when the aggregate does not exist and the expected version is not 0", async () => {
+            const ag = new StoredAggregateRoot(new ObjectId().toHexString(), 5);
+
+            const stored = StoredEvent.fromPublishedEvent(
+                new ObjectId().toHexString(),
+                ag.id,
+                "Test",
+                new TestEvent1(),
+                new Date()
+            );
+            const saving = eventStore.save([stored], ag);
+
+            await expect(saving).rejects.toBeInstanceOf(EventConcurrencyException);
+            await expect(saving).rejects.toMatchObject({ expectedVersion: 5, storedVersion: -1 });
+
+            const eventsCount = await eventsCollection.countDocuments();
+            expect(eventsCount).toBe(0);
+
+            const aggregatesCount = await aggregatesCollection.countDocuments();
+            expect(aggregatesCount).toBe(0);
+
+            expect(ag.version).toBe(5);
+        });
+
         test("saves new aggregate with its event", async () => {
-            const ag = new StoredAggregateRoot(new ObjectId().toHexString(), 1);
+            const ag = new StoredAggregateRoot(new ObjectId().toHexString(), 0);
 
             const events = [
                 StoredEvent.fromPublishedEvent(
@@ -300,6 +324,46 @@ describe("MongoEventStore", () => {
             const storedEvents = await eventsCollection.find({ aggregateRootId: aggregateId }).toArray();
             expect(storedEvents).toHaveLength(1);
             expect(storedEvents[0].aggregateRootVersion).toBe(6);
+        });
+
+        test("two concurrent first saves of a new aggregate: one wins, the other throws", async () => {
+            const aggregateId = new ObjectId().toHexString();
+
+            const ag1 = new StoredAggregateRoot(aggregateId, 0);
+            const ag2 = new StoredAggregateRoot(aggregateId, 0);
+
+            const event1 = StoredEvent.fromPublishedEvent(
+                new ObjectId().toHexString(),
+                aggregateId,
+                "Test",
+                new TestEvent1(),
+                new Date()
+            );
+            const event2 = StoredEvent.fromPublishedEvent(
+                new ObjectId().toHexString(),
+                aggregateId,
+                "Test",
+                new TestEvent2(),
+                new Date()
+            );
+
+            const results = await Promise.allSettled([eventStore.save([event1], ag1), eventStore.save([event2], ag2)]);
+
+            const fulfilled = results.filter((r) => r.status === "fulfilled");
+            const rejected = results.filter((r) => r.status === "rejected");
+
+            expect(fulfilled).toHaveLength(1);
+            expect(rejected).toHaveLength(1);
+            expect((rejected[0] as PromiseRejectedResult).reason).toBeInstanceOf(EventConcurrencyException);
+
+            const storedAggregate = await aggregatesCollection.findOne({ _id: new ObjectId(aggregateId) });
+            expect(storedAggregate?.version).toBe(1);
+
+            expect([ag1.version, ag2.version].toSorted((a, b) => a - b)).toEqual([0, 1]);
+
+            const storedEvents = await eventsCollection.find({ aggregateRootId: aggregateId }).toArray();
+            expect(storedEvents).toHaveLength(1);
+            expect(storedEvents[0].aggregateRootVersion).toBe(1);
         });
     });
 

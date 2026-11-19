@@ -182,11 +182,35 @@ export class PostgreSQLEventStore extends AbstractEventStore {
 
                 let currentVersion: number;
                 if (isNil(aggregateInDatabase)) {
+                    // A missing aggregate can only be created by a caller that also believes it is new.
+                    // Any other expected version means the aggregate was purged or never existed.
+                    if (expectedVersion !== 0) {
+                        this._logger.error(
+                            `Version conflict detected for aggregate ${aggregate.id}. Expected ${expectedVersion} but the aggregate does not exist`
+                        );
+                        throw new EventConcurrencyException(aggregate.id, -1, expectedVersion);
+                    }
                     this._logger.debug(`Aggregate ${aggregate.id} does not exist. Will save it`);
-                    await trx(this._schemaConfiguration.schemaAwareAggregatesTable).insert({
-                        id: aggregate.id,
-                        version: 0
-                    });
+                    const inserted = await trx<AggregateRootRow>(this._schemaConfiguration.schemaAwareAggregatesTable)
+                        .insert({ id: aggregate.id, version: 0 })
+                        .onConflict("id")
+                        .ignore()
+                        .returning("id");
+                    // Nothing is inserted when another transaction created the aggregate after the lookup
+                    // above. Its row was invisible to that lookup, so it is read again here.
+                    if (inserted.length === 0) {
+                        const created = await trx<AggregateRootRow>(
+                            this._schemaConfiguration.schemaAwareAggregatesTable
+                        )
+                            .select("version")
+                            .where("id", aggregate.id)
+                            .first();
+                        const storedVersion = created?.version ?? -1;
+                        this._logger.error(
+                            `Version conflict detected for aggregate ${aggregate.id}. Expected ${expectedVersion}. Stored ${storedVersion}`
+                        );
+                        throw new EventConcurrencyException(aggregate.id, storedVersion, expectedVersion);
+                    }
                     currentVersion = 0;
                 } else {
                     currentVersion = aggregateInDatabase.version;

@@ -1,5 +1,6 @@
 /* eslint-disable unicorn/consistent-boolean-name */
 import { Logger, OnModuleDestroy } from "@nestjs/common";
+import { InstanceWrapper } from "@nestjs/core/injector/instance-wrapper";
 import { Module } from "@nestjs/core/injector/module";
 import { isNil } from "es-toolkit";
 import { concatMap, from, lastValueFrom, toArray } from "rxjs";
@@ -40,29 +41,35 @@ export class DomainEventEmitter implements OnModuleDestroy {
                     return;
                 }
 
-                const events = getEventsFromDomainEventSubscription(provider.instance as OnDomainEvent<unknown>);
-                const isAsync = getSubscriptionAsyncType(provider.instance as OnDomainEvent<unknown>);
-                if (isAsync) {
-                    events.forEach((event) => {
-                        const eventId = getEventId(event) as string;
-                        if (!this._asyncHandlers.has(eventId)) {
-                            this._asyncHandlers.set(eventId, []);
-                        }
+                const subscription = provider.instance as OnDomainEvent<object>;
+                const subscriptionName = subscription.constructor.name;
 
-                        this._logger.debug(`Binding ${provider.instance?.constructor.name} to event ${eventId}`);
-                        this._asyncHandlers.get(eventId)?.push(provider.instance as OnDomainEvent<object>);
-                    });
-                } else {
-                    events.forEach((event) => {
-                        const eventId = getEventId(event) as string;
-                        if (!this._syncHandlers.has(eventId)) {
-                            this._syncHandlers.set(eventId, []);
-                        }
-
-                        this._logger.debug(`Binding ${provider.instance?.constructor.name} to event ${eventId}`);
-                        this._syncHandlers.get(eventId)?.push(provider.instance as OnDomainEvent<object>);
-                    });
+                // Request-scoped and transient providers are never instantiated in the static context. What
+                // NestJS exposes for them here is a bare prototype object without constructor state or
+                // injected dependencies, so binding it would produce a handler that can't work.
+                if (!this.isSingleton(provider)) {
+                    this._logger.warn(
+                        `Skipping ${subscriptionName}. Only singleton providers can be used as domain event subscriptions, request-scoped and transient providers are not supported`
+                    );
+                    return;
                 }
+
+                const events = getEventsFromDomainEventSubscription(subscription);
+                const handlers = getSubscriptionAsyncType(subscription) ? this._asyncHandlers : this._syncHandlers;
+                events.forEach((event) => {
+                    const eventId = getEventId(event) as string;
+                    const boundHandlers = handlers.get(eventId) ?? [];
+                    handlers.set(eventId, boundHandlers);
+
+                    // The same instance can be reachable through more than one provider token, for example
+                    // with a useExisting alias. Binding it again would deliver each event more than once.
+                    if (boundHandlers.includes(subscription)) {
+                        return;
+                    }
+
+                    this._logger.debug(`Binding ${subscriptionName} to event ${eventId}`);
+                    handlers.get(eventId)?.push(subscription);
+                });
             });
         });
     }
@@ -189,6 +196,10 @@ export class DomainEventEmitter implements OnModuleDestroy {
                 }
             });
         return Promise.resolve();
+    }
+
+    private isSingleton(provider: InstanceWrapper): boolean {
+        return provider.isDependencyTreeStatic() && !provider.isTransient;
     }
 
     private splitEventsBySubscriptionType(

@@ -325,6 +325,32 @@ describe("AggregateRoot", () => {
             expect(entity.renamedEventValues).toEqual(["from-legacy-name", "from-canonical-name"]);
             expect(entity.version).toBe(2);
         });
+
+        test("applies every event class of a method with stacked ApplyEvent decorators", () => {
+            class StackedRoot extends AggregateRoot {
+                applied: Array<string> = [];
+
+                constructor(id: string) {
+                    super(id);
+                }
+
+                @ApplyEvent(TestEvent1)
+                @ApplyEvent(TestEvent2)
+                applyEither(event: TestEvent1 | TestEvent2) {
+                    this.applied.push(event.constructor.name);
+                }
+            }
+
+            const event1 = StoredEvent.fromStorage("ev1", "id1", "test-event-1", new Date(), 1, "ag-name", {});
+            const event2 = StoredEvent.fromStorage("ev2", "id1", "test-event-2", new Date(), 2, "ag-name", {});
+
+            const entity = new StackedRoot("id1");
+
+            entity.reconstitute([event1, event2]);
+
+            expect(entity.applied).toEqual(["TestEvent1", "TestEvent2"]);
+            expect(entity.version).toBe(2);
+        });
     });
 
     describe("append", () => {

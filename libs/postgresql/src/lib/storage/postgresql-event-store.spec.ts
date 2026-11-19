@@ -15,6 +15,7 @@ import {
 } from "@event-nest/core";
 import { createMock } from "@golevelup/ts-jest";
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from "@testcontainers/postgresql";
+import { delay } from "es-toolkit";
 import { knex } from "knex";
 import { randomUUID } from "node:crypto";
 
@@ -444,9 +445,30 @@ describe("PostgreSQLEventStore", () => {
             expect(root.version).toBe(5);
         });
 
+        test("throws when the aggregate does not exist and the expected version is not 0", async () => {
+            const rootId = randomUUID();
+            const root = new StoredAggregateRoot(rootId, 5);
+
+            const saving = eventStore.save(
+                [StoredEvent.fromPublishedEvent(randomUUID(), rootId, "Test", new SqlEvent1(), new Date())],
+                root
+            );
+
+            await expect(saving).rejects.toBeInstanceOf(EventConcurrencyException);
+            await expect(saving).rejects.toMatchObject({ expectedVersion: 5, storedVersion: -1 });
+
+            const events = await knexConnection(schema + ".es-events").select("*");
+            expect(events.length).toBe(0);
+
+            const aggregates = await knexConnection(schema + ".es-aggregates").select("*");
+            expect(aggregates.length).toBe(0);
+
+            expect(root.version).toBe(5);
+        });
+
         test("saves new aggregate with its event", async () => {
             const rootId = randomUUID();
-            const root = new StoredAggregateRoot(rootId, 1);
+            const root = new StoredAggregateRoot(rootId, 0);
 
             const events = [StoredEvent.fromPublishedEvent(randomUUID(), rootId, "Test", new SqlEvent2(), new Date())];
 
@@ -550,6 +572,136 @@ describe("PostgreSQLEventStore", () => {
             expect(storedEvents[0].aggregate_root_version).toBe(6);
 
             expect([ag1.version, ag2.version].toSorted((a, b) => a - b)).toEqual([5, 6]);
+        });
+
+        test("two concurrent first saves of a new aggregate: one wins, the other throws", async () => {
+            const rootId = randomUUID();
+            const ag1 = new StoredAggregateRoot(rootId, 0);
+            const ag2 = new StoredAggregateRoot(rootId, 0);
+
+            const event1 = StoredEvent.fromPublishedEvent(randomUUID(), rootId, "Test", new SqlEvent1(), new Date());
+            const event2 = StoredEvent.fromPublishedEvent(randomUUID(), rootId, "Test", new SqlEvent2(), new Date());
+
+            const results = await Promise.allSettled([eventStore.save([event1], ag1), eventStore.save([event2], ag2)]);
+
+            const fulfilled = results.filter((r) => r.status === "fulfilled");
+            const rejected = results.filter((r) => r.status === "rejected");
+
+            expect(fulfilled).toHaveLength(1);
+            expect(rejected).toHaveLength(1);
+            expect((rejected[0] as PromiseRejectedResult).reason).toBeInstanceOf(EventConcurrencyException);
+
+            const storedAggregate = await knexConnection<AggregateRootRow>(schema + ".es-aggregates")
+                .where("id", rootId)
+                .first();
+            expect(storedAggregate!.version).toBe(1);
+
+            const storedEvents = await knexConnection<EventRow>(schema + ".es-events").where(
+                "aggregate_root_id",
+                rootId
+            );
+            expect(storedEvents).toHaveLength(1);
+
+            expect([ag1.version, ag2.version].toSorted((a, b) => a - b)).toEqual([0, 1]);
+        });
+
+        test("throws a concurrency exception when another transaction creates the aggregate first", async () => {
+            const rootId = randomUUID();
+            const root = new StoredAggregateRoot(rootId, 0);
+
+            // The competing transaction holds the uncommitted aggregate row, so the save below finds no
+            // aggregate and blocks on its own insert until the competing transaction commits.
+            const competing = await knexConnection.transaction();
+            await competing<AggregateRootRow>(schema + ".es-aggregates").insert({ id: rootId, version: 1 });
+
+            const saving = Promise.allSettled([
+                eventStore.save(
+                    [StoredEvent.fromPublishedEvent(randomUUID(), rootId, "Test", new SqlEvent1(), new Date())],
+                    root
+                )
+            ]);
+
+            let blockedLocks: Array<unknown> = [];
+            while (blockedLocks.length === 0) {
+                await delay(10);
+                blockedLocks = await knexConnection("pg_locks").where("granted", false);
+            }
+            await competing.commit();
+
+            const [result] = await saving;
+            expect(result.status).toBe("rejected");
+            const reason = (result as PromiseRejectedResult).reason;
+            expect(reason).toBeInstanceOf(EventConcurrencyException);
+            expect(reason).toMatchObject({ expectedVersion: 0, storedVersion: 1 });
+
+            const storedAggregate = await knexConnection<AggregateRootRow>(schema + ".es-aggregates")
+                .where("id", rootId)
+                .first();
+            expect(storedAggregate!.version).toBe(1);
+
+            const storedEvents = await knexConnection<EventRow>(schema + ".es-events").select("*");
+            expect(storedEvents).toHaveLength(0);
+
+            expect(root.version).toBe(0);
+        });
+
+        test("rethrows a unique violation when the first save of an aggregate reuses an event id", async () => {
+            const eventId = randomUUID();
+            const otherRootId = randomUUID();
+
+            await eventStore.save(
+                [StoredEvent.fromPublishedEvent(eventId, otherRootId, "Test", new SqlEvent1(), new Date())],
+                new StoredAggregateRoot(otherRootId, 0)
+            );
+
+            const rootId = randomUUID();
+            const root = new StoredAggregateRoot(rootId, 0);
+            const saving = eventStore.save(
+                [StoredEvent.fromPublishedEvent(eventId, rootId, "Test", new SqlEvent2(), new Date())],
+                root
+            );
+
+            await expect(saving).rejects.toMatchObject({ code: "23505" });
+            await expect(saving).rejects.not.toBeInstanceOf(EventConcurrencyException);
+
+            const storedAggregate = await knexConnection<AggregateRootRow>(schema + ".es-aggregates")
+                .where("id", rootId)
+                .first();
+            expect(storedAggregate).toBeUndefined();
+
+            const storedEvents = await knexConnection<EventRow>(schema + ".es-events").select("*");
+            expect(storedEvents).toHaveLength(1);
+
+            expect(root.version).toBe(0);
+        });
+
+        test("rethrows a unique violation that is not a version conflict", async () => {
+            const rootId = randomUUID();
+            const eventId = randomUUID();
+
+            await eventStore.save(
+                [StoredEvent.fromPublishedEvent(eventId, rootId, "Test", new SqlEvent1(), new Date())],
+                new StoredAggregateRoot(rootId, 0)
+            );
+
+            const root = new StoredAggregateRoot(rootId, 1);
+            const saving = eventStore.save(
+                [StoredEvent.fromPublishedEvent(eventId, rootId, "Test", new SqlEvent2(), new Date())],
+                root
+            );
+
+            await expect(saving).rejects.toMatchObject({ code: "23505" });
+            await expect(saving).rejects.not.toBeInstanceOf(EventConcurrencyException);
+
+            const storedAggregate = await knexConnection<AggregateRootRow>(schema + ".es-aggregates")
+                .where("id", rootId)
+                .first();
+            expect(storedAggregate!.version).toBe(1);
+
+            const storedEvents = await knexConnection<EventRow>(schema + ".es-events").select("*");
+            expect(storedEvents).toHaveLength(1);
+
+            expect(root.version).toBe(1);
         });
     });
 
