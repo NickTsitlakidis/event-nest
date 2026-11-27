@@ -1,11 +1,11 @@
 ---
-title: Event Sourcing for NestJS
-description: Event sourcing primitives and persistence adapters for NestJS applications.
+title: Event sourcing for NestJS
+description: Persist domain events and rebuild aggregate state in NestJS. Use PostgreSQL, MongoDB, or SQL Server as your event store.
 # Theme 8.x only auto-detects the home layout on versioned sites; unversioned sites must opt in.
 home: true
 heroImage: /hero.svg
 actions:
-  - label: Build your first aggregate
+  - label: Build an event-sourced NestJS app with PostgreSQL
     type: primary
     to: /build-your-first-aggregate/installation/
   - label: GitHub
@@ -23,13 +23,6 @@ actions:
 </script>
 
 <HomeFeatures />
-
-## What's new in {CURRENT_VERSION}
-
-- **More reliable subscriptions and replay**: singleton subscription instances are bound once, and stacked `@ApplyEvent` decorators work on the same method.
-- **Persistence fixes**: event IDs retain their generated order, missing aggregate versions are checked in MongoDB and PostgreSQL, and concurrent PostgreSQL first commits report a concurrency conflict.
-
-Read the [upgrade notes](/help/compatibility/#Upgrading-to-this-release) and the [6.2.1 release notes](https://github.com/NickTsitlakidis/event-nest/releases/tag/v6.2.1). Version 6.2 also introduced [NestJS 12 support](/help/compatibility/) and [structured error handling](/api-reference/exceptions/).
 
 <div style="margin-top: 3rem; margin-bottom: 3rem">
 
@@ -72,3 +65,10 @@ class User extends AggregateRoot {
 ```
 
 Event Nest is a focused set of libraries — not an application framework, ORM, or distributed event bus. Review [Scope and Limitations](/overview/scope-and-limitations/) before adopting it.
+
+## What's new in {CURRENT_VERSION}
+
+- **More reliable subscriptions and replay**: singleton subscription instances are bound once, and stacked `@ApplyEvent` decorators work on the same method.
+- **Persistence fixes**: event IDs retain their generated order, missing aggregate versions are checked in MongoDB and PostgreSQL, and concurrent PostgreSQL first commits report a concurrency conflict.
+
+Read the [upgrade notes](/help/compatibility/#Upgrading-to-this-release) and the [6.2.1 release notes](https://github.com/NickTsitlakidis/event-nest/releases/tag/v6.2.1). Version 6.2 also introduced [NestJS 12 support](/help/compatibility/) and [structured error handling](/api-reference/exceptions/).

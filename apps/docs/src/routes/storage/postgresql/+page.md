@@ -1,5 +1,6 @@
 ---
-title: PostgreSQL
+title: PostgreSQL event store configuration
+seoTitle: "PostgreSQL Event Store Configuration | Event Nest"
 description: Configure the Event Nest PostgreSQL adapter, table initialization, transactions, snapshots, and connection behavior.
 ---
 
