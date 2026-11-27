@@ -17,11 +17,7 @@
     const isHome = $derived(page.route.id === "/");
     const showFeedback = $derived(!isHome && fm.layout !== false);
     const socialTitle = $derived(typeof fm.title === "string" ? fm.title : "Event Nest documentation");
-
-    // Theme 8.x renders fm.title both in the head <title> and as the hero heading. The hero should
-    // keep the site title ("Event Nest"), so strip fm.title on the home route and re-emit the SEO
-    // title through SeoTitle below.
-    const layoutFm = $derived(isHome ? { ...fm, title: undefined } : fm);
+    const seoTitle = $derived(typeof fm.seoTitle === "string" ? fm.seoTitle : undefined);
 </script>
 
 <svelte:head>
@@ -36,8 +32,8 @@
     {/if}
 {/snippet}
 
-<DefaultPageLayout fm={layoutFm} {heroImage} {titleAction} children={articleContent} />
+<DefaultPageLayout {fm} {heroImage} {titleAction} children={articleContent} />
 
-{#if isHome && typeof fm.title === "string"}
-    <SeoTitle title={`${fm.title} - Event Nest`} />
+{#if seoTitle}
+    <SeoTitle title={seoTitle} />
 {/if}

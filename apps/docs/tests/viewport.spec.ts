@@ -29,11 +29,23 @@ function findGeneratedRoutes(directory = buildDirectory): string[] {
 
 const routes = findGeneratedRoutes().toSorted((left, right) => left.localeCompare(right));
 
-test("homepage social metadata uses its page title", async ({ page }) => {
+test("homepage explains Event Nest and links to the PostgreSQL tutorial", async ({ page }) => {
     await page.goto(`${basePath}/`);
 
-    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", "Event Sourcing for NestJS");
-    await expect(page.locator('meta[name="twitter:title"]')).toHaveAttribute("content", "Event Sourcing for NestJS");
+    const heading = "Event sourcing for NestJS";
+    await expect(page.getByRole("heading", { level: 1, name: heading })).toBeVisible();
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", heading);
+    await expect(page.locator('meta[name="twitter:title"]')).toHaveAttribute("content", heading);
+
+    await page.getByRole("link", { name: "Build an event-sourced NestJS app with PostgreSQL" }).click();
+    await expect(page).toHaveURL(`${basePath}/build-your-first-aggregate/installation/`);
+    await expect(page).toHaveTitle("NestJS Event Sourcing with PostgreSQL: A Tutorial | Event Nest");
+});
+
+test("the PostgreSQL adapter reference has a configuration-specific page title", async ({ page }) => {
+    await page.goto(`${basePath}/storage/postgresql/`);
+
+    await expect(page).toHaveTitle("PostgreSQL Event Store Configuration | Event Nest");
 });
 
 for (const viewport of viewports) {

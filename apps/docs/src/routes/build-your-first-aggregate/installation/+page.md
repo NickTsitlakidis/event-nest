@@ -1,6 +1,7 @@
 ---
-title: Installation
-description: Install Event Nest and configure its PostgreSQL event store in a NestJS application.
+title: NestJS event sourcing with PostgreSQL
+seoTitle: "NestJS Event Sourcing with PostgreSQL: A Tutorial | Event Nest"
+description: Build an event-sourced User aggregate with NestJS and PostgreSQL. Set up the event store, persist domain events, and rebuild state by replaying them.
 ---
 
 <script lang="ts">
@@ -9,7 +10,13 @@ description: Install Event Nest and configure its PostgreSQL event store in a Ne
     const tutorialPackages = ["@event-nest/core", "@event-nest/postgresql", "pg"];
 </script>
 
-This tutorial builds a small event-sourced `User` model backed by PostgreSQL. You need Node.js 22 or newer, a NestJS 10, 11, or 12 application, and a PostgreSQL database that your application can reach.
+In this tutorial, you'll build a `User` aggregate in NestJS. You'll store user creation and name changes as domain events in PostgreSQL, then replay those events to rebuild the user's current state.
+
+Start here by configuring the PostgreSQL event store. Then [build the aggregate](/build-your-first-aggregate/your-first-aggregate/) and [add a projection](/build-your-first-aggregate/add-a-projection/) to turn committed events into a queryable read model.
+
+## Prerequisites
+
+You need Node.js 22 or newer, a NestJS 10, 11, or 12 application, and a PostgreSQL database your application can reach.
 
 ## Install the packages
 
