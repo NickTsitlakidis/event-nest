@@ -265,6 +265,13 @@ main:has(> .home-page) .toc {
     line-height: 1.5;
 }
 
+.home-page .svp-action--primary {
+    height: auto;
+    min-height: 3rem;
+    padding-block: 0.625rem;
+    line-height: 1.35;
+}
+
 /* The theme's hero glow is rose/amber; repaint it with the palette's blue and purple. */
 .home-page::before {
     background:
